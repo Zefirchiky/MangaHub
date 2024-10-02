@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "mangareader"
+version = "0.1.0"
+description = ""
+authors = ["Zefirchiky <mudruk.arte@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+bs4 = "^0.0.2"
+ttkbootstrap = "^1.10.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
