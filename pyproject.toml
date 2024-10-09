@@ -6,9 +6,11 @@ authors = ["Zefirchiky <mudruk.arte@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.12,<3.13"
 bs4 = "^0.0.2"
-ttkbootstrap = "^1.10.1"
+pyinstaller = "^6.10.0"
+ruff = "^0.6.8"
+pyside6 = "^6.7.3"
 
 
 [build-system]

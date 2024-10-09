@@ -1,0 +1,22 @@
+{
+    "AsuraScans": {
+        "name": "AsuraScans",
+        "url": "https://asuracomic.net",
+        "title_page": {
+            "title_page_url_format": "series/$title$-$num_identifier$",
+            "title_html_path": "/html/body/div[3]/div/div/div/div[1]/div/div[1]/div[1]/div[2]/div[1]/div[2]/div[1]/span",
+            "cover_html_path": "/html/body/div[3]/div/div/div/div[1]/div/div[1]/div[1]/div[2]/div[1]/div[1]/img"
+        },
+        "chapter_page": {
+            "chapter_url_format": "series/$title$-$num_identifier$/chapter/$chapter$",
+            "title_html_path": "/html/body/div[3]/div/div/div/h2[1]",
+            "image_html_path": "/html/body/div[3]/div/div/div/div[5]/div/img"
+        },
+        "mangas": {
+            "Boundless Necromancer": {
+                "title": "boundless-necromancer",
+                "num_identifier": "ead52bd4"
+            }
+        }
+    }
+}

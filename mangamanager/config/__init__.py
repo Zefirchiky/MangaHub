@@ -3,4 +3,4 @@ Project settings:
 - settings.py parsing other config files
 '''
 
-from settings import *
+from .settings import *
