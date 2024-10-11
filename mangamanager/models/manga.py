@@ -1,8 +1,8 @@
 from .manga_chapter import MangaChapter
 
 class Manga:
-    def __init__(self, title, cover):
-        self.title = title
+    def __init__(self, name, cover):
+        self.name = name
         self.cover = cover
         self.chapters = {}
 

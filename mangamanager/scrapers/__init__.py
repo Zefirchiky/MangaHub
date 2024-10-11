@@ -1,0 +1,1 @@
+from .manga_title_page_scraper import MangaTitlePageScraper
