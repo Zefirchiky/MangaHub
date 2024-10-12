@@ -1,14 +1,23 @@
-class MangaChapter:
-    def __init__(self, manga, chapter_number: int, chapter_name: str):
-        self.number = chapter_number
-        self.name = chapter_name
-        self.images = []
+from .manga_chapter_image import MangaChapterImage
+from dataclasses import dataclass, field
+from typing import Iterator, List
 
-    def add_image(self, image):
+
+@dataclass
+class MangaChapter:
+    number: int
+    name: str
+    images: List[MangaChapterImage] = field(default_factory=list)
+
+    def __iter__(self) -> Iterator[MangaChapterImage]:
+        return iter(self.images)
+
+    def add_image(self, image: MangaChapterImage) -> None:
         self.images.append(image)
 
-    def add_all_images(self, images):
-        self.images = images
+    def add_images(self, images: List[MangaChapterImage]) -> None:
+        for image in images:
+            self.images.append(image)
 
-    def __iter__(self):
-        return iter(self.images)
+    def add_all_images(self, images: List[MangaChapterImage]) -> None:
+        self.images = images
