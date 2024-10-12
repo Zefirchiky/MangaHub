@@ -17,7 +17,7 @@ class SvgIcon(QIcon):
     def get_svg_with_color(self, color, fill = 'none'):
         return self.svg_content.replace('stroke="currentColor"', f'stroke="{color}"').replace('fill="none', f'fill="{fill}')
     
-    def get_pixmap(self, color, fill = 'none'):
+    def get_pixmap_with_color(self, color, fill = 'none'):
         size = (512, 512)
         svg_content = self.get_svg_with_color(color, fill)
 
@@ -42,5 +42,8 @@ class SvgIcon(QIcon):
         return pixmap
     
     def get_icon(self, color, fill = 'none'):
-        return QIcon(self.get_pixmap(color, fill))
+        return QIcon(self.get_pixmap_with_color(color, fill))
+    
+    def get_pixmap(self, color, w=32, h=32, fill = 'none'):
+        return self.get_icon(color, fill).pixmap(h, w)
 

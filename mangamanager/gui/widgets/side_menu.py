@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import (
-    QFrame, QWidget,
+    QFrame,
     QVBoxLayout, QHBoxLayout,
+    QGraphicsOpacityEffect,
     QPushButton, QLabel
 )
-from PySide6.QtGui import QFont, QPixmap
-from PySide6.QtCore import QSize, QPropertyAnimation, QRect, QEasingCurve, Qt, QByteArray
+from PySide6.QtGui import QFont, QCursor
+from PySide6.QtCore import Qt, QSize, QRect, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve
 
 from .separators import Separator
 from .svg import SvgIcon
@@ -21,17 +22,20 @@ class SideMenu(QFrame):
         self.hidden_x = -self._width + 2
         self.visible_x = 0
         self.y_offset = 1
-
-        self.buttons = {}
+        self.current_x = self.hidden_x
         
         self.is_visible = False
         self.is_fully_opened = False
         self.checked_button = None
-        self.current_x = self.hidden_x
 
-        # menu
+        self.buttons = {}
+
+
+        # Menu
         menu_button = QPushButton()
-        menu_button.setStyleSheet('''QPushButton {
+        menu_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        menu_button.setStyleSheet('''
+                                QPushButton {
                                     background-color: transparent;
                                     border: none;
                                     border-radius: 5px;
@@ -44,39 +48,35 @@ class SideMenu(QFrame):
         menu_button.setFixedHeight(56)
         menu_button.setIconSize(QSize(40, 40))
         menu_button.setIcon(SvgIcon("mangamanager/resources/icons/menu-outline.svg").get_icon('white', fill='white'))
-
         menu_button.clicked.connect(lambda: self.handle_full_menu())
 
-        menu_button_layout = QVBoxLayout()
-        menu_button_layout.addWidget(menu_button)
-
-        # buttons
+        # Buttons
         self.buttons_layout = QVBoxLayout()
 
-        # settings
+        # Settings
         self.settings_svg_icon = SvgIcon("mangamanager/resources/icons/settings-outline.svg")
         self.settings_button = QPushButton()
         self.settings_button.setCheckable(True)
+        self.settings_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.settings_button.setFixedHeight(56)
         self.settings_button.setIconSize(QSize(32, 32))
-        self.settings_button.setIcon(self.settings_svg_icon.get_icon('gray'))
+        self.settings_button.setIcon(self.settings_svg_icon.get_icon('white'))
         self.settings_button.clicked.connect(self.change_settings_icon)
-
-        settings_button_layout = QVBoxLayout()
-        settings_button_layout.addWidget(self.settings_button)
 
         # root layout
         root_layout = QVBoxLayout()
         root_layout.setSpacing(10)
 
-        root_layout.addLayout(menu_button_layout)
+        root_layout.addWidget(menu_button)
         root_layout.addWidget(Separator())
         root_layout.addStretch(1)
         root_layout.addLayout(self.buttons_layout)
         root_layout.addStretch(1)
         root_layout.addWidget(Separator())
-        root_layout.addLayout(settings_button_layout)
+        root_layout.addWidget(self.settings_button)
+
         self.setLayout(root_layout)
+
 
         # animations
         self.open_close_animation = QPropertyAnimation(self, b"geometry")
@@ -87,11 +87,44 @@ class SideMenu(QFrame):
         self.full_open_close_animation.setDuration(300)
         self.full_open_close_animation.setEasingCurve(QEasingCurve.OutCubic)
 
-    def change_settings_icon(self):
-        if self.settings_button.isChecked():
-            self.settings_button.setIcon(self.settings_svg_icon.get_icon('white', fill='white'))
-        else:
-            self.settings_button.setIcon(self.settings_svg_icon.get_icon('gray'))
+    def add_button(self, fn, svg_icon=None, text=None, is_default=False):
+        button_index = len(self.buttons)
+
+        layout = QHBoxLayout()
+
+        icon = QLabel()
+        icon.setFixedSize(32, 32)
+        icon.setPixmap(svg_icon.get_pixmap('white', 32, 32))
+
+        opacity_effect = QGraphicsOpacityEffect()
+        opacity_effect.setOpacity(0)
+
+        text = QLabel(text) if text else None
+        text.setFont(QFont("Times", 12, 2))
+        text.setGraphicsEffect(opacity_effect)
+        
+        layout.addWidget(icon)
+        layout.addStretch(1)
+        layout.addWidget(text)
+        layout.addStretch(1)
+
+        button = QPushButton()
+        button.setCheckable(True)
+        button.setFixedHeight(56)
+        button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        button.setLayout(layout)
+        button.clicked.connect(fn)
+        button.clicked.connect(lambda: self.change_checked_button(button_index))
+
+        self.buttons[button_index] = {
+            "button": button,
+            "opacity_effect": opacity_effect,
+        }
+
+        if is_default:
+            self.change_checked_button(button_index)
+
+        self.buttons_layout.addWidget(button)
 
     def handle_full_menu(self):
         self.is_fully_opened ^= 1
@@ -102,65 +135,10 @@ class SideMenu(QFrame):
 
         self.full_open_close_animation.setStartValue(self.geometry())
         self.full_open_close_animation.setEndValue(QRect(self.current_x - 3, self.y_offset, self._width, self.parent.geometry().height() - self.y_offset))
-        self.full_open_close_animation.finished.connect(self.set_buttons_text)
         self.full_open_close_animation.start()
         self.set_buttons_text()
 
         self.hidden_x = -self._width + 1
-        self.adjust_geometry()
-
-    def set_buttons_text(self):
-        for button in self.buttons.keys():
-            self.buttons[button]["button"].setText("  " + button if self.is_fully_opened else '')
-
-    def add_button(self, fn, svg_icon=None, text=None, is_default=False):
-        button = QPushButton()
-        button.setCheckable(True)
-        button.setFixedHeight(56)
-        button.setFont(QFont("Times", 12, 2))
-        button.setStyleSheet("color: white;")
-
-        button.clicked.connect(fn)
-
-        button_index = len(self.buttons)
-        self.buttons[text] = {
-            "button": button,
-            "icon": svg_icon
-        }
-
-        if is_default:
-            self.change_checked_button(button_index)
-
-        button.clicked.connect(lambda: self.change_checked_button(button_index))
-
-        if svg_icon:
-            button.setIconSize(QSize(32, 32))
-            button.setIcon(svg_icon.get_icon('grey' if button_index != self.checked_button else 'white'))
-
-        self.buttons_layout.addWidget(button)
-
-    def change_checked_button(self, button_index):
-        self.checked_button = button_index
-        button_keys = [button for button in self.buttons.keys()]
-        color = None
-        is_checked = None
-
-        for i in range(len(button_keys)):
-            if i != button_index:
-                is_checked = False
-                color = 'gray'
-            else:
-                is_checked = True
-                color = 'white'
-
-            button = self.buttons[button_keys[i]]
-            button["button"].setChecked(is_checked)
-            button["button"].setIcon(button["icon"].get_icon(color))
-
-    def adjust_geometry(self):
-        if self.parent:
-            parent_geometry = self.parent.geometry()
-            self.setGeometry(self.current_x - 3, self.y_offset, self._width, parent_geometry.height() - self.y_offset)
 
     def show_menu(self):
         if self.is_visible != 2:
@@ -185,4 +163,39 @@ class SideMenu(QFrame):
             self.open_close_animation.setStartValue(self.geometry())
             self.open_close_animation.setEndValue(QRect(self.current_x, self.y_offset, self._width, self.parent.geometry().height() - self.y_offset))
             self.open_close_animation.start()
+
+    def set_buttons_text(self):
+        self.anim_group = QParallelAnimationGroup()
+        
+        for button in self.buttons.keys():
+            fade_animation = QPropertyAnimation(self.buttons[button]["opacity_effect"], b"opacity")
+            fade_animation.setDuration(50)
+            fade_animation.setStartValue(0 if self.is_fully_opened else 1)
+            fade_animation.setEndValue(1 if self.is_fully_opened else 0)
+            self.anim_group.addAnimation(fade_animation)
+
+        self.anim_group.start()
+
+    def change_checked_button(self, button_index):
+        self.checked_button = button_index
+        is_checked = None
+
+        for i in self.buttons.keys():
+            is_checked = i == button_index
+            self.buttons[i]["button"].setChecked(is_checked)
+
+    def change_settings_icon(self):
+        if self.settings_button.isChecked():
+            self.settings_button.setIcon(self.settings_svg_icon.get_icon('white', fill='white'))
+        else:
+            self.settings_button.setIcon(self.settings_svg_icon.get_icon('gray'))
+
+    def set_settings_function(self, fn):
+        self.settings_button.clicked.connect(fn)
+
+    def adjust_geometry(self):
+        if self.parent:
+            parent_geometry = self.parent.geometry()
+            self.setGeometry(self.current_x - 3, self.y_offset, self._width, parent_geometry.height() - self.y_offset)
+
     

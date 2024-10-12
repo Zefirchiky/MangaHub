@@ -25,7 +25,6 @@ class MangaTitlePageScraper:
         html = requests.get(self.url)
         soup = BeautifulSoup(html.text, 'html.parser')
         i = soup.find_all('img', class_='object-cover mx-auto')[1]
-        print(i.get('src'))
         with open(path, 'wb') as f:
             f.write(requests.get(i.get('src')).content)
         return requests.get(i.get('src')).content

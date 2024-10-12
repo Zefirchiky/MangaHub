@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QApplication, QMainWindow,
-    QVBoxLayout, QHBoxLayout, QStackedLayout,
+    QVBoxLayout, QHBoxLayout, QStackedLayout, 
     QSizePolicy,
     QWidget, QToolBar, QPushButton, QLabel, QLineEdit, QScrollArea
 )
@@ -46,9 +46,21 @@ class MainWindow(QMainWindow):
         add_manga_button.setFixedWidth(100)
         add_manga_button.clicked.connect(self.add_manga)
 
+        book_svg_icon = SvgIcon("mangamanager/resources/icons/book-outline.svg")
+        lb = QLabel()
+        bt = QPushButton()
+        book_svg_pixmap = book_svg_icon.get_pixmap('grey')
+        bt.setIcon(QIcon(QPixmap("mangamanager/resources/icons/book-outline.svg")))
+        lb.setPixmap(book_svg_icon.get_pixmap('grey', 64, 64))
+        lb.setAlignment(Qt.AlignCenter)
+        lb.setFixedSize(64, 64)
+        lb.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
         # manga page
         manga_page_layout = QVBoxLayout()
         manga_page_layout.setAlignment(Qt.AlignCenter)
+        manga_page_layout.addWidget(lb)
+        manga_page_layout.addWidget(bt)
         manga_page_layout.addWidget(QLabel("Manga Manager"))
         manga_page_layout.addWidget(add_manga_button)
 
@@ -84,6 +96,7 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(root)
 
+
         # side menu
         book_svg_icon = SvgIcon("mangamanager/resources/icons/book-outline.svg")
         map_svg_icon = SvgIcon("mangamanager/resources/icons/map-outline.svg")
@@ -92,7 +105,8 @@ class MainWindow(QMainWindow):
         self.side_menu.add_button(lambda: root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
         self.side_menu.add_button(lambda: root_layout.setCurrentIndex(1), map_svg_icon, "Map")
 
-        self.side_menu.settings_button.clicked.connect(self.open_settings)
+        self.side_menu.set_settings_function(self.open_settings)
+
 
         # timer
         self.timer = QTimer()
