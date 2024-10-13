@@ -1,1 +1,1 @@
-from .manga_title_page_scraper import MangaTitlePageScraper
+from .manga_site_scraper import MangaTitlePageScraper

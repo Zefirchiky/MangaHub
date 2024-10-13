@@ -1,14 +1,11 @@
-from parsers import MangaJsonParser
-import requests # type: ignore
+from models import Site
 from bs4 import BeautifulSoup
-from PySide6.QtWidgets import QLabel
-from PySide6.QtGui import QPixmap
-import os
+import requests # type: ignore
 
 
-class MangaTitlePageScraper:
-    def __init__(self, url: str):
-        self.url = url
+class MangaSiteScraper:
+    def __init__(self, site: Site):
+        self.site = site
 
     def get_title_page(self):
         path = "mangamanager/data/manga/boundless_necromancer/title_page.jpg"
