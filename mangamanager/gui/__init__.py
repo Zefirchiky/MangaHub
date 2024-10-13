@@ -1,1 +1,1 @@
-from .main_gui import MainGui
+from .main_gui import MainWindow

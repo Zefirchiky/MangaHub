@@ -7,6 +7,7 @@ from typing import List
 @dataclass
 class Manga:
     name: str
+    _id: str
     cover: str
     sites: List[Site] = field(default_factory=list)
     chapters: List[MangaChapter] = field(default_factory=list)

@@ -188,7 +188,7 @@ class SideMenu(QFrame):
         if self.settings_button.isChecked():
             self.settings_button.setIcon(self.settings_svg_icon.get_icon('white', fill='white'))
         else:
-            self.settings_button.setIcon(self.settings_svg_icon.get_icon('gray'))
+            self.settings_button.setIcon(self.settings_svg_icon.get_icon('white'))
 
     def set_settings_function(self, fn):
         self.settings_button.clicked.connect(fn)

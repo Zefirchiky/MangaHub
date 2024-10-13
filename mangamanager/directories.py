@@ -1,5 +1,6 @@
 import os
 
+STD_DIR = os.getcwd()
 
 def create_directory(directory: str) -> None:
     if not os.path.exists(directory):

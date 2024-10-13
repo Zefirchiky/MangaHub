@@ -12,15 +12,15 @@ from .multi_window.add_manga import AddMangaWindow
 from .multi_window.settings import SettingsWindow
 from .widgets.side_menu import SideMenu
 from .widgets.svg import SvgIcon
-from scrapers import MangaTitlePageScraper
+from services.scrapers import MangaSiteScraper
+from models import Manga
 
 
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, app):
+    def __init__(self):
         super().__init__()
-        self.app = app
 
         # set up the main window
         self.setWindowTitle("Manga Manager")
@@ -34,11 +34,10 @@ class MainWindow(QMainWindow):
         
         self.settings_is_opened = False
 
-        self.scraper = MangaTitlePageScraper("https://asuracomic.net/series/nano-machine-b6b7f63d/chapter/228")
-        img = self.scraper.get_chapter_page()
+        self.scraper = MangaSiteScraper(Manga("Boundless Necromancer", "boundless-necromancer", "data/manga/boundless-necromancer/cover.jpg", ["AsuraScans"], []))
+        img = self.scraper.get_chapter_image_iter(1)
         img = QImage().fromData(img)
         img = img.scaledToWidth(480, Qt.TransformationMode.SmoothTransformation)
-        img.save("mangamanager/data/manga/boundless_necromancer/chapters/chapter1-name/1_1_scaled.webp")
 
         # TAB 0
         # add manga
@@ -49,7 +48,6 @@ class MainWindow(QMainWindow):
         book_svg_icon = SvgIcon("mangamanager/resources/icons/book-outline.svg")
         lb = QLabel()
         bt = QPushButton()
-        book_svg_pixmap = book_svg_icon.get_pixmap('grey')
         bt.setIcon(QIcon(QPixmap("mangamanager/resources/icons/book-outline.svg")))
         lb.setPixmap(book_svg_icon.get_pixmap('grey', 64, 64))
         lb.setAlignment(Qt.AlignCenter)
@@ -100,10 +98,14 @@ class MainWindow(QMainWindow):
         # side menu
         book_svg_icon = SvgIcon("mangamanager/resources/icons/book-outline.svg")
         map_svg_icon = SvgIcon("mangamanager/resources/icons/map-outline.svg")
+        add_svg_icon = SvgIcon("mangamanager/resources/icons/add-outline.svg")
+        airplane_svg_icon = SvgIcon("mangamanager/resources/icons/airplane-outline.svg")
 
         self.side_menu = SideMenu(self)
         self.side_menu.add_button(lambda: root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
         self.side_menu.add_button(lambda: root_layout.setCurrentIndex(1), map_svg_icon, "Map")
+        self.side_menu.add_button(lambda: root_layout.setCurrentIndex(1), add_svg_icon, "Add")
+        self.side_menu.add_button(lambda: root_layout.setCurrentIndex(1), airplane_svg_icon, "Airplane")
 
         self.side_menu.set_settings_function(self.open_settings)
 
@@ -137,14 +139,4 @@ class MainWindow(QMainWindow):
         self.side_menu.adjust_geometry()
 
         return super().resizeEvent(event)
-
-
-class MainGui:
-    def __init__(self, app):
-        self.app = app
-        self.qt_app = QApplication()
-        self.main_window = MainWindow(app)
-
-    def start(self):
-        self.main_window.showMaximized()
-        self.qt_app.exec()
+    

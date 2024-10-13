@@ -1,0 +1,9 @@
+{
+    "Boundless Necromancer": {
+        "name": "Boundless Necromancer",
+        "_id": "boundless-necromancer",
+        "cover": "data/manga/boundless-necromancer/cover.jpg",
+        "sites": ["AsuraScans"],
+        "chapters": []
+    }
+}
