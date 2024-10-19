@@ -1,0 +1,26 @@
+{
+    "AsuraScans": {
+        "name": "AsuraScans",
+        "url": "https://asuracomic.net",
+        "title_page": {
+            "url_format": "series/$manga_id$-$num_identifier$",
+            "name_html_class": "text-xl font-bold  ",
+            "cover_html_class": "rounded mx-auto md:mx-0"
+        },
+        "chapter_page": {
+            "url_format": "series/$manga_id$-$num_identifier$/chapter/$chapter_num$",
+            "title_html_class": "text-xl text-[#DDDDDD] font-bold",
+            "images_html_class": "object-cover mx-auto"
+        },
+        "manga": {
+            "Boundless Necromancer": {
+                "_id": "boundless-necromancer",
+                "num_identifier": "d6164e33"
+            },
+            "Raising The Princess To Overcome Death": {
+                "_id": "raising-the-princess-to-overcome-death",
+                "num_identifier": "93d590ee"
+            }
+        }
+    }
+}
