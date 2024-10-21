@@ -21,16 +21,16 @@ class MangaManager:
         if not os.path.exists(f'data/manga/{_id}'):
             os.makedirs(f'data/manga/{_id}')
             
-        cover = self.ensure_cover(_id)
+        cover = self.ensure_cover(_id, url_parser)
 
         return Manga(name, _id, cover, [site.name])
     
-    def ensure_cover(self, _id):
+    def ensure_cover(self, _id, url_parser):
         dir = f'{MANGA_DIR}/{_id}'
         if os.path.exists(f'{dir}/cover.jpg'):
             cover = f'{dir}/cover.jpg'
         else:
-            scraper = MangaSiteScraper(self.sites_parser, manga=self.get_manga(_id))
+            scraper = MangaSiteScraper(self.sites_parser, url_parser=url_parser)
             cover = scraper.save_manga_cover_path(dir)
 
         return cover
@@ -39,6 +39,7 @@ class MangaManager:
         return self.manga_parser.get_all_manga()
 
     def get_manga(self, name):
+        print(self.manga)
         return self.manga[name]
     
     def get_chapter(self, manga, num):

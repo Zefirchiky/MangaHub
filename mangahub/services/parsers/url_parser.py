@@ -47,6 +47,7 @@ class UrlParser:
             ).replace(
                 '$num_identifier$', site.manga[manga.name]['num_identifier']
             )
+        print(url)
 
         return url
 
@@ -55,7 +56,7 @@ class UrlParser:
         url = site.url + "/" + site.chapter_page['url_format'].replace(
                 '$manga_id$', manga._id
             ).replace(
-                '$num_identifier$', site.manga[manga.name]['num_identifier']
+                '$num_identifier$', 'ffffffff'
             ).replace(
                 '$chapter_num$', str(chapter_num)
             )

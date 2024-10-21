@@ -12,6 +12,7 @@ from .multi_window.add_manga import AddMangaWindow
 from .multi_window.settings import SettingsWindow
 from .widgets.slide_menus import SideMenu, SlideMenu
 from .widgets.svg import SvgIcon
+from widgets.scroll_areas import MangaViewer
 from services.scrapers import MangaSiteScraper
 from controllers import MangaManager
 from models import Manga
@@ -44,8 +45,9 @@ class MainWindow(QMainWindow):
         # img = img.scaledToWidth(480, Qt.TransformationMode.SmoothTransformation)
 
         img_layout = QVBoxLayout()
+        img_layout.setSpacing(0)
         img_layout.addWidget(QLabel("Boundless Necromancer"))
-        for image in self.manager.get_new_chapter(self.manager.get_manga_from_url('https://asuracomic.net/series/raising-the-princess-to-overcome-death-93d590ee'), 1):
+        for image in self.manager.get_new_chapter(self.manager.get_manga_from_url('https://asuracomic.net/series/nano-machine-114281f9/chapter/229'), 229):
             img_pmap = QPixmap(image)
             img_pmap = img_pmap.scaledToWidth(480, Qt.TransformationMode.SmoothTransformation)
             img = QLabel()
@@ -124,8 +126,7 @@ class MainWindow(QMainWindow):
         self.side_menu.set_settings_function(self.open_settings)
 
         self.slide_menu = SlideMenu(self)
-        self.slide_menu.adjust_geometry_with_animation(self.slide_menu.get_geometry(1700, 0, 72, 0), self.slide_menu.get_geometry(1700, 0, 100, 0),
-                                                       fn_after_animation=lambda: print(self.slide_menu.geometry()))
+        self.slide_menu.adjust_geometry_with_animation(self.slide_menu.get_geometry(1700, 0, 72, 0), self.slide_menu.get_geometry(1700, 0, 100, 0))
 
 
         # timer

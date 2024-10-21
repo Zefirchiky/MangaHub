@@ -33,8 +33,8 @@ class MangaSiteScraper:
 
             raise Exception(f"No site for the {self.manga.name} available")
         
-        elif self.url:                
-            return self.get_bs_from_url(self.url)
+        elif self.url_parser:                
+            return self.get_bs_from_url(self.url_parser.url)
 
         raise Exception("Manga or url not found")      
     
@@ -43,6 +43,7 @@ class MangaSiteScraper:
             self.title_page = self.get_title_page()
     
         cover = self.title_page.find('img', class_=self.site.title_page['cover_html_class'])
+        print(cover)
         img_data = requests.get(cover.get('src')).content
 
         return img_data
@@ -61,6 +62,7 @@ class MangaSiteScraper:
         if self.manga:
             for _site in self.manga.sites:
                 self.site = self.sites_parser.get_site(_site)
+                print(self.manga)
                 url = UrlParser.get_chapter_page_url(self.site, self.manga, num)
 
                 return self.get_bs_from_url(url)
