@@ -9,6 +9,7 @@ class Manga:
     name: str
     _id: str
     cover: str
+    _id_dex: str = ''
     sites: List[Site] = field(default_factory=list)
     chapters: List[MangaChapter] = field(default_factory=list)
 

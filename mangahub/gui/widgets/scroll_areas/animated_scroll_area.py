@@ -7,9 +7,10 @@ from PySide6.QtCore import (
 
 
 class AnimatedScrollArea(QScrollArea):
-    def __init__(self, parent=None, step_size=40, duration=100):
+    def __init__(self, parent=None, step_size=80, duration=100):
         super().__init__(parent)
         self.verticalScrollBar().setSingleStep(step_size)
+        self.setWidgetResizable(True)
 
         self.step_size = step_size
         self.duration = duration
@@ -20,9 +21,9 @@ class AnimatedScrollArea(QScrollArea):
 
         self.animation = QPropertyAnimation(self.verticalScrollBar(), b"value")
         self.animation.setDuration(duration)
-        self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.animation.setEasingCurve(QEasingCurve.Type.Linear)
 
-    def scrollEvent(self, event):
+    def wheelEvent(self, event):
         delta = event.angleDelta().y()
 
         # If scroll is opposite, stop the animation

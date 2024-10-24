@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QFrame,
     QVBoxLayout, QHBoxLayout,
-    QGraphicsOpacityEffect,
+    QGraphicsOpacityEffect, QSizePolicy,
     QPushButton, QLabel
 )
 from PySide6.QtGui import QFont, QCursor
@@ -101,13 +101,13 @@ class SideMenu(QFrame):
         opacity_effect.setOpacity(0)
 
         text = QLabel(text) if text else None
+        text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        text.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         text.setFont(QFont("Times", 12, 2))
         text.setGraphicsEffect(opacity_effect)
         
         layout.addWidget(icon)
-        layout.addStretch(1)
         layout.addWidget(text)
-        layout.addStretch(1)
 
         button = QPushButton()
         button.setCheckable(True)

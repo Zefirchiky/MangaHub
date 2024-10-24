@@ -12,18 +12,18 @@ from .multi_window.add_manga import AddMangaWindow
 from .multi_window.settings import SettingsWindow
 from .widgets.slide_menus import SideMenu, SlideMenu
 from .widgets.svg import SvgIcon
-from widgets.scroll_areas import MangaViewer
+from .widgets.scroll_areas import MangaViewer
 from services.scrapers import MangaSiteScraper
 from controllers import MangaManager
 from models import Manga
-from directories import ICONS_DIR
+from directories import *
 import os
 
 
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, app, manga_manager: MangaManager):
+    def __init__(self, app):
         super().__init__()
         self.app = app
 
@@ -39,30 +39,12 @@ class MainWindow(QMainWindow):
         
         self.settings_is_opened = False
 
-        self.manager = manga_manager
-        # img = self.manager.get_chapter_image_iter(1)
-        # img = QImage().fromData(img)
-        # img = img.scaledToWidth(480, Qt.TransformationMode.SmoothTransformation)
-
-        img_layout = QVBoxLayout()
-        img_layout.setSpacing(0)
-        img_layout.addWidget(QLabel("Boundless Necromancer"))
-        for image in self.manager.get_new_chapter(self.manager.get_manga_from_url('https://asuracomic.net/series/nano-machine-114281f9/chapter/229'), 229):
-            img_pmap = QPixmap(image)
-            img_pmap = img_pmap.scaledToWidth(480, Qt.TransformationMode.SmoothTransformation)
-            img = QLabel()
-            img.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            img.setPixmap(img_pmap)
-            img_layout.addWidget(img)
-
-        img_widget = QWidget()
-        img_widget.setLayout(img_layout)
 
         # TAB 0
         # add manga
-        add_manga_button = QPushButton("Add Manga")
-        add_manga_button.setFixedWidth(100)
-        add_manga_button.clicked.connect(self.add_manga)
+        self.add_manga_button = QPushButton("Add Manga")
+        self.add_manga_button.setFixedWidth(100)
+        self.add_manga_button.clicked.connect(self.add_manga)
         
         book_svg_icon = SvgIcon(f"{ICONS_DIR}/book-outline.svg")
         lb = QLabel()
@@ -75,27 +57,23 @@ class MainWindow(QMainWindow):
 
         # manga page
         manga_page_layout = QVBoxLayout()
-        manga_page_layout.setAlignment(Qt.AlignCenter)
+        manga_page_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         manga_page_layout.addWidget(lb)
         manga_page_layout.addWidget(bt)
         manga_page_layout.addWidget(QLabel("Manga Manager"))
-        manga_page_layout.addWidget(add_manga_button)
+        manga_page_layout.addWidget(self.add_manga_button)
 
         manga_page_widget = QWidget()
         manga_page_widget.setLayout(manga_page_layout)
 
         # TAB 1
+        self.manga_viewer = MangaViewer()
 
-        scrollable_label = QScrollArea()
-        scrollable_label.verticalScrollBar().setSingleStep(30)
-        scrollable_label.setAlignment(Qt.AlignCenter)
-        scrollable_label.setWidgetResizable(True)
-        scrollable_label.setWidget(img_widget)
 
         # manga reader
         manga_reader_layout = QVBoxLayout()
-        manga_reader_layout.setAlignment(Qt.AlignCenter)
-        manga_reader_layout.addWidget(scrollable_label)
+        manga_reader_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        manga_reader_layout.addWidget(self.manga_viewer)
 
         manga_reader_widget = QWidget()
         manga_reader_widget.setLayout(manga_reader_layout)
@@ -133,6 +111,16 @@ class MainWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_mouse_position)
         self.timer.start(100)
+        
+    def init(self):
+        self.manager: MangaManager = self.app.manga_manager
+        # for image in self.manager.get_new_chapter(self.manager.get_manga_from_url('https://asuracomic.net/series/nano-machine-114281f9/chapter/229'), 230):
+        #     self.manga_viewer.add_image(image)
+        
+        for image in self.manager.get_manga_chapter_images('nano-machine', 229):
+            self.manga_viewer.add_image(image)
+            
+        self.add_manga_button.clicked.connect(lambda: self.app.mm.show_message('info', "Creating manga"))
 
     def open_settings(self):
         self.settings_is_opened ^= 1
@@ -156,6 +144,7 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         self.side_menu.adjust_geometry()
+        self.app.mm.pos_update()
 
         return super().resizeEvent(event)
     

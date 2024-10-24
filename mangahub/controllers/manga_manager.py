@@ -1,16 +1,104 @@
+from PySide6.QtCore import QObject
 from services.parsers import MangaJsonParser, SitesJsonParser, UrlParser
 from services.scrapers import MangaSiteScraper
 from models import Manga, MangaChapter
+from utils import BatchWorker
 from directories import *
+import requests
 import os
 
-
+class ImageDownloader(QObject):
+    def __init__(self):
+        super().__init__()
+        self.images = []
+        self.received_count = 0
+        self.expected_count = 0
+        
+    def handle_result(self, response):
+        if response and hasattr(response, 'content'):
+            self.images.append(response.content)
+            self.received_count += 1
+            print(f"Added image {self.received_count}/{self.expected_count}")
+            
 class MangaManager:
-    def __init__(self, manga_parser: MangaJsonParser, sites_parser: SitesJsonParser):
-        self.manga_parser = manga_parser
-        self.sites_parser = sites_parser
+    def __init__(self, app):
+        self.app = app
+        self.manga_parser = self.app.manga_json_parser
+        self.sites_parser = self.app.sites_json_parser
 
         self.manga = self.get_all_manga()
+        
+    def get_manga(self, name, manga_dex=True):
+        if name in self.manga.keys():
+            return self.manga[name]
+        else:
+            raise Exception(f"Manga {name} not found")
+        
+    def get_chapter(self, manga, num):
+        if num in manga.chapters.keys():
+            return manga.chapters[num]
+        else:
+            self.app.mm.show_message('error', f"Chapter {num} not found")
+        
+    def get_manga_id_from_manga_dex(self, name):
+        url = "https://api.mangadex.org/manga"
+        params = {
+            "title": name,
+            "limit": 1
+        }
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        if data["data"]:
+            manga = data["data"][0]
+            return manga["id"]
+        return None
+    
+    def get_chapter_id(self, num, manga_id, language="en"):
+        url = f"https://api.mangadex.org/chapter"
+        params = {
+            "manga": manga_id,
+            "translatedLanguage[]": language,
+            "limit": 1
+        }
+        
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+
+        data = response.json()
+        chapter_id = data["data"][0]["id"]
+        
+        return chapter_id
+    
+    def get_chapter_images_url(self, chapter_id):
+        url = f"https://api.mangadex.org/at-home/server/{chapter_id}"
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        data = response.json()
+        base_url = data["baseUrl"]
+        image_files = data["chapter"]["dataSaver"]
+        
+        # Construct full image URLs
+        image_urls = [f"{base_url}/data-saver/{data['chapter']['hash']}/{image_file}" for image_file in image_files]
+        
+        return image_urls
+    
+    def get_manga_chapter_images(self, manga_title, num):
+        manga_id = self.get_manga_id_from_manga_dex(manga_title)
+        if not manga_id:
+            return None
+        
+        chapter_id = self.get_chapter_id(num, manga_id)
+        image_urls = self.get_chapter_images_url(chapter_id)
+        images = []
+        
+        worker = BatchWorker()
+        worker.signals.item_completed.connect(lambda response: images.append(response.content))
+        worker.process_batch(requests.get, image_urls)
+                
+        return images
 
     def get_manga_from_url(self, url):
         url_parser = UrlParser(url, self.sites_parser)
@@ -18,8 +106,8 @@ class MangaManager:
         _id = url_parser.get_manga_id()
         name = _id.title().replace('-', ' ')
 
-        if not os.path.exists(f'data/manga/{_id}'):
-            os.makedirs(f'data/manga/{_id}')
+        if not os.path.exists(f'{MANGA_DIR}/{_id}'):
+            os.makedirs(f'{MANGA_DIR}/{_id}')
             
         cover = self.ensure_cover(_id, url_parser)
 
@@ -37,13 +125,6 @@ class MangaManager:
     
     def get_all_manga(self):
         return self.manga_parser.get_all_manga()
-
-    def get_manga(self, name):
-        print(self.manga)
-        return self.manga[name]
-    
-    def get_chapter(self, manga, num):
-        return manga.chapters[num]
     
     def get_new_chapter(self, manga, num):
         _dir = f'data/manga/{manga._id}/chapter{num}'
@@ -57,7 +138,6 @@ class MangaManager:
             with open(f'{_dir}/{i + 1}.webp', 'wb') as f:
                 f.write(image)
             chapter.add_image(i + 1, f'{_dir}/{i + 1}.webp')
-        print(chapter)
 
         return chapter
     

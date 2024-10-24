@@ -1,12 +1,10 @@
-from PySide6.QtGui import QImage, QPixmap
 from bs4 import BeautifulSoup
 
 from services.parsers import SitesJsonParser, UrlParser
-from models import Site, Manga
+from models import Manga
 
 import requests # type: ignore
 import os
-import re
 
 
 class MangaSiteScraper:

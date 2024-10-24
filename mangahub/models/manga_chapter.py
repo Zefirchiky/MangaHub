@@ -6,6 +6,7 @@ from typing import Iterator, Dict
 class MangaChapter:
     number: int
     name: str
+    _id_dex: str = ''
     images: Dict[int, str] = field(default_factory=dict)
 
     def __iter__(self) -> Iterator[dict]:

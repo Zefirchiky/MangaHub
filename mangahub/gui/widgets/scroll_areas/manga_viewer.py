@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QHBoxLayout,
+    QVBoxLayout,
     QWidget, QLabel
 )
 from PySide6.QtGui import QPixmap
@@ -14,7 +14,7 @@ class MangaViewer(AnimatedScrollArea):
         
         self.img_width = 480
 
-        self.root_layout = QHBoxLayout()
+        self.root_layout = QVBoxLayout()
         self.root_layout.setSpacing(0)
         
         root_widget = QWidget()
@@ -22,7 +22,8 @@ class MangaViewer(AnimatedScrollArea):
         self.setWidget(root_widget)
         
     def add_image(self, image: bytes, size_multiplier: float = 1.0):
-        image_pmap = QPixmap(image)
+        image_pmap = QPixmap()
+        image_pmap.loadFromData(image)
         image_pmap = image_pmap.scaledToWidth(self.img_width * size_multiplier, Qt.TransformationMode.SmoothTransformation)
         
         img = QLabel()
