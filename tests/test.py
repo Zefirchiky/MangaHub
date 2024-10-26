@@ -1,73 +1,58 @@
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QMainWindow, QApplication
-from PySide6.QtCore import QTimer, QRunnable, Slot, Signal, QObject, QThreadPool
-
+from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QApplication
+from PySide6.QtCore import Qt, QPointF
 import sys
-import time
-import traceback
 
+class ZoomableGraphicsView(QGraphicsView):
+    def __init__(self, scene, parent=None):
+        super().__init__(scene, parent)
+        self._zoom_factor = 1.15  # How much to zoom per step
+        self._current_zoom = 1.0   # Track current zoom level
+        self._zoom_min = 0.05      # Minimum zoom limit (5%)
+        self._zoom_max = 20.0      # Maximum zoom limit (2000%)
 
-class WorkerSignals(QObject):
-    status = Signal(str)
-    progress = Signal(int)
-    finished = Signal()
-    result = Signal(object)
-    error = Signal(tuple)
+    def wheelEvent(self, event):
+        """Zoom in or out using the mouse wheel, centered around the mouse position."""
+        # Get the position of the mouse in the view's coordinate system
+        mouse_view_pos = event.position()
+        # Map the mouse position to the scene's coordinate system
+        mouse_scene_pos = self.mapToScene(mouse_view_pos.toPoint())
 
-class Worker(QRunnable):
-    def __init__(self, fn, *args, progress_callback=False, status_callback=False, **kwargs):
-        
-        super().__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
-        
-        if progress_callback:
-            self.kwargs["progress_callback"] = self.signals.progress
-        if status_callback:
-            self.kwargs["status_callback"] = self.signals.status
-        
-    @Slot()
-    def run(self):
-        try:
-            result = self.fn(*self.args, **self.kwargs)
-        except Exception as e:
-            self.signals.error.emit(e)
-        else:
-            self.signals.result.emit(result)
-        finally:
-            self.signals.finished.emit()            
+        # Determine whether we're zooming in or out
+        if event.angleDelta().y() > 0:  # Zoom in
+            zoom_factor = self._zoom_factor
+        else:  # Zoom out
+            zoom_factor = 1 / self._zoom_factor
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+        # Calculate the new zoom level
+        new_zoom = self._current_zoom * zoom_factor
 
-        self.threadpool = QThreadPool()
-        print(f"Multithreading with maximum {self.threadpool.maxThreadCount()}")
+        # Enforce zoom limits
+        if new_zoom < self._zoom_min or new_zoom > self._zoom_max:
+            return  # Do nothing if zoom level is out of bounds
 
-        self.button = QPushButton("Start")
-        self.button.pressed.connect(self.button_pressed)
-        self.setCentralWidget(self.button)
+        # Apply the scaling (zoom in or out)
+        self.scale(zoom_factor, zoom_factor)
+        self._current_zoom = new_zoom
+
+        # After scaling, reposition the view so the mouse stays in the same place
+        # Get the position of the mouse after the zoom
+        mouse_view_pos_after = self.mapToScene(mouse_view_pos.toPoint())
         
-    def task(self, progress_callback):
-        time.sleep(1)
-        progress_callback.emit(50)
-        print("hello")
-        time.sleep(3)
-        progress_callback.emit(100)
-        return("Lol")
-        
-    def button_pressed(self):
-        worker = Worker(self.task, progress_callback=True)
-        worker.signals.result.connect(print)
-        worker.signals.error.connect(print)
-        worker.signals.finished.connect(lambda: print("finished"))
-        worker.signals.progress.connect(print)
-        
-        self.threadpool.start(worker)
-    
-    
+        # Translate the view to keep the mouse point stable
+        delta = mouse_view_pos_after - mouse_scene_pos
+        self.translate(delta.x(), delta.y())
+
+# Setup the application and scene
 app = QApplication(sys.argv)
-window = MainWindow()
-window.show()
-app.exec()
+scene = QGraphicsScene()
+
+# Add a large rectangle to the scene (could be any item or image)
+scene.addRect(0, 0, 500, 500)
+scene.addRect(100, 500, 500, 400)
+
+# Create the zoomable view and show the scene
+view = ZoomableGraphicsView(scene)
+view.show()
+
+sys.exit(app.exec())
+

@@ -1,6 +1,6 @@
 import time
 from functools import wraps
-from gui.utils import MessageManager
+from gui.gui_utils import MessageManager
 
 def retry(max_retries=5, delay=1, exception_to_check=Exception):
     """

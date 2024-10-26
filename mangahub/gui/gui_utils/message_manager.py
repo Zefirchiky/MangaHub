@@ -13,7 +13,7 @@ class Message(QFrame):
     def __init__(self, parent=None, message_type='error', message=None, width=250, min_height=40):
         super().__init__(parent)
         self.setStyleSheet(self._get_style(message_type))
-        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.SubWindow)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.SubWindow)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFixedWidth(width)
         self.setMinimumHeight(min_height)
@@ -78,7 +78,7 @@ class MessageManager:
             raise Exception("MessageManager has not been initialized!")
         return MessageManager._instance
     
-    def __init__(self, app, width=250):
+    def __init__(self, app, width=400):
         if MessageManager._instance is not None:
             raise Exception("This class is a singleton!")
         else:

@@ -1,34 +1,67 @@
-from PySide6.QtWidgets import (
-    QVBoxLayout,
-    QWidget, QLabel
-)
-from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QGraphicsPixmapItem
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
+from .smooth_graphics_view import SmoothGraphicsView
 
-from .animated_scroll_area import AnimatedScrollArea
 
-
-class MangaViewer(AnimatedScrollArea):
+class MangaViewer(SmoothGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._image_items = []
+        self._vertical_spacing = 0
+        self._base_width = 480
+        self._current_scale = 0.7
+        self._zoom_factor = 1.1
         
-        self.img_width = 480
+        self.scale(self._current_scale, self._current_scale)
 
-        self.root_layout = QVBoxLayout()
-        self.root_layout.setSpacing(0)
-        
-        root_widget = QWidget()
-        root_widget.setLayout(self.root_layout)
-        self.setWidget(root_widget)
-        
-    def add_image(self, image: bytes, size_multiplier: float = 1.0):
-        image_pmap = QPixmap()
-        image_pmap.loadFromData(image)
-        image_pmap = image_pmap.scaledToWidth(self.img_width * size_multiplier, Qt.TransformationMode.SmoothTransformation)
-        
-        img = QLabel()
-        img.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        img.setPixmap(image_pmap)
-        
-        self.root_layout.addWidget(img)
-        
+    def add_images(self, image_bytes_list):
+        current_y = 0
+
+        for image_bytes in image_bytes_list:
+            pixmap = QPixmap()
+            if not pixmap.loadFromData(image_bytes):
+                print("Error loading image from bytes")
+                continue
+
+            viewport_width = self.viewport().width()
+            image_x = (viewport_width - pixmap.width()) / 2
+
+            item = QGraphicsPixmapItem(pixmap)
+            item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+            item.setPos(image_x, current_y)
+            self.scene.addItem(item)
+            self._image_items.append(item)
+            current_y += pixmap.height() + self._vertical_spacing
+
+        self.scene.setSceneRect(self.scene.itemsBoundingRect())
+
+    def wheelEvent(self, event):
+        if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            zoom_in = event.angleDelta().y() > 0
+            
+            factor = self._zoom_factor if zoom_in else 1 / self._zoom_factor
+            new_scale = self._current_scale * factor
+            
+            if 0.2 <= new_scale <= 5.0:
+                self.scale_multiplier = new_scale
+                old_pos = self.mapToScene(event.position().toPoint())
+                
+                self.resetTransform()
+                self._current_scale = new_scale
+                self.scale(new_scale, new_scale)
+                
+                # Get new scene position and adjust view to keep point under mouse
+                new_pos = self.mapToScene(event.position().toPoint())
+                delta = new_pos - old_pos
+                self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + int(delta.x()))
+                self.verticalScrollBar().setValue(self.verticalScrollBar().value() + int(delta.y()))
+                
+                event.accept()
+                
+            return
+                
+        super().wheelEvent(event)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)

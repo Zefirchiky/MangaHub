@@ -18,15 +18,17 @@ class BatchWorkerSignals(QObject):
 
 class Worker(QRunnable):
     def __init__(
-        self, 
-        fn: Callable, 
-        *args, 
+        self,
+        num: int,
+        fn: Callable,
+        *args,
         progress_callback: bool=False, 
         status_callback: bool=False, 
         **kwargs
     ):
         
         super().__init__()
+        self.num = num
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
@@ -39,13 +41,12 @@ class Worker(QRunnable):
         
     @Slot()
     def run(self):
-        self.signals.error.emit(1)
         try:
             result = self.fn(*self.args, **self.kwargs)
         except Exception as e:
             self.signals.error.emit(e)
         else:
-            self.signals.result.emit(result)
+            self.signals.result.emit((self.num, result))
         finally:
             self.signals.finished.emit()
             
@@ -68,29 +69,34 @@ class BatchWorker(QObject):
         **kwargs
     ) -> List[Any]:
         
-        self._results = []
+        self._results = [None for _ in range(len(items))]
         self._workers = []
         total_items = len(items)
+        self.processed_items = 0
         
         loop = QEventLoop() if blocking else None
         
         def handle_result(result):
-            self._results.append(result)
+            num, result = result
+            self.processed_items += 1
+            self._results[num] = result
             self.signals.item_completed.emit(result)
-            self.signals.progress.emit(int(len(self._results) / total_items * 100))
+            self.signals.progress.emit(int(self.processed_items / total_items * 100))
             
             # Check if all items are processed
-            if len(self._results) >= total_items:
+            if self.processed_items >= total_items:
                 self.signals.all_completed.emit(self._results)
                 if loop:
                     loop.quit()
+                return self._results
                     
         def handle_error(error):
             self.signals.error.emit(error)
             self.signals.status.emit(f"Error occurred: {str(error)}")
         
-        for item in items:
+        for i, item in enumerate(items):
             worker = Worker(
+                i,
                 fn,
                 item,
                 *args,

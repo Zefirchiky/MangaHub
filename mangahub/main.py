@@ -1,16 +1,23 @@
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
 from gui import MainWindow
-from gui.utils import MessageManager
+from gui.gui_utils import MessageManager
 from services.parsers import MangaJsonParser, SitesJsonParser, UrlParser
 from controllers import MangaManager
 from directories import *
 from utils import retry
+import ctypes
+import sys
 
 
     
 class App:
     def __init__(self):
-        self.gui_app = QApplication([])
+        myappid = 'none.mangahub.none.0.1.0' # arbitrary string
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        
+        self.gui_app = QApplication(sys.argv)
+        self.gui_app.setWindowIcon(QIcon("resources/app_icon.ico"))
         self.gui_window = MainWindow(self)
         self.mm = MessageManager(self)
 
@@ -23,7 +30,7 @@ class App:
         self.gui_window.showMaximized()
         self.gui_window.init()
         
-        self.mm.show_message('info', os.getcwd())
+        self.mm.show_message('info', f"Working directory: os.getcwd()", 7000)
         self.gui_app.exec()
 
 

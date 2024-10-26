@@ -4,21 +4,10 @@ from services.scrapers import MangaSiteScraper
 from models import Manga, MangaChapter
 from utils import BatchWorker
 from directories import *
+from gui.gui_utils import MessageManager
 import requests
 import os
 
-class ImageDownloader(QObject):
-    def __init__(self):
-        super().__init__()
-        self.images = []
-        self.received_count = 0
-        self.expected_count = 0
-        
-    def handle_result(self, response):
-        if response and hasattr(response, 'content'):
-            self.images.append(response.content)
-            self.received_count += 1
-            print(f"Added image {self.received_count}/{self.expected_count}")
             
 class MangaManager:
     def __init__(self, app):
@@ -47,6 +36,7 @@ class MangaManager:
             "limit": 1
         }
         response = requests.get(url, params=params)
+        MessageManager.get_instance().show_message('error', f"Manga {name} not found")
         response.raise_for_status()
         
         data = response.json()
@@ -60,6 +50,7 @@ class MangaManager:
         params = {
             "manga": manga_id,
             "translatedLanguage[]": language,
+            "chapter": num,
             "limit": 1
         }
         
@@ -95,8 +86,10 @@ class MangaManager:
         images = []
         
         worker = BatchWorker()
-        worker.signals.item_completed.connect(lambda response: images.append(response.content))
-        worker.process_batch(requests.get, image_urls)
+        worker.signals.all_completed.connect(lambda _: MessageManager.get_instance().show_message('info', 'Images downloaded'))
+        
+        for image in worker.process_batch(requests.get, image_urls):
+            images.append(image.content)
                 
         return images
 

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QWidget, QToolBar, QPushButton, QLabel, QLineEdit, QScrollArea
 )
 from PySide6.QtCore import Qt, QTimer, QPoint
-from PySide6.QtGui import QAction, QPixmap, QImage, QCursor, QIcon
+from PySide6.QtGui import QAction, QPixmap, QImage, QCursor, QIcon, QImageReader
 from PySide6.QtSvgWidgets import QSvgWidget
 
 from .multi_window.add_manga import AddMangaWindow
@@ -17,7 +17,10 @@ from services.scrapers import MangaSiteScraper
 from controllers import MangaManager
 from models import Manga
 from directories import *
+from utils import BatchWorker
+import time
 import os
+
 
 
 
@@ -27,13 +30,11 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.app = app
 
-        # set up the main window
-        self.setWindowTitle("Manga Manager")
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setWindowTitle("MangaHub")
         self.setMinimumSize(1200, 800)
-        # self.setWindowIcon(PySide6.QtGui.QIcon("mangamanager/resources/mangamanager.png"))
+        self.setWindowIcon(QIcon("resources/app_icon.ico"))
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
-        # set up multi window
         self.settings_window = SettingsWindow()
         self.add_manga_window = AddMangaWindow()
         
@@ -41,6 +42,17 @@ class MainWindow(QMainWindow):
 
 
         # TAB 0
+        l = QVBoxLayout()
+        ll = QLabel()
+        ll.setPixmap(QPixmap(f"{MANGA_DIR}/nano-machine/cover.jpg").scaledToWidth(400, Qt.TransformationMode.SmoothTransformation))
+        l.addWidget(ll)
+        self.manga1_button = QPushButton("Nano Machine")
+        self.manga1_button.setFixedSize(400, 700)
+        self.manga1_button.setLayout(l)
+        self.manga1_button.clicked.connect(lambda: self.show_manga('Nano Machine', 230))
+        self.manga2_button = QPushButton("Regressor Instruction Manual")
+        self.manga2_button.clicked.connect(lambda: self.show_manga('Regressor Instruction Manual', 1))
+        
         # add manga
         self.add_manga_button = QPushButton("Add Manga")
         self.add_manga_button.setFixedWidth(100)
@@ -61,6 +73,8 @@ class MainWindow(QMainWindow):
         manga_page_layout.addWidget(lb)
         manga_page_layout.addWidget(bt)
         manga_page_layout.addWidget(QLabel("Manga Manager"))
+        manga_page_layout.addWidget(self.manga1_button)
+        manga_page_layout.addWidget(self.manga2_button)
         manga_page_layout.addWidget(self.add_manga_button)
 
         manga_page_widget = QWidget()
@@ -114,13 +128,9 @@ class MainWindow(QMainWindow):
         
     def init(self):
         self.manager: MangaManager = self.app.manga_manager
-        # for image in self.manager.get_new_chapter(self.manager.get_manga_from_url('https://asuracomic.net/series/nano-machine-114281f9/chapter/229'), 230):
-        #     self.manga_viewer.add_image(image)
         
-        for image in self.manager.get_manga_chapter_images('nano-machine', 229):
-            self.manga_viewer.add_image(image)
-            
-        self.add_manga_button.clicked.connect(lambda: self.app.mm.show_message('info', "Creating manga"))
+    def show_manga(self, manga_title, num):
+        self.manga_viewer.add_images(self.manager.get_manga_chapter_images(manga_title, num))
 
     def open_settings(self):
         self.settings_is_opened ^= 1
