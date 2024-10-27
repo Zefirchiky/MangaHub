@@ -79,22 +79,13 @@ class MangaManager:
         
         return image_urls
     
-    def get_chapter_images(self, chapter: MangaChapter):
-        self.dex = MangaDexScraper()
-        images = self.dex.get_chapter_images(chapter._id_dex)
-        # images = []
-        # manga_id = self.get_manga_id_from_manga_dex(manga_title)
-        # if not manga_id:
-        #     return None
-        
-        # chapter_id = self.get_chapter_id(num, manga_id)
-        # image_urls = self.get_chapter_images_url(chapter_id)
-        
-        # worker = BatchWorker()
-        # worker.signals.all_completed.connect(lambda _: MM.show_message('info', 'Images downloaded'))
-        
-        # for image in worker.process_batch(requests.get, image_urls):
-        #     images.append(image.content)
+    def get_chapter_images(self, chapter: MangaChapter, manga_title, manga_dex=True):
+        if manga_dex:
+            self.scraper = MangaDexScraper()
+            images = self.scraper.get_chapter_images(chapter._id_dex)
+        else:
+            self.scraper = MangaSiteScraper(self.sites_parser, self.manga_parser.get_manga(manga_title))
+            images = self.scraper.get_chapter_images(chapter.number)
                             
         return images
 

@@ -1,6 +1,7 @@
 from gui.gui_utils import MM
 from utils import BatchWorker
 from typing import Any
+from utils import convert_to_format
 import requests
 
 
@@ -72,7 +73,7 @@ class MangaDexScraper:
         data = self.get_chapter_data(manga_id, num, limit=limit, language=language)
         return data["id"]
     
-    def get_chapter_images_url(self, chapter_id, data_saver=1) -> list[str]:
+    def get_chapter_image_urls(self, chapter_id, data_saver=1) -> list[str]:
         response = requests.get(f"{self.chapters_url}/{chapter_id}")
         response.raise_for_status()
         data = response.json()
@@ -90,7 +91,7 @@ class MangaDexScraper:
         return images_url
     
     def get_chapter_images(self, chapter_id, data_saver=1) -> list[bytes]:
-        image_urls = self.get_chapter_images_url(chapter_id, data_saver)
+        image_urls = self.get_chapter_image_urls(chapter_id, data_saver)
         images = []
         
         worker = BatchWorker()

@@ -53,7 +53,7 @@ class Worker(QRunnable):
 class BatchWorker(QObject):
     def __init__(self):
         super().__init__()
-        self.threadpool = QThreadPool()
+        self.threadpool = QThreadPool().globalInstance()
         self.signals = BatchWorkerSignals()
         self._workers = []
         self._results = []
@@ -80,7 +80,7 @@ class BatchWorker(QObject):
             num, result = result
             self.processed_items += 1
             self._results[num] = result
-            self.signals.item_completed.emit(result)
+            self.signals.item_completed.emit((num, result))
             self.signals.progress.emit(int(self.processed_items / total_items * 100))
             
             # Check if all items are processed

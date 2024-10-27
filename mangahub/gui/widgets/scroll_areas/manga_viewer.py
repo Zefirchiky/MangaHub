@@ -1,8 +1,10 @@
 from PySide6.QtWidgets import QGraphicsPixmapItem
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QImage
 from .smooth_graphics_view import SmoothGraphicsView
 from gui.gui_utils import MM
+from utils import BatchWorker, convert_to_format
+import io
 
 
 class MangaViewer(SmoothGraphicsView):
@@ -17,14 +19,11 @@ class MangaViewer(SmoothGraphicsView):
         self.scale(self._current_scale, self._current_scale)
 
     def add_images(self, image_bytes_list):
+        worker = BatchWorker()
+        pixmap_list = worker.process_batch(self.get_pixmap, image_bytes_list)
+        
         current_y = 0
-
-        for image_bytes in image_bytes_list:
-            pixmap = QPixmap()
-            if not pixmap.loadFromData(image_bytes):
-                MM.show_message('error', 'Failed to load image')
-                continue
-
+        for pixmap in pixmap_list:
             viewport_width = self.viewport().width()
             image_x = (viewport_width - pixmap.width()) / 2
 
@@ -36,6 +35,14 @@ class MangaViewer(SmoothGraphicsView):
             current_y += pixmap.height() + self._vertical_spacing
 
         self.scene.setSceneRect(self.scene.itemsBoundingRect())
+        
+    def get_pixmap(self, image_bytes):
+        image_bytes = convert_to_format(image_bytes)
+        image = QImage()
+        if not image.loadFromData(image_bytes):
+            MM.show_message('error', 'Failed to load image')
+            return 
+        return QPixmap.fromImage(image)
 
     def wheelEvent(self, event):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:

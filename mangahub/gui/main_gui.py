@@ -52,8 +52,8 @@ class MainWindow(QMainWindow):
         self.manga1_button.setLayout(l)
         self.manga1_button.clicked.connect(lambda: self.show_manga('Nano Machine', 230))
         self.manga1_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.manga2_button = QPushButton("Regressor Instruction Manual")
-        self.manga2_button.clicked.connect(lambda: self.show_manga('Regressor Instruction Manual', 1))
+        self.manga2_button = QPushButton("Boundless Necromancer")
+        self.manga2_button.clicked.connect(lambda: self.show_manga('Boundless Necromancer', 1))
         
         # add manga
         self.add_manga_button = QPushButton("Add Manga")
@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
         
     def show_manga(self, manga_title, num):
         chapter = MangaChapter(num, manga_title, self.manager.get_chapter_id(num, self.manager.get_manga_id_from_manga_dex(manga_title)))
-        self.manga_viewer.add_images(self.manager.get_chapter_images(chapter))
+        self.manga_viewer.add_images(self.manager.get_chapter_images(chapter, manga_title, manga_dex=True))
 
     def open_settings(self):
         self.settings_is_opened ^= 1
