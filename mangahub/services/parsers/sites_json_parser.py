@@ -1,4 +1,5 @@
 from services.handlers import JsonHandler
+from gui.gui_utils import MM
 from models import Site
 
 class SitesJsonParser:
@@ -17,6 +18,7 @@ class SitesJsonParser:
                 self.sites[name] = site
                 return site
             except KeyError:
+                MM.show_message('error', f"Site {name} not found")
                 raise Exception(f"Site {name} not found")
 
     def get_all_sites(self) -> dict:

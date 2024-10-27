@@ -10,12 +10,13 @@ from PySide6.QtSvgWidgets import QSvgWidget
 
 from .multi_window.add_manga import AddMangaWindow
 from .multi_window.settings import SettingsWindow
+from gui.gui_utils import MM
 from .widgets.slide_menus import SideMenu, SlideMenu
 from .widgets.svg import SvgIcon
 from .widgets.scroll_areas import MangaViewer
 from services.scrapers import MangaSiteScraper
 from controllers import MangaManager
-from models import Manga
+from models import Manga, MangaChapter
 from directories import *
 from utils import BatchWorker
 import time
@@ -50,6 +51,7 @@ class MainWindow(QMainWindow):
         self.manga1_button.setFixedSize(400, 700)
         self.manga1_button.setLayout(l)
         self.manga1_button.clicked.connect(lambda: self.show_manga('Nano Machine', 230))
+        self.manga1_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.manga2_button = QPushButton("Regressor Instruction Manual")
         self.manga2_button.clicked.connect(lambda: self.show_manga('Regressor Instruction Manual', 1))
         
@@ -63,7 +65,7 @@ class MainWindow(QMainWindow):
         bt = QPushButton()
         bt.setIcon(QIcon(QPixmap(f"{ICONS_DIR}/book-outline.svg")))
         lb.setPixmap(book_svg_icon.get_pixmap('grey', 64, 64))
-        lb.setAlignment(Qt.AlignCenter)
+        lb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lb.setFixedSize(64, 64)
         lb.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
@@ -130,7 +132,8 @@ class MainWindow(QMainWindow):
         self.manager: MangaManager = self.app.manga_manager
         
     def show_manga(self, manga_title, num):
-        self.manga_viewer.add_images(self.manager.get_manga_chapter_images(manga_title, num))
+        chapter = MangaChapter(num, manga_title, self.manager.get_chapter_id(num, self.manager.get_manga_id_from_manga_dex(manga_title)))
+        self.manga_viewer.add_images(self.manager.get_chapter_images(chapter))
 
     def open_settings(self):
         self.settings_is_opened ^= 1
@@ -154,7 +157,7 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         self.side_menu.adjust_geometry()
-        self.app.mm.pos_update()
+        MM().pos_update()
 
         return super().resizeEvent(event)
     

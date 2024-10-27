@@ -1,5 +1,5 @@
-from .message_manager import MessageManager
+from .message_manager import MM
 
 __all__ = [
-    "MessageManager"
+    "MM"
 ]

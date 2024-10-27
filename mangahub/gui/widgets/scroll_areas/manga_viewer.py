@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QGraphicsPixmapItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from .smooth_graphics_view import SmoothGraphicsView
+from gui.gui_utils import MM
 
 
 class MangaViewer(SmoothGraphicsView):
@@ -21,7 +22,7 @@ class MangaViewer(SmoothGraphicsView):
         for image_bytes in image_bytes_list:
             pixmap = QPixmap()
             if not pixmap.loadFromData(image_bytes):
-                print("Error loading image from bytes")
+                MM.show_message('error', 'Failed to load image')
                 continue
 
             viewport_width = self.viewport().width()

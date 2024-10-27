@@ -1,10 +1,10 @@
-from PySide6.QtCore import QObject
+from directories import *
+from gui.gui_utils import MM
 from services.parsers import MangaJsonParser, SitesJsonParser, UrlParser
 from services.scrapers import MangaSiteScraper
+from services.scrapers import MangaDexScraper
 from models import Manga, MangaChapter
-from utils import BatchWorker
-from directories import *
-from gui.gui_utils import MessageManager
+from utils import BatchWorker, retry
 import requests
 import os
 
@@ -12,22 +12,26 @@ import os
 class MangaManager:
     def __init__(self, app):
         self.app = app
-        self.manga_parser = self.app.manga_json_parser
-        self.sites_parser = self.app.sites_json_parser
+        self.manga_parser: MangaJsonParser = self.app.manga_json_parser
+        self.sites_parser: SitesJsonParser = self.app.sites_json_parser
 
         self.manga = self.get_all_manga()
         
-    def get_manga(self, name, manga_dex=True):
+    @retry(max_retries=3, delay=1, exception_to_check=Exception)
+    def get_manga(self, name):
         if name in self.manga.keys():
             return self.manga[name]
         else:
+            MM.show_message('error', f"Manga {name} not found")
             raise Exception(f"Manga {name} not found")
-        
+    
+    @retry(max_retries=3, delay=1, exception_to_check=Exception)
     def get_chapter(self, manga, num):
         if num in manga.chapters.keys():
             return manga.chapters[num]
         else:
-            self.app.mm.show_message('error', f"Chapter {num} not found")
+            MM.show_message('error', f"Chapter {num} not found")
+            raise Exception(f"Chapter {num} not found")
         
     def get_manga_id_from_manga_dex(self, name):
         url = "https://api.mangadex.org/manga"
@@ -36,7 +40,6 @@ class MangaManager:
             "limit": 1
         }
         response = requests.get(url, params=params)
-        MessageManager.get_instance().show_message('error', f"Manga {name} not found")
         response.raise_for_status()
         
         data = response.json()
@@ -76,21 +79,23 @@ class MangaManager:
         
         return image_urls
     
-    def get_manga_chapter_images(self, manga_title, num):
-        manga_id = self.get_manga_id_from_manga_dex(manga_title)
-        if not manga_id:
-            return None
+    def get_chapter_images(self, chapter: MangaChapter):
+        self.dex = MangaDexScraper()
+        images = self.dex.get_chapter_images(chapter._id_dex)
+        # images = []
+        # manga_id = self.get_manga_id_from_manga_dex(manga_title)
+        # if not manga_id:
+        #     return None
         
-        chapter_id = self.get_chapter_id(num, manga_id)
-        image_urls = self.get_chapter_images_url(chapter_id)
-        images = []
+        # chapter_id = self.get_chapter_id(num, manga_id)
+        # image_urls = self.get_chapter_images_url(chapter_id)
         
-        worker = BatchWorker()
-        worker.signals.all_completed.connect(lambda _: MessageManager.get_instance().show_message('info', 'Images downloaded'))
+        # worker = BatchWorker()
+        # worker.signals.all_completed.connect(lambda _: MM.show_message('info', 'Images downloaded'))
         
-        for image in worker.process_batch(requests.get, image_urls):
-            images.append(image.content)
-                
+        # for image in worker.process_batch(requests.get, image_urls):
+        #     images.append(image.content)
+                            
         return images
 
     def get_manga_from_url(self, url):

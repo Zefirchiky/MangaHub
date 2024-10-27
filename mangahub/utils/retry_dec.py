@@ -1,6 +1,5 @@
-import time
 from functools import wraps
-from gui.gui_utils import MessageManager
+from gui.gui_utils import MM
 
 def retry(max_retries=5, delay=1, exception_to_check=Exception):
     """
@@ -18,11 +17,11 @@ def retry(max_retries=5, delay=1, exception_to_check=Exception):
                     return func(*args, **kwargs)
                 except exception_to_check as e:
                     retries += 1
-                    MessageManager.get_instance().show_message(
+                    MM.show_message(
                         'info', f"Attempt {retries}/{max_retries} failed: {str(e)}", duration=2000
                     )
 
-            MessageManager.get_instance().show_message(
+            MM.show_message(
                 'error', f"Function {func.__name__} failed after {max_retries} attempts.", duration=5000
             )
             return None

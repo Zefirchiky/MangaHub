@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 
+from gui.gui_utils import MM
 from services.parsers import SitesJsonParser, UrlParser
 from models import Manga
 
@@ -19,6 +20,7 @@ class MangaSiteScraper:
         if self.url_parser:
             self.site = self.url_parser.get_site()
             if not self.site:
+                MM.show_message('error', "Site not found")
                 raise Exception("Site not found")
 
     def get_title_page(self) -> requests.Response | BeautifulSoup:
@@ -29,11 +31,13 @@ class MangaSiteScraper:
 
                 return self.get_bs_from_url(url)
 
+            MM.show_message('error', f"No site for the {self.manga.name} available")
             raise Exception(f"No site for the {self.manga.name} available")
         
         elif self.url_parser:                
             return self.get_bs_from_url(self.url_parser.url)
 
+        MM.show_message('error', "Manga or url not found")
         raise Exception("Manga or url not found")      
     
     def get_manga_cover(self) -> bytes:
@@ -41,7 +45,6 @@ class MangaSiteScraper:
             self.title_page = self.get_title_page()
     
         cover = self.title_page.find('img', class_=self.site.title_page['cover_html_class'])
-        print(cover)
         img_data = requests.get(cover.get('src')).content
 
         return img_data
@@ -65,8 +68,10 @@ class MangaSiteScraper:
 
                 return self.get_bs_from_url(url)
             
+            MM.show_message('error', f"No site for the {self.manga.name} available")
             raise Exception(f"No site for the {self.manga.name} available")
             
+        MM.show_message('error', "No manga found")
         raise Exception("No manga found")
     
     def get_chapter_name(self, num) -> str:
@@ -90,5 +95,6 @@ class MangaSiteScraper:
         try:
             response = requests.get(url)
         except requests.exceptions.RequestException as e:
+            MM.show_message('error', str(e), 5000)
             raise Exception(e)
         return BeautifulSoup(response.text, 'html.parser')

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
 from gui import MainWindow
-from gui.gui_utils import MessageManager
+from gui.gui_utils import MM
 from services.parsers import MangaJsonParser, SitesJsonParser, UrlParser
 from controllers import MangaManager
 from directories import *
@@ -19,7 +19,7 @@ class App:
         self.gui_app = QApplication(sys.argv)
         self.gui_app.setWindowIcon(QIcon("resources/app_icon.ico"))
         self.gui_window = MainWindow(self)
-        self.mm = MessageManager(self)
+        self.mm = MM(self)
 
         self.manga_json_parser = MangaJsonParser(MANGA_JSON)
         self.sites_json_parser = SitesJsonParser(SITES_JSON)
@@ -30,7 +30,9 @@ class App:
         self.gui_window.showMaximized()
         self.gui_window.init()
         
-        self.mm.show_message('info', f"Working directory: os.getcwd()", 7000)
+        MM.show_message('info', f"Working directory: \n{os.getcwd()}", 7000)
+        MM.show_message('error', f"Manga One Piece not found")
+        
         self.gui_app.exec()
 
 

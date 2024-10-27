@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QVBoxLayout,
+    QHBoxLayout,
     QFrame,
     QLabel
 )
@@ -17,13 +17,17 @@ class Message(QFrame):
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFixedWidth(width)
         self.setMinimumHeight(min_height)
-
-        self.label = QLabel(f"{message_type.capitalize()}: {message}")
+        
+        self.label = QLabel(f"{message}")
         self.label.setStyleSheet("border: none; background-color: transparent;")
         self.label.setWordWrap(True)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        root_layout = QVBoxLayout()
+        self.type_label = QLabel(f"{message_type.upper()}", self.label)
+        self.type_label.setStyleSheet("border: none; background-color: transparent; font-size: 10px;")
+        self.type_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+
+        root_layout = QHBoxLayout()
         root_layout.addWidget(self.label)
 
         self.setLayout(root_layout)
@@ -69,33 +73,40 @@ class Message(QFrame):
             """)  # Default gray message
         
 
-class MessageManager:
+class MM:
     _instance = None
     
-    @staticmethod
-    def get_instance():
-        if MessageManager._instance is None:
-            raise Exception("MessageManager has not been initialized!")
-        return MessageManager._instance
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            # Only create a new instance if one doesn't exist and app is provided
+            if args or 'app' in kwargs:
+                cls._instance = super().__new__(cls)
+            else:
+                raise Exception("First MM instantiation requires 'app' parameter!")
+        return cls._instance
     
-    def __init__(self, app, width=400):
-        if MessageManager._instance is not None:
-            raise Exception("This class is a singleton!")
-        else:
-            MessageManager._instance = self
+    def __init__(self, app=None, width=400):
+        # Only initialize if this is a new instance
+        if not hasattr(self, 'initialized'):
+            self.initialized = True
+            self.app = app
+            self.window = app.gui_window
             
-        self.app = app
-        self.window = app.gui_window
-        
-        self.width = width
-        self.min_height = 40
-        self.x = self.window.width() - self.width - 10
-        
-        self.active_messages = []
-        self.move_anim_group = {}
-        self.destroy_anim_group = {}
-
-    def show_message(self, message_type='error', message_text=None, duration=3000):
+            self.width = width
+            self.min_height = 40
+            self.x = self.window.width() - self.width - 10
+            
+            self.active_messages = []
+            self.move_anim_group = {}
+            self.destroy_anim_group = {}
+    
+    @classmethod
+    def show_message(cls, message_type='error', message_text=None, duration=5000):
+        if cls._instance is None:
+            raise Exception("MessageManager has not been initialized!")
+        return cls._instance._show_message(message_type, message_text, duration)
+    
+    def _show_message(self, message_type='error', message_text=None, duration=5000):
         message = Message(self.window, message_type, message_text, self.width, self.min_height)
         message.setGeometry(self.x, self.window.height(), message.width(), message.height())
         message.show()
