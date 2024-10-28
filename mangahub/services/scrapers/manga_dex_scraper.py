@@ -2,7 +2,9 @@ from gui.gui_utils import MM
 from utils import BatchWorker
 from typing import Any
 from utils import convert_to_format
+from PIL import Image
 import requests
+import io
 
 
 class MangaDexScraper:
@@ -41,6 +43,18 @@ class MangaDexScraper:
     def get_manga_id(self, name):
         data = self.get_manga_data(name)
         return data["id"]
+    
+    def get_manga_cover_id(self, name):
+        data = self.get_manga_data(name)
+        return data["relationships"][0]["id"]
+    
+    def get_manga_cover(self, name):
+        manga_cover_id = self.get_manga_cover_id(name)
+        manga_id = self.get_manga_id(name)
+        response = requests.get(f"{self.cover_url}/{manga_id}/{manga_cover_id}")
+        response.raise_for_status()
+        image = Image.open(io.BytesIO(response.content))
+        return convert_to_format(image)
         
     def get_chapter_data(self, manga_id, num, limit=1, language="en"):
         if not self.chapters_data.get(manga_id):
@@ -85,22 +99,31 @@ class MangaDexScraper:
         base_url = data["baseUrl"]
         _hash = chapter_data["hash"]
         image_ids = chapter_data["dataSaver" if data_saver else "data"]
-            
-        images_url = [f"{base_url}/{"data-saver" if data_saver else "data"}/{_hash}/{image_id}" for image_id in image_ids]
-        
-        return images_url
-    
-    def get_chapter_images(self, chapter_id, data_saver=1) -> list[bytes]:
-        image_urls = self.get_chapter_image_urls(chapter_id, data_saver)
-        images = []
         
         worker = BatchWorker()
-        worker.signals.all_completed.connect(lambda _: MM.show_message('success', 'Images downloaded'))
+        image_urls = worker.process_batch(lambda x: f"{base_url}/data-saver/{_hash}/{x}", image_ids, blocking=True)
+                    
+        return image_urls
+    
+    def get_image_size(self, url):
+        headers = {"Range": "bytes=0-1023"}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
         
-        for image in worker.process_batch(requests.get, image_urls):
-            images.append(image.content)
-            
-        return images
+        image = Image.open(io.BytesIO(response.content))
+        return image.size
+
+    def get_chapter_image_placeholders(self, chapter_id, data_saver=1):
+        image_urls = self.get_chapter_image_urls(chapter_id, data_saver)
+        placeholders_worker = BatchWorker()
+        placeholders_worker.signals.all_completed.connect(lambda _: MM.show_message('info', "Image sizes downloaded"))
+        return list(placeholders_worker.process_batch(self.get_image_size, image_urls, blocking=True))
+    
+    def start_chapter_images_download(self, chapter_id, data_saver=1):
+        image_urls = self.get_chapter_image_urls(chapter_id, data_saver)
+        images_worker = BatchWorker()
+        images_worker.process_batch(requests.get, image_urls, blocking=False)
+        return images_worker
     
     def get_manga_chapter_images(self, manga_name, num, limit=1, data_saver=1, language="en") -> list[bytes]:
         manga_id = self.get_manga_id(manga_name)

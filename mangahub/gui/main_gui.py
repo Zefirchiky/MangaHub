@@ -1,12 +1,10 @@
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow,
-    QVBoxLayout, QHBoxLayout, QStackedLayout, 
-    QSizePolicy,
-    QWidget, QToolBar, QPushButton, QLabel, QLineEdit, QScrollArea
+    QMainWindow,
+    QVBoxLayout, QStackedLayout, 
+    QWidget, QPushButton, QLabel
 )
 from PySide6.QtCore import Qt, QTimer, QPoint
-from PySide6.QtGui import QAction, QPixmap, QImage, QCursor, QIcon, QImageReader
-from PySide6.QtSvgWidgets import QSvgWidget
+from PySide6.QtGui import QPixmap, QCursor, QIcon
 
 from .multi_window.add_manga import AddMangaWindow
 from .multi_window.settings import SettingsWindow
@@ -14,16 +12,9 @@ from gui.gui_utils import MM
 from .widgets.slide_menus import SideMenu, SlideMenu
 from .widgets.svg import SvgIcon
 from .widgets.scroll_areas import MangaViewer
-from services.scrapers import MangaSiteScraper
 from controllers import MangaManager
-from models import Manga, MangaChapter
+from models import MangaChapter
 from directories import *
-from utils import BatchWorker
-import time
-import os
-
-
-
 
 
 class MainWindow(QMainWindow):
@@ -43,17 +34,21 @@ class MainWindow(QMainWindow):
 
 
         # TAB 0
-        l = QVBoxLayout()
-        ll = QLabel()
-        ll.setPixmap(QPixmap(f"{MANGA_DIR}/nano-machine/cover.jpg").scaledToWidth(400, Qt.TransformationMode.SmoothTransformation))
-        l.addWidget(ll)
-        self.manga1_button = QPushButton("Nano Machine")
-        self.manga1_button.setFixedSize(400, 700)
-        self.manga1_button.setLayout(l)
-        self.manga1_button.clicked.connect(lambda: self.show_manga('Nano Machine', 230))
-        self.manga1_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.manga2_button = QPushButton("Boundless Necromancer")
-        self.manga2_button.clicked.connect(lambda: self.show_manga('Boundless Necromancer', 1))
+        # Create manga button for Nano Machine
+        nano_layout = QVBoxLayout()
+        nano_cover = QLabel()
+        nano_cover.setPixmap(QPixmap(f"{MANGA_DIR}/nano-machine/cover.jpg").scaledToWidth(400, Qt.TransformationMode.SmoothTransformation))
+        nano_layout.addWidget(nano_cover)
+        
+        self.nano_button = QPushButton("Nano Machine") 
+        self.nano_button.setFixedSize(400, 700)
+        self.nano_button.setLayout(nano_layout)
+        self.nano_button.clicked.connect(lambda: self.show_manga('Nano Machine', 230))
+        self.nano_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        # Create manga button for Boundless Necromancer
+        self.boundless_button = QPushButton("Boundless Necromancer")
+        self.boundless_button.clicked.connect(lambda: self.show_manga('Boundless Necromancer', 1))
         
         # add manga
         self.add_manga_button = QPushButton("Add Manga")
@@ -75,8 +70,8 @@ class MainWindow(QMainWindow):
         manga_page_layout.addWidget(lb)
         manga_page_layout.addWidget(bt)
         manga_page_layout.addWidget(QLabel("Manga Manager"))
-        manga_page_layout.addWidget(self.manga1_button)
-        manga_page_layout.addWidget(self.manga2_button)
+        manga_page_layout.addWidget(self.nano_button)
+        manga_page_layout.addWidget(self.boundless_button)
         manga_page_layout.addWidget(self.add_manga_button)
 
         manga_page_widget = QWidget()
@@ -132,8 +127,17 @@ class MainWindow(QMainWindow):
         self.manager: MangaManager = self.app.manga_manager
         
     def show_manga(self, manga_title, num):
-        chapter = MangaChapter(num, manga_title, self.manager.get_chapter_id(num, self.manager.get_manga_id_from_manga_dex(manga_title)))
-        self.manga_viewer.add_images(self.manager.get_chapter_images(chapter, manga_title, manga_dex=True))
+        chapter = MangaChapter(num, manga_title, _id_dex=self.manager.get_chapter_id(num, self.manager.get_manga_id_from_manga_dex(manga_title)))
+        placeholders, worker = self.manager.get_chapter_images(chapter, manga_title, manga_dex=True)
+    
+        # Create placeholders at each y-level based on sizes
+        current_y = 0
+        for width, height in placeholders:
+            self.manga_viewer.add_placeholder(width, height, current_y)
+            current_y += height + self.manga_viewer._vertical_spacing
+        
+        # Display each image as it downloads, replacing placeholders
+        worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
 
     def open_settings(self):
         self.settings_is_opened ^= 1

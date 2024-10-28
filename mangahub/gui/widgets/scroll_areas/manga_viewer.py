@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QGraphicsPixmapItem
+from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtGui import QPixmap, QImage, QColor
 from .smooth_graphics_view import SmoothGraphicsView
 from gui.gui_utils import MM
 from utils import BatchWorker, convert_to_format
@@ -16,33 +16,33 @@ class MangaViewer(SmoothGraphicsView):
         self._current_scale = 0.7
         self._zoom_factor = 1.1
         
+        self._placeholders = []
+        
+        self.scale_multiplier = self._current_scale
         self.scale(self._current_scale, self._current_scale)
 
-    def add_images(self, image_bytes_list):
-        worker = BatchWorker()
-        pixmap_list = worker.process_batch(self.get_pixmap, image_bytes_list)
-        
-        current_y = 0
-        for pixmap in pixmap_list:
-            viewport_width = self.viewport().width()
-            image_x = (viewport_width - pixmap.width()) / 2
+    def add_placeholder(self, width, height, y_pos):
+        placeholder = QGraphicsRectItem((0 - width) // 2, y_pos, width, height)
+        placeholder.setBrush(QColor(200, 200, 200, 50))  # Light grey placeholder
+        self.scene.addItem(placeholder)
+        self._placeholders.append(placeholder)
 
+    def replace_placeholder(self, index, image_data):
+        if index >= len(self._placeholders):
+            return
+
+        # Remove the placeholder
+        placeholder = self._placeholders[index]
+        self.scene.removeItem(placeholder)
+        self._placeholders[index] = None  # Optional: mark as replaced
+
+        # Add the actual image in its place
+        pixmap = QPixmap()
+        if pixmap.loadFromData(image_data):
             item = QGraphicsPixmapItem(pixmap)
             item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-            item.setPos(image_x, current_y)
+            item.setPos(placeholder.rect().x(), placeholder.rect().y())
             self.scene.addItem(item)
-            self._image_items.append(item)
-            current_y += pixmap.height() + self._vertical_spacing
-
-        self.scene.setSceneRect(self.scene.itemsBoundingRect())
-        
-    def get_pixmap(self, image_bytes):
-        image_bytes = convert_to_format(image_bytes)
-        image = QImage()
-        if not image.loadFromData(image_bytes):
-            MM.show_message('error', 'Failed to load image')
-            return 
-        return QPixmap.fromImage(image)
 
     def wheelEvent(self, event):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:

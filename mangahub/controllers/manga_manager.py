@@ -14,24 +14,36 @@ class MangaManager:
         self.app = app
         self.manga_parser: MangaJsonParser = self.app.manga_json_parser
         self.sites_parser: SitesJsonParser = self.app.sites_json_parser
-
-        self.manga = self.get_all_manga()
+        self.dex_scraper = MangaDexScraper()
+        self.sites_scraper = MangaSiteScraper(self.sites_parser)
+        self.manga_collection = self.get_all_manga()
         
     @retry(max_retries=3, delay=1, exception_to_check=Exception)
     def get_manga(self, name):
-        if name in self.manga.keys():
-            return self.manga[name]
-        else:
+        manga = self.manga_collection.get(name)
+        if not manga:
             MM.show_message('error', f"Manga {name} not found")
-            raise Exception(f"Manga {name} not found")
+            return None
+        return manga
+    
+    def add_new_manga(self, manga: Manga):
+        self.manga_collection[manga.name] = manga
+        
+    def create_manga(self, name, manga_dex=True):
+        _id = name.lower().replace(' ', '-')
+        cover = self.dex_scraper.get_manga_cover(_id_dex)
+        _id_dex = self.get_manga_id_from_manga_dex(name) if manga_dex else None
+        manga = Manga(name, _id, _id_dex=_id_dex)
+        self.add_new_manga(manga)
+        return manga
     
     @retry(max_retries=3, delay=1, exception_to_check=Exception)
     def get_chapter(self, manga, num):
-        if num in manga.chapters.keys():
-            return manga.chapters[num]
-        else:
-            MM.show_message('error', f"Chapter {num} not found")
-            raise Exception(f"Chapter {num} not found")
+        chapter = manga.chapters[num]
+        if not chapter:
+            MM.show_message('error', f"Chapter {manga.name} {num} not found")
+            return None
+        return chapter
         
     def get_manga_id_from_manga_dex(self, name):
         url = "https://api.mangadex.org/manga"
@@ -82,7 +94,7 @@ class MangaManager:
     def get_chapter_images(self, chapter: MangaChapter, manga_title, manga_dex=True):
         if manga_dex:
             self.scraper = MangaDexScraper()
-            images = self.scraper.get_chapter_images(chapter._id_dex)
+            images = self.scraper.get_chapter_image_placeholders(chapter._id_dex), self.scraper.start_chapter_images_download(chapter._id_dex)
         else:
             self.scraper = MangaSiteScraper(self.sites_parser, self.manga_parser.get_manga(manga_title))
             images = self.scraper.get_chapter_images(chapter.number)
