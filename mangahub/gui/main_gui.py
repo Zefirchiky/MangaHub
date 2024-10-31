@@ -11,7 +11,7 @@ from .multi_window.settings import SettingsWindow
 from gui.gui_utils import MM
 from .widgets.slide_menus import SideMenu, SlideMenu
 from .widgets.svg import SvgIcon
-from .widgets.scroll_areas import MangaViewer
+from .widgets.scroll_areas import MangaViewer, MangaDashboard
 from controllers import MangaManager
 from models import MangaChapter
 from directories import *
@@ -80,22 +80,25 @@ class MainWindow(QMainWindow):
         # TAB 1
         self.manga_viewer = MangaViewer()
 
-
         # manga reader
-        manga_reader_layout = QVBoxLayout()
-        manga_reader_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        manga_reader_layout.addWidget(self.manga_viewer)
+        # manga_reader_layout = QVBoxLayout()
+        # manga_reader_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # manga_reader_layout.addWidget(self.manga_viewer)
 
-        manga_reader_widget = QWidget()
-        manga_reader_widget.setLayout(manga_reader_layout)
+        # manga_reader_widget = QWidget()
+        # manga_reader_widget.setLayout(manga_reader_layout)
+        
+        # TAB 3
+        # manga dashboard
+        self.manga_dashboard = MangaDashboard()
 
         # root layout
-        root_layout = QStackedLayout()
-        root_layout.insertWidget(0, manga_page_widget)
-        root_layout.insertWidget(1, manga_reader_widget)
-
+        self.root_layout = QStackedLayout()
+        self.root_layout.insertWidget(0, manga_page_widget)
+        self.root_layout.insertWidget(1, self.manga_viewer)
+        self.root_layout.insertWidget(2, self.manga_dashboard)
         root = QWidget()
-        root.setLayout(root_layout)
+        root.setLayout(self.root_layout)
 
         self.setCentralWidget(root)
 
@@ -107,10 +110,10 @@ class MainWindow(QMainWindow):
         airplane_svg_icon = SvgIcon(f"{ICONS_DIR}/airplane-outline.svg")
 
         self.side_menu = SideMenu(self)
-        self.side_menu.add_button(lambda: root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
-        self.side_menu.add_button(lambda: root_layout.setCurrentIndex(1), map_svg_icon, "Map")
-        self.side_menu.add_button(lambda: root_layout.setCurrentIndex(1), add_svg_icon, "Add")
-        self.side_menu.add_button(lambda: root_layout.setCurrentIndex(1), airplane_svg_icon, "Airplane")
+        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
+        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(1), map_svg_icon, "Map")
+        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(2), add_svg_icon, "Add")
+        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(1), airplane_svg_icon, "Airplane")
 
         self.side_menu.set_settings_function(self.open_settings)
 
@@ -125,9 +128,23 @@ class MainWindow(QMainWindow):
         
     def init(self):
         self.manager: MangaManager = self.app.manga_manager
+        # manga = self.manager.create_manga("Boundless Necromancer")
+        # manga_ = self.manager.create_manga("Nano Machine")
+        # manga__ = self.manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
+        bn = self.manga_dashboard.add_manga(self.manager.get_manga("Boundless Necromancer"))
+        bn.chapter_clicked.connect(lambda n: self.show_manga("Boundless Necromancer", n))
+        it = self.manga_dashboard.add_manga(self.manager.get_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!"))
+        it.chapter_clicked.connect(lambda n: self.show_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!", n))
+        nm = self.manga_dashboard.add_manga(self.manager.get_manga("Nano Machine"))
+        nm.chapter_clicked.connect(lambda n: self.show_manga("Nano Machine", n))
         
     def show_manga(self, manga_title, num):
-        chapter = MangaChapter(num, manga_title, _id_dex=self.manager.get_chapter_id(num, self.manager.get_manga_id_from_manga_dex(manga_title)))
+        self.root_layout.removeWidget(self.manga_viewer)
+        self.manga_viewer = MangaViewer()
+        self.root_layout.insertWidget(1, self.manga_viewer)
+        
+        manga = self.manager.get_manga(manga_title)
+        chapter = self.manager.get_chapter(manga, num)
         placeholders, worker = self.manager.get_chapter_images(chapter, manga_title, manga_dex=True)
     
         # Create placeholders at each y-level based on sizes
@@ -152,9 +169,9 @@ class MainWindow(QMainWindow):
     def check_mouse_position(self):
         cursor_pos = QCursor.pos()
         window_pos = self.mapToGlobal(QPoint(0, 0))
-        if 0 <= cursor_pos.x() - window_pos.x() <= self.side_menu._width + 40:
+        if 0 <= cursor_pos.x() - window_pos.x() <= self.side_menu._width - 40:
             self.side_menu.show_menu()
-        elif self.side_menu._width + 40 < cursor_pos.x() - window_pos.x() <= self.side_menu._width + 340:
+        elif self.side_menu._width + 40 < cursor_pos.x() - window_pos.x() <= self.side_menu._width + 400:
             self.side_menu.show_half_menu()
         else:
             self.side_menu.hide_menu()

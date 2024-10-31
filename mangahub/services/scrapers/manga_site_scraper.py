@@ -63,7 +63,6 @@ class MangaSiteScraper:
         if self.manga:
             for _site in self.manga.sites:
                 self.site = self.sites_parser.get_site(_site)
-                print(self.manga)
                 url = UrlParser.get_chapter_page_url(self.site, self.manga, num)
 
                 return self.get_bs_from_url(url)

@@ -11,3 +11,6 @@ class SmoothScrollArea(QScrollArea, SmoothScrollMixin):
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        
+    def wheelEvent(self, event):
+        SmoothScrollMixin.wheelEvent(self, event)

@@ -11,14 +11,16 @@ from .tags.tag import Tag
 class Manga(BaseModel):
     name: str
     _id: str
+    _id_dex: str
     cover: str
+    current_chapter: Optional[int] = None
+    last_chapter: Optional[int] = None
     description: Optional[str] = None
     author: Optional[str] = None
     artist: Optional[str] = None
     status: str = "Unknown"
     year: Optional[int] = None
-    _id_dex: str = ''
-    last_updated: datetime = field(default_factory=datetime.now)
+    last_updated: str = str(datetime.now())
     sites: List[Site] = field(default_factory=list)
     chapters: Dict[int, MangaChapter] = field(default_factory=dict)
     tags: List[Tag] = field(default_factory=list)
@@ -29,7 +31,7 @@ class Manga(BaseModel):
             
     def add_chapter(self, chapter: MangaChapter) -> None:
         self.chapters[chapter.number] = chapter
-        self.last_updated = datetime.now()
+        self.last_updated = str(datetime.now())
         
     def get_chapter(self, number: int) -> Optional[MangaChapter]:
         return self.chapters.get(number)

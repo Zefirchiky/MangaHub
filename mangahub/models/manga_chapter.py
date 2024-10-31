@@ -2,17 +2,18 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional
 from datetime import datetime
 from .base_model import BaseModel
+from .chapter_image import ChapterImage
 
 
 @dataclass
 class MangaChapter(BaseModel):
     number: int
     name: str
-    upload_date: datetime = field(default_factory=datetime.now)
-    _id_dex: str = ''
-    images: Dict[int, str] = field(default_factory=dict)
+    _id_dex: str
+    upload_date: str = ''
     translator: Optional[str] = None
     language: str = 'en'
+    images: Dict[int, ChapterImage] = field(default_factory=dict)
     
     def add_image(self, num: int, image: str) -> None:
         self.images[num] = image

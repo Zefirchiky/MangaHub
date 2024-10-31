@@ -13,6 +13,7 @@ class MangaDexScraper:
         self.base_upload_url = "https://uploads.mangadex.org"
         
         self.manga_url = f"{self.base_api_url}/manga"
+        self.cover_id_url = f"{self.base_api_url}/cover"
         self.cover_url = f"{self.base_upload_url}/covers"
         self.chapter_url = f"{self.base_api_url}/chapter"
         self.chapters_url = f"{self.base_api_url}/at-home/server"
@@ -31,31 +32,62 @@ class MangaDexScraper:
 
         response = requests.get(self.manga_url, params=params)
         response.raise_for_status()
-        data = response.json()["data"][0]
-        if not data:
-            MM.show_message('error', f"Manga {name} not found")
-            raise Exception(f"Manga {name} not found")
-            
-        self.manga_data[name] = data
+        data = response.json()["data"]
+        if data:
+            manga = data[0]
+            self.manga_data[name] = manga
+            return manga
         
-        return data
+        MM.show_message('error', f"Manga {name} not found")
+        raise Exception(f"Manga {name} not found")
     
     def get_manga_id(self, name):
         data = self.get_manga_data(name)
         return data["id"]
     
-    def get_manga_cover_id(self, name):
-        data = self.get_manga_data(name)
-        return data["relationships"][0]["id"]
+    def get_manga_cover_filename(self, manga_id):
+        response = requests.get(f"{self.cover_id_url}", params={"manga[]": manga_id})
+        response.raise_for_status()
+        data = response.json()["data"][0]
+        return data["attributes"]["fileName"]
     
     def get_manga_cover(self, name):
-        manga_cover_id = self.get_manga_cover_id(name)
         manga_id = self.get_manga_id(name)
+        manga_cover_id = self.get_manga_cover_filename(manga_id)
         response = requests.get(f"{self.cover_url}/{manga_id}/{manga_cover_id}")
         response.raise_for_status()
-        image = Image.open(io.BytesIO(response.content))
-        return convert_to_format(image)
+        return convert_to_format(response.content)
+    
+    def get_all_chapters(self, manga_id, language="en"):
+        params = {
+            "translatedLanguage[]": language
+        }
         
+        response = requests.get(f"{self.manga_url}/{manga_id}/feed", params=params)
+        response.raise_for_status()
+        data = response.json()["data"]
+        return data
+    
+    def get_last_chapter_num(self, manga_id, language="en"):
+        if not self.chapters_data.get(manga_id):
+            self.chapters_data[manga_id] = {}
+            
+        params = {
+            "manga": manga_id,
+            "translatedLanguage[]": language,
+            "order[chapter]": "desc",
+            "limit": 1
+        }
+        
+        response = requests.get(self.chapter_url, params=params)
+        response.raise_for_status()
+        data = response.json()["data"][0]
+        num = int(data['attributes']['chapter'])
+        
+        self.chapters_data[manga_id][num] = data
+        
+        return num
+                
     def get_chapter_data(self, manga_id, num, limit=1, language="en"):
         if not self.chapters_data.get(manga_id):
             self.chapters_data[manga_id] = {}
@@ -67,7 +99,7 @@ class MangaDexScraper:
         params = {
             "manga": manga_id,
             "translatedLanguage[]": language,
-            "offset": num - 1,
+            "chapter": num,
             "limit": limit
         }
         
@@ -82,10 +114,17 @@ class MangaDexScraper:
         
         return data
     
-    def get_chapter_id(self, manga_name, num, limit=1, language="en"):
-        manga_id = self.get_manga_id(manga_name)
+    def get_chapter_name(self, manga_id, num):
+        data = self.get_chapter_data(manga_id, num)
+        return data["attributes"]["title"]
+    
+    def get_chapter_id(self, manga_id, num, limit=1, language="en"):
         data = self.get_chapter_data(manga_id, num, limit=limit, language=language)
         return data["id"]
+    
+    def get_chapter_upload_date(self, manga_id, num):
+        data = self.get_chapter_data(manga_id, num)
+        return data["attributes"]["publishAt"]
     
     def get_chapter_image_urls(self, chapter_id, data_saver=1) -> list[str]:
         response = requests.get(f"{self.chapters_url}/{chapter_id}")

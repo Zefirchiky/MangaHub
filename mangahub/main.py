@@ -13,7 +13,7 @@ import sys
     
 class App:
     def __init__(self):
-        myappid = 'none.mangahub.none.0.1.0' # arbitrary string
+        myappid = 'mangahub.0.1.0'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         
         self.gui_app = QApplication(sys.argv)
