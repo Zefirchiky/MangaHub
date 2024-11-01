@@ -2,8 +2,10 @@ from PySide6.QtCore import QPropertyAnimation, QEasingCurve
 
 
 class SmoothScrollMixin:   
-    def init_smooth_scroll(self):
+    def init_smooth_scroll(self, vertical=True):
         """Initialize smooth scrolling - call this in __init__"""
+        self.scroll_bar = self.verticalScrollBar() if vertical else self.horizontalScrollBar()
+        
         # Scroll state tracking
         self.prev_delta = 0
         self.accumulated_scroll = 0
@@ -14,7 +16,7 @@ class SmoothScrollMixin:
         self.step_size = 100
         self.scroll_duration = 200
         
-        self.animation = QPropertyAnimation(self.verticalScrollBar(), b"value")
+        self.animation = QPropertyAnimation(self.scroll_bar, b"value")
         self.animation.setDuration(self.scroll_duration)
         self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
                 
@@ -28,12 +30,12 @@ class SmoothScrollMixin:
         scroll_amount = -delta / 120 * self.step_size
         self.accumulated_scroll += scroll_amount * self.scale_multiplier
         
-        current_value = self.verticalScrollBar().value()
+        current_value = self.scroll_bar.value()
         target_value = current_value + self.accumulated_scroll
 
         # Ensure target is within bounds
-        max_value = self.verticalScrollBar().maximum()
-        min_value = self.verticalScrollBar().minimum()
+        max_value = self.scroll_bar.maximum()
+        min_value = self.scroll_bar.minimum()
         target_value = max(min_value, min(max_value, target_value))
 
         self.animation.stop()

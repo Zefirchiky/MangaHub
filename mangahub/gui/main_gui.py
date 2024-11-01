@@ -78,7 +78,6 @@ class MainWindow(QMainWindow):
         manga_page_widget.setLayout(manga_page_layout)
 
         # TAB 1
-        self.manga_viewer = MangaViewer()
 
         # manga reader
         # manga_reader_layout = QVBoxLayout()
@@ -90,13 +89,9 @@ class MainWindow(QMainWindow):
         
         # TAB 3
         # manga dashboard
-        self.manga_dashboard = MangaDashboard()
 
         # root layout
         self.root_layout = QStackedLayout()
-        self.root_layout.insertWidget(0, manga_page_widget)
-        self.root_layout.insertWidget(1, self.manga_viewer)
-        self.root_layout.insertWidget(2, self.manga_dashboard)
         root = QWidget()
         root.setLayout(self.root_layout)
 
@@ -117,9 +112,11 @@ class MainWindow(QMainWindow):
 
         self.side_menu.set_settings_function(self.open_settings)
 
-        self.slide_menu = SlideMenu(self)
-        self.slide_menu.adjust_geometry_with_animation(self.slide_menu.get_geometry(1700, 0, 72, 0), self.slide_menu.get_geometry(1700, 0, 100, 0))
+        # self.slide_menu = SlideMenu(self)
+        # self.slide_menu.adjust_geometry_with_animation(self.slide_menu.get_geometry(1700, 0, 72, 0), self.slide_menu.get_geometry(1700, 0, 100, 0))
 
+        self.cur_manga = ''
+        self.cur_num = 0
 
         # timer
         self.timer = QTimer()
@@ -128,9 +125,22 @@ class MainWindow(QMainWindow):
         
     def init(self):
         self.manager: MangaManager = self.app.manga_manager
+        
+        self.manga_dashboard = MangaDashboard()
+        
+        self.manga_viewer = MangaViewer()
+        self.manga_viewer.close_button.clicked.connect(lambda _: self.root_layout.setCurrentIndex(0))
+        
+        self.root_layout.insertWidget(0, self.manga_dashboard)
+        self.root_layout.insertWidget(1, self.manga_viewer)
+        # self.root_layout.insertWidget(2, manga_page_widget)
         # manga = self.manager.create_manga("Boundless Necromancer")
-        # manga_ = self.manager.create_manga("Nano Machine")
+        # self.manager.add_new_manga(manga)
+        # manga_ = self.manager.create_manga("Nano Machine", sites=["AsuraScans"])
+        # self.manager.add_new_manga(manga_)
         # manga__ = self.manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
+        # self.manager.add_new_manga(manga__)
+        
         bn = self.manga_dashboard.add_manga(self.manager.get_manga("Boundless Necromancer"))
         bn.chapter_clicked.connect(lambda n: self.show_manga("Boundless Necromancer", n))
         it = self.manga_dashboard.add_manga(self.manager.get_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!"))
@@ -139,22 +149,26 @@ class MainWindow(QMainWindow):
         nm.chapter_clicked.connect(lambda n: self.show_manga("Nano Machine", n))
         
     def show_manga(self, manga_title, num):
-        self.root_layout.removeWidget(self.manga_viewer)
-        self.manga_viewer = MangaViewer()
-        self.root_layout.insertWidget(1, self.manga_viewer)
+        if manga_title != self.cur_manga and num != self.cur_num:
+            self.manga_viewer.clear()
+            
+            manga = self.manager.get_manga(manga_title)
+            chapter = self.manager.get_chapter(manga, num)
+            placeholders, worker = self.manager.get_chapter_images(manga, chapter, manga_dex=True)
         
-        manga = self.manager.get_manga(manga_title)
-        chapter = self.manager.get_chapter(manga, num)
-        placeholders, worker = self.manager.get_chapter_images(chapter, manga_title, manga_dex=True)
-    
-        # Create placeholders at each y-level based on sizes
-        current_y = 0
-        for width, height in placeholders:
-            self.manga_viewer.add_placeholder(width, height, current_y)
-            current_y += height + self.manga_viewer._vertical_spacing
-        
-        # Display each image as it downloads, replacing placeholders
-        worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
+            # Create placeholders at each y-level based on sizes
+            current_y = 0
+            for width, height in placeholders:
+                self.manga_viewer.add_placeholder(width, height, current_y)
+                current_y += height + self.manga_viewer._vertical_spacing
+            
+            # Display each image as it downloads, replacing placeholders
+            worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
+            
+            self.cur_manga = manga_title
+            self.cur_num = num
+            
+        self.root_layout.setCurrentIndex(1)
 
     def open_settings(self):
         self.settings_is_opened ^= 1
@@ -169,8 +183,12 @@ class MainWindow(QMainWindow):
     def check_mouse_position(self):
         cursor_pos = QCursor.pos()
         window_pos = self.mapToGlobal(QPoint(0, 0))
-        if 0 <= cursor_pos.x() - window_pos.x() <= self.side_menu._width - 40:
-            self.side_menu.show_menu()
+        if 0 <= cursor_pos.x() - window_pos.x() <= self.side_menu._width + 40:
+            if self.root_layout.currentIndex() != 2:
+                self.side_menu.show_menu()
+            else:
+                if cursor_pos.x() - window_pos.x() <= self.side_menu._width - 20:
+                    self.side_menu.show_menu()
         elif self.side_menu._width + 40 < cursor_pos.x() - window_pos.x() <= self.side_menu._width + 400:
             self.side_menu.show_half_menu()
         else:

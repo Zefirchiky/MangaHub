@@ -11,13 +11,14 @@
         "artist": null,
         "status": "Unknown",
         "year": null,
-        "last_updated": "2024-10-31 22:52:12.640107",
+        "last_updated": "2024-11-01 21:09:25.717223",
         "sites": [],
         "chapters": {
             "1": {
                 "number": 1,
                 "name": null,
                 "_id_dex": "c75f7b60-c459-48a3-91a9-4296d369998b",
+                "url": "",
                 "upload_date": "2023-06-23T04:16:41+00:00",
                 "translator": null,
                 "language": "en",
@@ -27,6 +28,7 @@
                 "number": 98,
                 "name": null,
                 "_id_dex": "e0ae2586-ae9b-4579-a78e-d0c6ee0cd527",
+                "url": "",
                 "upload_date": "2024-08-17T23:45:38+00:00",
                 "translator": null,
                 "language": "en",
@@ -47,14 +49,17 @@
         "artist": null,
         "status": "Unknown",
         "year": null,
-        "last_updated": "2024-10-31 22:52:16.492053",
-        "sites": [],
+        "last_updated": "2024-11-01 21:09:30.581818",
+        "sites": [
+            "AsuraScans"
+        ],
         "chapters": {
             "1": {
                 "number": 1,
-                "name": "",
-                "_id_dex": "34fd8e10-6406-4025-bc16-22856f0d2db8",
-                "upload_date": "2020-11-15T22:32:16+00:00",
+                "name": null,
+                "_id_dex": null,
+                "url": "",
+                "upload_date": null,
                 "translator": null,
                 "language": "en",
                 "images": {}
@@ -63,6 +68,7 @@
                 "number": 230,
                 "name": null,
                 "_id_dex": "54a8621f-e75f-4bd2-af4a-cf492fd15b47",
+                "url": "",
                 "upload_date": "2024-10-24T03:05:15+00:00",
                 "translator": null,
                 "language": "en",
@@ -83,14 +89,15 @@
         "artist": null,
         "status": "Unknown",
         "year": null,
-        "last_updated": "2024-10-31 22:52:19.336541",
+        "last_updated": "2024-11-01 21:09:33.040400",
         "sites": [],
         "chapters": {
             "1": {
                 "number": 1,
                 "name": null,
-                "_id_dex": "0c2ef8d6-355c-45cf-bfba-a24dfb33b254",
-                "upload_date": "2024-02-14T17:02:09+00:00",
+                "_id_dex": "cbf35563-e388-4a3a-bbd7-ca0b42938c4d",
+                "url": "",
+                "upload_date": "2024-02-14T17:03:10+00:00",
                 "translator": null,
                 "language": "en",
                 "images": {}
@@ -99,6 +106,7 @@
                 "number": 39,
                 "name": null,
                 "_id_dex": "1a48f69c-d0cd-4bc8-be04-cb0ad7b4226a",
+                "url": "",
                 "upload_date": "2024-10-18T03:39:38+00:00",
                 "translator": null,
                 "language": "en",

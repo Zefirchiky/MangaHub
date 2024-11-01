@@ -8,6 +8,12 @@ class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.init_smooth_scroll()
+        self.setObjectName("smooth_graphics_view")
+        self.setStyleSheet(f'''
+                           #smooth_graphics_view {{
+                               border: 1px solid {self.palette().window().color().lighter().name()};
+                               border-radius: 5px;
+                            }}''')
         
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)

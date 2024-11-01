@@ -13,7 +13,9 @@ ruff = "^0.6.8"
 pyside6 = "^6.7.3"
 requests = "^2.32.3"
 pillow = "^10.4.0"
-glm = "^0.4.4"
+imageio = "^2.36.0"
+pyglm = "^2.7.3"
+webp = "^0.4.0"
 
 
 [build-system]

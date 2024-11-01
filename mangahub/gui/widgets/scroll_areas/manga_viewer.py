@@ -1,25 +1,34 @@
-from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem, QPushButton
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QPixmap, QImage, QColor
 from .smooth_graphics_view import SmoothGraphicsView
 from gui.gui_utils import MM
+from gui.widgets import SvgIcon
 from utils import BatchWorker, convert_to_format
+from directories import *
 import io
 
 
 class MangaViewer(SmoothGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._image_items = []
         self._vertical_spacing = 0
         self._base_width = 480
         self._current_scale = 0.7
         self._zoom_factor = 1.1
         
+        self._image_items = []
         self._placeholders = []
         
         self.scale_multiplier = self._current_scale
         self.scale(self._current_scale, self._current_scale)
+        
+        self.close_button = QPushButton(self)
+        self.close_button.setIcon(SvgIcon(f"{ICONS_DIR}/close-outline.svg").get_icon('white'))
+        self.close_button.setFixedSize(32, 32)
+        self.close_button.setIconSize(QSize(24, 24))
+        self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.close_button.move(self.width() - self.close_button.width() - 15, 10)
 
     def add_placeholder(self, width, height, y_pos):
         placeholder = QGraphicsRectItem((0 - width) // 2, y_pos, width, height)
@@ -31,12 +40,10 @@ class MangaViewer(SmoothGraphicsView):
         if index >= len(self._placeholders):
             return
 
-        # Remove the placeholder
         placeholder = self._placeholders[index]
         self.scene.removeItem(placeholder)
-        self._placeholders[index] = None  # Optional: mark as replaced
+        self._placeholders[index] = None 
 
-        # Add the actual image in its place
         pixmap = QPixmap()
         if pixmap.loadFromData(image_data):
             item = QGraphicsPixmapItem(pixmap)
@@ -70,6 +77,12 @@ class MangaViewer(SmoothGraphicsView):
             return
                 
         super().wheelEvent(event)
+        
+    def clear(self):
+        self._image_items = []
+        self._placeholders = []
+        self.scene.clear()
 
     def resizeEvent(self, event):
+        self.close_button.move(self.width() - self.close_button.width() - 15, 10)
         super().resizeEvent(event)

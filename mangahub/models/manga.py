@@ -21,11 +21,11 @@ class Manga(BaseModel):
     status: str = "Unknown"
     year: Optional[int] = None
     last_updated: str = str(datetime.now())
-    sites: List[Site] = field(default_factory=list)
-    chapters: Dict[int, MangaChapter] = field(default_factory=dict)
+    sites: List[str] = field(default_factory=list)
+    chapters: Dict[str, MangaChapter] = field(default_factory=dict)
     tags: List[Tag] = field(default_factory=list)
     
-    def add_site(self, site: Site) -> None:
+    def add_site(self, site) -> None:
         if site not in self.sites:
             self.sites.append(site)
             

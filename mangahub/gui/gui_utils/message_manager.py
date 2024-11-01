@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QFrame,
+    QSizePolicy,
     QLabel
 )
 from PySide6.QtCore import (
@@ -20,12 +21,14 @@ class Message(QFrame):
         
         self.label = QLabel(f"{message}")
         self.label.setStyleSheet("border: none; background-color: transparent;")
-        self.label.setWordWrap(True)
+        self.label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setWordWrap(True)
 
-        self.type_label = QLabel(f"{message_type.upper()}", self.label)
+        self.type_label = QLabel(f"{message_type.upper()}", self)
         self.type_label.setStyleSheet("border: none; background-color: transparent; font-size: 10px;")
         self.type_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.type_label.move(10, 5)
 
         root_layout = QHBoxLayout()
         root_layout.addWidget(self.label)

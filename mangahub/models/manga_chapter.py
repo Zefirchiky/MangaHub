@@ -8,8 +8,9 @@ from .chapter_image import ChapterImage
 @dataclass
 class MangaChapter(BaseModel):
     number: int
-    name: str
-    _id_dex: str
+    name: str = ''
+    _id_dex: str = ''
+    url: str = ''
     upload_date: str = ''
     translator: Optional[str] = None
     language: str = 'en'

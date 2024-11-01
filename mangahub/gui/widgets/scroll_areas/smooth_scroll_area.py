@@ -4,9 +4,9 @@ from .smooth_scroll_mixin import SmoothScrollMixin
 
 
 class SmoothScrollArea(QScrollArea, SmoothScrollMixin):
-    def __init__(self, parent=None):
+    def __init__(self, vertical=True, parent=None):
         super().__init__(parent)
-        self.init_smooth_scroll()
+        self.init_smooth_scroll(vertical=vertical)
         
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

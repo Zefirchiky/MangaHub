@@ -31,7 +31,7 @@ class MangaManager:
         self.manga_collection[manga.name] = manga
         self.manga_parser.save_data(self.manga_collection)
         
-    def create_manga(self, name):
+    def create_manga(self, name, sites=[]):
         _id = name.lower().replace(' ', '-')
         _id_dex = self.dex_scraper.get_manga_id(name)
         last = self.dex_scraper.get_last_chapter_num(_id_dex)
@@ -41,21 +41,21 @@ class MangaManager:
         with open(cover, 'wb') as f:
             f.write(self.dex_scraper.get_manga_cover(_id))
         
-        manga = Manga(name, _id, _id_dex, cover, last_chapter=last)
+        manga = Manga(name, _id, _id_dex, cover, last_chapter=last, sites=sites)
         manga.add_chapter(self.get_chapter(manga, 1))
         manga.add_chapter(self.get_chapter(manga, last))
-        
-        self.add_new_manga(manga)
         return manga
     
-    # @retry(max_retries=3, delay=1, exception_to_check=Exception)
     def get_chapter(self, manga: Manga, num):
         chapter = manga.chapters.get(num)
         if chapter:
             return chapter
         
-        name = self.dex_scraper.get_chapter_name(manga._id_dex, num)
         _id_dex = self.dex_scraper.get_chapter_id(manga._id_dex, num)
+        name = self.dex_scraper.get_chapter_name(manga._id_dex, num)
+        if not name:
+            self.sites_scraper.get_chapter_name(manga, num)
+        
         upload_date = self.dex_scraper.get_chapter_upload_date(manga._id_dex, num)
         chapter = MangaChapter(num, name, _id_dex, upload_date=upload_date)
         return chapter
@@ -69,13 +69,11 @@ class MangaManager:
         image = ChapterImage(num, width, height)
         return image
     
-    def get_chapter_images(self, chapter: MangaChapter, manga_title, manga_dex=True):
-        if manga_dex:
-            self.scraper = MangaDexScraper()
-            images = self.scraper.get_chapter_image_placeholders(chapter._id_dex), self.scraper.start_chapter_images_download(chapter._id_dex)
+    def get_chapter_images(self, manga: Manga, chapter: MangaChapter, manga_dex=True):
+        if manga_dex and chapter._id_dex:
+            images = self.dex_scraper.get_chapter_placeholders(chapter._id_dex), self.dex_scraper.start_chapter_images_download(chapter._id_dex)
         else:
-            self.scraper = MangaSiteScraper(self.sites_parser, self.manga_parser.get_manga(manga_title))
-            images = self.scraper.get_chapter_images(chapter.number)
+            images = self.sites_scraper.get_chapter_placeholders(manga, chapter.number), self.sites_scraper.start_chapter_images_download(manga, chapter.number)
 
         return images
 

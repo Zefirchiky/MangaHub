@@ -105,26 +105,26 @@ class MangaDexScraper:
         
         response = requests.get(self.chapter_url, params=params)
         response.raise_for_status()
-        data = response.json()["data"][0]
-        if not data:
-            MM.show_message('error', f"Chapter {manga_id} {num} not found")
-            raise Exception(f"Chapter {manga_id} {num} not found")
+        data = response.json()["data"]
+        if data:
+            data = data[0]
+            self.chapters_data[manga_id][num] = data
+            return data
         
-        self.chapters_data[manga_id][num] = data
-        
-        return data
+        MM.show_message('error', f"Chapter {manga_id} {num} not found on MangaDex")
+        return None
     
     def get_chapter_name(self, manga_id, num):
         data = self.get_chapter_data(manga_id, num)
-        return data["attributes"]["title"]
+        return data["attributes"]["title"] if data else None
     
     def get_chapter_id(self, manga_id, num, limit=1, language="en"):
         data = self.get_chapter_data(manga_id, num, limit=limit, language=language)
-        return data["id"]
+        return data["id"] if data else None
     
     def get_chapter_upload_date(self, manga_id, num):
         data = self.get_chapter_data(manga_id, num)
-        return data["attributes"]["publishAt"]
+        return data["attributes"]["publishAt"] if data else None
     
     def get_chapter_image_urls(self, chapter_id, data_saver=1) -> list[str]:
         response = requests.get(f"{self.chapters_url}/{chapter_id}")
@@ -149,18 +149,21 @@ class MangaDexScraper:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         
+        print(2, response.headers["Content-Type"])
+        
         image = Image.open(io.BytesIO(response.content))
         return image.size
 
-    def get_chapter_image_placeholders(self, chapter_id, data_saver=1):
+    def get_chapter_placeholders(self, chapter_id, data_saver=1):
         image_urls = self.get_chapter_image_urls(chapter_id, data_saver)
         placeholders_worker = BatchWorker()
-        placeholders_worker.signals.all_completed.connect(lambda _: MM.show_message('info', "Image sizes downloaded"))
+        placeholders_worker.signals.all_completed.connect(lambda _: MM.show_message('success', "Image sizes downloaded"))
         return list(placeholders_worker.process_batch(self.get_image_size, image_urls, blocking=True))
     
     def start_chapter_images_download(self, chapter_id, data_saver=1):
         image_urls = self.get_chapter_image_urls(chapter_id, data_saver)
         images_worker = BatchWorker()
+        images_worker.signals.all_completed.connect(lambda _: MM.show_message('success', "Images downloaded"))
         images_worker.process_batch(requests.get, image_urls, blocking=False)
         return images_worker
     

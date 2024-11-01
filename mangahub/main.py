@@ -31,7 +31,6 @@ class App:
         self.gui_window.init()
         
         MM.show_message('info', f"Working directory: \n{os.getcwd()}", 7000)
-        MM.show_message('error', f"Manga One Piece not found")
         
         self.gui_app.exec()
 
