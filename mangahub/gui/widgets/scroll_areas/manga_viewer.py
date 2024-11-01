@@ -23,12 +23,28 @@ class MangaViewer(SmoothGraphicsView):
         self.scale_multiplier = self._current_scale
         self.scale(self._current_scale, self._current_scale)
         
+        # close
         self.close_button = QPushButton(self)
         self.close_button.setIcon(SvgIcon(f"{ICONS_DIR}/close-outline.svg").get_icon('white'))
         self.close_button.setFixedSize(32, 32)
         self.close_button.setIconSize(QSize(24, 24))
         self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.close_button.move(self.width() - self.close_button.width() - 15, 10)
+        
+        # prev/next
+        self.next_button = QPushButton(self)
+        self.next_button.setIcon(SvgIcon(f"{ICONS_DIR}/chevron-forward-outline.svg").get_icon('white'))
+        self.next_button.setFixedSize(32, 32)
+        self.next_button.setIconSize(QSize(24, 24))
+        self.next_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.next_button.move(self.width() - self.next_button.width() - 15, self.height() - self.next_button.height() - 15)
+        
+        self.prev_button = QPushButton(self)
+        self.prev_button.setIcon(SvgIcon(f"{ICONS_DIR}/chevron-back-outline.svg").get_icon('white'))
+        self.prev_button.setFixedSize(32, 32)
+        self.prev_button.setIconSize(QSize(24, 24))
+        self.prev_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.prev_button.move(self.width() - self.prev_button.width() - self.next_button.width() - 15, self.height() - self.prev_button.height() - 15)
 
     def add_placeholder(self, width, height, y_pos):
         placeholder = QGraphicsRectItem((0 - width) // 2, y_pos, width, height)
@@ -79,10 +95,13 @@ class MangaViewer(SmoothGraphicsView):
         super().wheelEvent(event)
         
     def clear(self):
+        self.verticalScrollBar().setValue(0)
         self._image_items = []
         self._placeholders = []
         self.scene.clear()
 
     def resizeEvent(self, event):
         self.close_button.move(self.width() - self.close_button.width() - 15, 10)
+        self.prev_button.move(self.width() - self.prev_button.width() - self.prev_button.width() - 15, self.height() - self.prev_button.height() - 15)
+        self.next_button.move(self.width() - self.next_button.width() - 15, self.height() - self.next_button.height() - 15)
         super().resizeEvent(event)

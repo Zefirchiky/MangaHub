@@ -79,17 +79,6 @@ class MainWindow(QMainWindow):
 
         # TAB 1
 
-        # manga reader
-        # manga_reader_layout = QVBoxLayout()
-        # manga_reader_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # manga_reader_layout.addWidget(self.manga_viewer)
-
-        # manga_reader_widget = QWidget()
-        # manga_reader_widget.setLayout(manga_reader_layout)
-        
-        # TAB 3
-        # manga dashboard
-
         # root layout
         self.root_layout = QStackedLayout()
         root = QWidget()
@@ -130,6 +119,8 @@ class MainWindow(QMainWindow):
         
         self.manga_viewer = MangaViewer()
         self.manga_viewer.close_button.clicked.connect(lambda _: self.root_layout.setCurrentIndex(0))
+        self.manga_viewer.prev_button.clicked.connect(lambda _: self.show_manga(self.cur_manga, self.cur_num - 1))
+        self.manga_viewer.next_button.clicked.connect(lambda _: self.show_manga(self.cur_manga, self.cur_num + 1))
         
         self.root_layout.insertWidget(0, self.manga_dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
@@ -149,14 +140,16 @@ class MainWindow(QMainWindow):
         nm.chapter_clicked.connect(lambda n: self.show_manga("Nano Machine", n))
         
     def show_manga(self, manga_title, num):
-        if manga_title != self.cur_manga and num != self.cur_num:
+        if manga_title != self.cur_manga or num != self.cur_num:
             self.manga_viewer.clear()
             
             manga = self.manager.get_manga(manga_title)
             chapter = self.manager.get_chapter(manga, num)
             placeholders, worker = self.manager.get_chapter_images(manga, chapter, manga_dex=True)
+            
+            self.manga_viewer.prev_button.setEnabled(num > 1)
+            self.manga_viewer.next_button.setEnabled(num < manga.last_chapter)
         
-            # Create placeholders at each y-level based on sizes
             current_y = 0
             for width, height in placeholders:
                 self.manga_viewer.add_placeholder(width, height, current_y)

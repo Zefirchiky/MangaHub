@@ -20,7 +20,7 @@ class MangaManager:
         self.manga_collection = self.get_all_manga()
         
     @retry(max_retries=3, delay=1, exception_to_check=Exception)
-    def get_manga(self, name):
+    def get_manga(self, name) -> Manga | None:
         manga = self.manga_collection.get(name)
         if not manga:
             MM.show_message('error', f"Manga {name} not found")

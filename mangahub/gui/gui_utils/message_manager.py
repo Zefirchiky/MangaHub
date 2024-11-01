@@ -5,12 +5,14 @@ from PySide6.QtWidgets import (
     QLabel
 )
 from PySide6.QtCore import (
-    Qt, QRect, QTimer,
+    Qt, QRect, QTimer, Signal,
     QPropertyAnimation, QEasingCurve
 )
 
 
 class Message(QFrame):
+    clicked = Signal(QFrame)
+    
     def __init__(self, parent=None, message_type='error', message=None, width=250, min_height=40):
         super().__init__(parent)
         self.setStyleSheet(self._get_style(message_type))
@@ -75,6 +77,10 @@ class Message(QFrame):
             border-radius: 4px;
             """)  # Default gray message
         
+    def mousePressEvent(self, event):
+        self.clicked.emit(self)
+        return super().mousePressEvent(event)
+        
 
 class MM:
     _instance = None
@@ -104,20 +110,24 @@ class MM:
             self.destroy_anim_group = {}
     
     @classmethod
-    def show_message(cls, message_type='error', message_text=None, duration=5000):
+    def show_message(cls, message_type='error', message_text=None, progress=False, duration=5000):
         if cls._instance is None:
             raise Exception("MessageManager has not been initialized!")
         return cls._instance._show_message(message_type, message_text, duration)
     
-    def _show_message(self, message_type='error', message_text=None, duration=5000):
+    def _show_message(self, message_type='error', message_text=None, progress=False, duration=5000):
         message = Message(self.window, message_type, message_text, self.width, self.min_height)
         message.setGeometry(self.x, self.window.height(), message.width(), message.height())
         message.show()
+        
+        message.clicked.connect(self.destroy_message)
 
         self.active_messages.append(message)
         self.move_messages()
 
         QTimer.singleShot(duration, lambda: self.destroy_message(message))
+        
+        return message
 
     def destroy_message(self, message):
         if message in self.active_messages:
@@ -136,20 +146,25 @@ class MM:
             animation.start()
 
     def _destroy_message(self, message):
+        if message in self.active_messages:
+            self.active_messages.remove(message)
+        if message in self.destroy_anim_group:
+            self.destroy_anim_group[message].stop()
+            self.destroy_anim_group.pop(message)
         message.deleteLater()
         self.move_messages()
-        self.destroy_anim_group.pop(message).stop()
 
     def move_messages(self, time=150):
         y = self.window.height() - 5
         for message in reversed(self.active_messages):  # Recent at the bottom
-            y -= message.height() + 5
-            animation = QPropertyAnimation(message, b"geometry")
-            animation.setDuration(time)
-            animation.setStartValue(message.geometry())
-            animation.setEndValue(QRect(self.x, y, message.width(), message.height()))
-            self.move_anim_group[message] = animation
-            animation.start()
+            if message:
+                y -= message.height() + 5
+                animation = QPropertyAnimation(message, b"geometry")
+                animation.setDuration(time)
+                animation.setStartValue(message.geometry())
+                animation.setEndValue(QRect(self.x, y, message.width(), message.height()))
+                self.move_anim_group[message] = animation
+                animation.start()
             
     def pos_update(self):
         self.x = self.window.width() - self.width - 10      

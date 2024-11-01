@@ -148,9 +148,7 @@ class MangaDexScraper:
         headers = {"Range": "bytes=0-1023"}
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        
-        print(2, response.headers["Content-Type"])
-        
+                
         image = Image.open(io.BytesIO(response.content))
         return image.size
 
