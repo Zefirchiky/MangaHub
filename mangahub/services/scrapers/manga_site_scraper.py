@@ -1,15 +1,14 @@
+import requests # type: ignore
+import io
+import os
+
 from bs4 import BeautifulSoup
 from PIL import Image
 
-from gui.gui_utils import MM
-from utils import BatchWorker, get_webp_dimensions
 from services.parsers import SitesJsonParser, UrlParser
 from models import Manga
-
-import requests # type: ignore
-
-import io
-import os
+from gui.gui_utils import MM
+from utils import BatchWorker, get_webp_dimensions
 
 
 class MangaSiteScraper:

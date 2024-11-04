@@ -135,11 +135,8 @@ class MainWindow(QMainWindow):
 
 
         # manga = self.manager.create_manga("Boundless Necromancer", sites=["AsuraScans"])
-        # self.manager.add_new_manga(manga)
         # manga_ = self.manager.create_manga("Nano Machine", sites=["AsuraScans"])
-        # self.manager.add_new_manga(manga_)
         # manga__ = self.manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
-        # self.manager.add_new_manga(manga__)
         
         bnm = self.manager.get_manga("Boundless Necromancer")
         bn = self.manga_dashboard.add_manga(bnm)

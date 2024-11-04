@@ -16,7 +16,7 @@ class MangaDexScraper:
         self.cover_id_url = f"{self.base_api_url}/cover"
         self.cover_url = f"{self.base_upload_url}/covers"
         self.chapter_url = f"{self.base_api_url}/chapter"
-        self.chapters_url = f"{self.base_api_url}/at-home/server"
+        self.chapter_images_url = f"{self.base_api_url}/at-home/server"
         
         self.manga_data = {}
         self.chapters_data = {}
@@ -127,7 +127,7 @@ class MangaDexScraper:
         return data["attributes"]["publishAt"] if data else None
     
     def get_chapter_image_urls(self, chapter_id, data_saver=1) -> list[str]:
-        response = requests.get(f"{self.chapters_url}/{chapter_id}")
+        response = requests.get(f"{self.chapter_images_url}/{chapter_id}")
         response.raise_for_status()
         data = response.json()
         if not data:
@@ -164,8 +164,3 @@ class MangaDexScraper:
         images_worker.signals.all_completed.connect(lambda _: MM.show_message('success', "Images downloaded"))
         images_worker.process_batch(requests.get, image_urls, blocking=False)
         return images_worker
-    
-    def get_manga_chapter_images(self, manga_name, num, limit=1, data_saver=1, language="en") -> list[bytes]:
-        manga_id = self.get_manga_id(manga_name)
-        chapter_id = self.get_chapter_id(manga_id, num, limit=limit, language=language)
-        return self.get_chapter_images(chapter_id, data_saver=data_saver)

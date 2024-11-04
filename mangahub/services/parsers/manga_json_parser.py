@@ -1,6 +1,7 @@
 from dataclasses import asdict
 from services.handlers import JsonHandler
-from models import Manga, MangaChapter, ChapterImage
+from models import Manga, MangaChapter
+from gui.gui_utils import MM
 
 
 class MangaJsonParser:
@@ -23,7 +24,8 @@ class MangaJsonParser:
                 self.manga[name] = manga
                 return manga
             except KeyError:
-                raise Exception(f"Manga {name} not found")
+                MM.show_message('error', f"Manga {name} not found")
+                return None
 
     def get_all_manga(self) -> dict:
         for manga_name in self.data.keys():

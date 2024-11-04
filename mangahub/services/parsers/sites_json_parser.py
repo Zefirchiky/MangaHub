@@ -1,6 +1,6 @@
 from services.handlers import JsonHandler
-from gui.gui_utils import MM
 from models import Site
+from gui.gui_utils import MM
 
 class SitesJsonParser:
     def __init__(self, file="data/sites.json"):
@@ -19,10 +19,10 @@ class SitesJsonParser:
                 return site
             except KeyError:
                 MM.show_message('error', f"Site {name} not found")
-                raise Exception(f"Site {name} not found")
+                return None
 
     def get_all_sites(self) -> dict:
-        for site_name, site in self.data.items():
+        for site_name in self.data.keys():
             if site_name not in self.sites.keys():
                 self.get_site(site_name)
         
