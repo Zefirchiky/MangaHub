@@ -15,6 +15,7 @@ import os
 class MangaSiteScraper:
     def __init__(self, sites_parser: SitesJsonParser):
         self.sites_parser = sites_parser
+        self.chapter_pages = {}
 
     def get_title_page(self) -> requests.Response | BeautifulSoup:
         if self.manga:
@@ -53,16 +54,27 @@ class MangaSiteScraper:
         return file_path
 
     def get_chapter_page(self, manga: Manga, num) -> BeautifulSoup | None:
+        if manga.name in self.chapter_pages:
+            if num in self.chapter_pages[manga.name]:
+                return self.chapter_pages[manga.name][num]
+            
+        if not manga.sites:
+            MM.show_message('error', f"No sites for {manga.name} {num} was found")
+            return None
+        
         for _site in manga.sites:
             self.site = self.sites_parser.get_site(_site)
             url = UrlParser.get_chapter_page_url(self.site, manga, num)
 
             soup = self.get_bs_from_url(url)
             if soup:
+                if not manga.name in self.chapter_pages:
+                    self.chapter_pages[manga.name] = {}
+                self.chapter_pages[manga.name][num] = soup
                 MM.show_message('success', f"Chapter {manga.name} {num} page loaded")
                 return soup
             
-        MM.show_message('error', f"Chapter {manga.name} {num} page not found")
+        MM.show_message('error', f"Chapter {manga.name} {num}: No site responded")
         return None
     
     def get_chapter_name(self, manga: Manga, num) -> str:
@@ -71,7 +83,8 @@ class MangaSiteScraper:
         if not chapter_page:
             return None
         
-        return chapter_page.find('h2', class_=self.site.chapter_page['title_html_class']).text
+        name = chapter_page.find('h2', class_=self.site.chapter_page['title_html_class'])
+        return name.text if name else ''
     
     def get_chapter_image_urls(self, manga: Manga, num) -> list[str]:
         chapter_page = self.get_chapter_page(manga, num)

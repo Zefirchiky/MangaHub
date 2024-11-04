@@ -1,12 +1,9 @@
-from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem, QPushButton
+from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem, QPushButton, QComboBox
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QPixmap, QImage, QColor
+from PySide6.QtGui import QPixmap, QColor
 from .smooth_graphics_view import SmoothGraphicsView
-from gui.gui_utils import MM
 from gui.widgets import SvgIcon
-from utils import BatchWorker, convert_to_format
 from directories import *
-import io
 
 
 class MangaViewer(SmoothGraphicsView):
@@ -30,6 +27,11 @@ class MangaViewer(SmoothGraphicsView):
         self.close_button.setIconSize(QSize(24, 24))
         self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.close_button.move(self.width() - self.close_button.width() - 15, 10)
+        
+        # chapter selection
+        self.chapter_selection = QComboBox(self)
+        self.chapter_selection.setFixedSize(100, 32)
+        self.chapter_selection.move(self.width() - self.close_button.width() - self.chapter_selection.width() - 20, 10)
         
         # prev/next
         self.next_button = QPushButton(self)
@@ -66,6 +68,10 @@ class MangaViewer(SmoothGraphicsView):
             item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
             item.setPos(placeholder.rect().x(), placeholder.rect().y())
             self.scene.addItem(item)
+            
+    def set_chapters_selection(self, final_chapter):
+        self.chapter_selection.clear()
+        self.chapter_selection.addItems([f"Chapter {i}" for i in range(1, final_chapter + 1)])
 
     def wheelEvent(self, event):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
@@ -102,6 +108,7 @@ class MangaViewer(SmoothGraphicsView):
 
     def resizeEvent(self, event):
         self.close_button.move(self.width() - self.close_button.width() - 15, 10)
+        self.chapter_selection.move(self.width() - self.close_button.width() - self.chapter_selection.width() - 20, 10)
         self.prev_button.move(self.width() - self.prev_button.width() - self.prev_button.width() - 15, self.height() - self.prev_button.height() - 15)
         self.next_button.move(self.width() - self.next_button.width() - 15, self.height() - self.next_button.height() - 15)
         super().resizeEvent(event)

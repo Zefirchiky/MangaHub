@@ -1,13 +1,15 @@
-from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QIcon
-from gui import MainWindow
-from gui.gui_utils import MM
-from services.parsers import MangaJsonParser, SitesJsonParser, UrlParser
-from controllers import MangaManager
-from directories import *
-from utils import retry
 import ctypes
 import sys
+import os
+
+from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
+
+from gui import MainWindow
+from gui.gui_utils import MM
+from services.parsers import MangaJsonParser, SitesJsonParser
+from controllers import MangaManager
+from directories import *
 
 
     

@@ -1,5 +1,4 @@
 from services.parsers import SitesJsonParser
-from models import Site
 
 
 class SitesManager:

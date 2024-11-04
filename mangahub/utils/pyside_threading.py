@@ -1,5 +1,7 @@
+from typing import Callable, Optional, List, Any, Tuple
+import traceback
+
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool, QEventLoop
-from typing import Callable, Optional, List, Any
 
 
 class WorkerSignals(QObject):
@@ -44,7 +46,7 @@ class Worker(QRunnable):
         try:
             result = self.fn(*self.args, **self.kwargs)
         except Exception as e:
-            self.signals.error.emit(e)
+            self.signals.error.emit((type(e), str(e), traceback.format_exc()))
         else:
             self.signals.result.emit((self.num, result))
         finally:
@@ -89,10 +91,6 @@ class BatchWorker(QObject):
                 if loop:
                     loop.quit()
                 return self._results
-                    
-        def handle_error(error):
-            self.signals.error.emit(error)
-            self.signals.status.emit(f"Error occurred: {str(error)}")
         
         for i, item in enumerate(items):
             worker = Worker(
@@ -105,7 +103,7 @@ class BatchWorker(QObject):
                 **kwargs
             )
             worker.signals.result.connect(handle_result)
-            worker.signals.error.connect(handle_error)
+            worker.signals.error.connect(self._handle_error)
             
             if progress_workers_callback:
                 worker.signals.progress.connect(progress_workers_callback)
@@ -120,6 +118,10 @@ class BatchWorker(QObject):
             return self._results
             
         return []
+    
+    def _handle_error(self, error: Tuple[type, str, str]):
+        self.signals.error.emit(error)
+        self.signals.status.emit(f"Error occurred: {error[1]}")
     
     def cancel(self):
         self._workers.clear()

@@ -21,12 +21,15 @@ class Message(QFrame):
         self.setFixedWidth(width)
         self.setMinimumHeight(min_height)
         
+        self.min_height = min_height
+        
         self.label = QLabel(f"{message}")
         self.label.setStyleSheet("border: none; background-color: transparent;")
+        self.label.setFixedWidth(width - 20)
         self.label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setWordWrap(True)
-
+        
         self.type_label = QLabel(f"{message_type.upper()}", self)
         self.type_label.setStyleSheet("border: none; background-color: transparent; font-size: 10px;")
         self.type_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
@@ -40,8 +43,7 @@ class Message(QFrame):
 
     def adjust_height(self):
         label_height = self.label.sizeHint().height()
-        min_height = 40
-        self.setFixedHeight(max(min_height, label_height + 20))
+        self.setFixedHeight(max(self.min_height, label_height + 30))
 
     def _get_style(self, message_type):
         styles = {

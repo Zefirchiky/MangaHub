@@ -1,6 +1,6 @@
+from dataclasses import asdict
 from services.handlers import JsonHandler
 from models import Manga, MangaChapter, ChapterImage
-from dataclasses import asdict
 
 
 class MangaJsonParser:
@@ -15,10 +15,10 @@ class MangaJsonParser:
             return self.manga[name]
         else:
             try:
-                for num, chapter in self.data[name]["chapters"].items():
-                    for num, image in chapter["images"].items():
-                        chapter["images"][num] = ChapterImage(**image)
-                    self.data[name]["chapters"][num] = MangaChapter(**chapter)
+                for num, chapter in self.data[name]["chapters"].copy().items():
+                    if isinstance(num, str):
+                        del self.data[name]["chapters"][num]
+                    self.data[name]["chapters"][int(num)] = MangaChapter(**chapter)
                 manga = Manga(**self.data[name])
                 self.manga[name] = manga
                 return manga

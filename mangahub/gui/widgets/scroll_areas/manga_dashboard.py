@@ -6,11 +6,11 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QFont, QCursor
 from PySide6.QtCore import Qt, Signal
+from glm import vec2
 
 from .smooth_scroll_area import SmoothScrollArea
 from ..image import ImageWidget
 from models import Manga
-from glm import vec2
 from directories import *
 
 
@@ -35,7 +35,6 @@ class MangaCard(QFrame):
         self.image.scale_to_width(25)
         self.image.scale_to_width(250)
         self.image.fit(vec2(250, 300))
-        self.image.signals.clicked_l.connect(lambda: print("clicked"))
         
         manga_name_label = QLabel(manga_name)
         manga_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -59,7 +58,7 @@ class MangaCard(QFrame):
         
         self.chapter_buttons = {}
         
-    def add_chapter_button(self, num, name, upload_date, type='last'):
+    def add_chapter_button(self, num, name, upload_date, type='last', insertion=0):
         name_label = QLabel(f"Chapter {num}{': ' if name else ''}{name if name else ''}")
         name_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         
@@ -79,14 +78,22 @@ class MangaCard(QFrame):
         chapter_button.clicked.connect(lambda _: self.chapter_clicked.emit(num))
         
         self.chapter_buttons[type] = chapter_button
-        self.root_layout.addWidget(chapter_button)
+        if not insertion:
+            self.root_layout.addWidget(chapter_button)
+        else:
+            self.root_layout.insertWidget(insertion, chapter_button)
         
         return chapter_button
-    
+        
 
 class MangaDashboard(SmoothScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        self.add_manga_button = QPushButton("Add Manga", parent=self)
+        self.add_manga_button.setFixedSize(100, 32)
+        self.add_manga_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.add_manga_button.move(self.width() - self.add_manga_button.width() - 15, 10)
         
         self.root_layout = QHBoxLayout(self)
         self.root_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
@@ -98,17 +105,30 @@ class MangaDashboard(SmoothScrollArea):
         
         self.setWidget(self.root_widget)
         
+        self.manga = {}
+        
     def add_manga(self, manga: Manga):
         mc = MangaCard(manga.name, manga.cover)
         
         if manga.last_chapter is not None:
-            mc.add_chapter_button(manga.last_chapter, manga.chapters[str(manga.last_chapter)].name, manga.chapters[str(manga.last_chapter)].upload_date, 'last')
+            mc.add_chapter_button(manga.last_chapter, manga.chapters[manga.last_chapter].name, manga.chapters[manga.last_chapter].upload_date, 'last')
             
         if manga.current_chapter is not None:
             mc.add_chapter_button(manga.current_chapter, manga.chapters[manga.current_chapter].name, manga.chapters[manga.current_chapter].upload_date, 'current')
             
-        mc.add_chapter_button(1, manga.chapters["1"].name, manga.chapters["1"].upload_date, 'first')
+        mc.add_chapter_button(1, manga.chapters[1].name, manga.chapters[1].upload_date, 'first')
         
+        self.manga[manga.name] = mc
         self.root_layout.addWidget(mc)
         return mc
+    
+    def update_manga(self, manga: Manga):
+        mc: MangaCard = self.manga[manga.name]
+        if mc.chapter_buttons.get('current'):
+            mc.root_layout.removeWidget(mc.chapter_buttons['current'])
+        mc.add_chapter_button(manga.current_chapter, manga.chapters[manga.current_chapter].name, manga.chapters[manga.current_chapter].upload_date, 'current', 3)
+        
+    def resizeEvent(self, arg__1):
+        self.add_manga_button.move(self.width() - self.add_manga_button.width() - 15, 10)
+        return super().resizeEvent(arg__1)
         

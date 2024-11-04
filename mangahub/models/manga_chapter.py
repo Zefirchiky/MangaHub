@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from typing import Dict, Optional
-from datetime import datetime
 from .base_model import BaseModel
 from .chapter_image import ChapterImage
 

@@ -2,7 +2,6 @@ from PySide6.QtGui import QIcon, QPixmap, QPainter
 from PySide6.QtCore import Qt, QByteArray
 from PySide6.QtSvg import QSvgRenderer
 from gui.gui_utils import MM
-from bs4 import BeautifulSoup
 
 
 class SvgIcon(QIcon):

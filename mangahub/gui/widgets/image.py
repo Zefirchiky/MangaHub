@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from PySide6.QtGui import QPixmap, QImage, QPainter, QPainterPath
-from PySide6.QtCore import Qt, QObject, Signal, QRect
+from PySide6.QtCore import Qt, QObject, Signal
 from glm import vec2
 
 

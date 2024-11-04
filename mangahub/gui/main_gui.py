@@ -8,12 +8,12 @@ from PySide6.QtGui import QPixmap, QCursor, QIcon
 
 from .multi_window.add_manga import AddMangaWindow
 from .multi_window.settings import SettingsWindow
-from gui.gui_utils import MM
-from .widgets.slide_menus import SideMenu, SlideMenu
-from .widgets.svg import SvgIcon
 from .widgets.scroll_areas import MangaViewer, MangaDashboard
+from .widgets.slide_menus import SideMenu
+from .widgets.svg import SvgIcon
+from gui.gui_utils import MM
 from controllers import MangaManager
-from models import MangaChapter
+from models import MangaState
 from directories import *
 
 
@@ -116,51 +116,63 @@ class MainWindow(QMainWindow):
         self.manager: MangaManager = self.app.manga_manager
         
         self.manga_dashboard = MangaDashboard()
+        self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
+        
+        self.manga_state = MangaState()
+        self.manga_state.signals.manga_changed.connect(lambda _: self.show_manga())
+        self.manga_state.signals.manga_changed.connect(lambda _: self.manga_viewer.set_chapters_selection(self.manga_state.manga.last_chapter))
+        self.manga_state.signals.chapter_changed.connect(lambda _: self.show_manga())
+        self.manga_state.signals.chapter_changed.connect(lambda _: self.manga_dashboard.update_manga(self.manga_state.manga))
         
         self.manga_viewer = MangaViewer()
         self.manga_viewer.close_button.clicked.connect(lambda _: self.root_layout.setCurrentIndex(0))
-        self.manga_viewer.prev_button.clicked.connect(lambda _: self.show_manga(self.cur_manga, self.cur_num - 1))
-        self.manga_viewer.next_button.clicked.connect(lambda _: self.show_manga(self.cur_manga, self.cur_num + 1))
+        self.manga_viewer.chapter_selection.currentTextChanged.connect(lambda _: self.manga_state.set_chapter(int(self.manga_viewer.chapter_selection.currentText().split()[1])))
+        self.manga_viewer.prev_button.clicked.connect(self.manga_state.prev_chapter)
+        self.manga_viewer.next_button.clicked.connect(self.manga_state.next_chapter)
         
         self.root_layout.insertWidget(0, self.manga_dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
-        # self.root_layout.insertWidget(2, manga_page_widget)
-        # manga = self.manager.create_manga("Boundless Necromancer")
+
+
+        # manga = self.manager.create_manga("Boundless Necromancer", sites=["AsuraScans"])
         # self.manager.add_new_manga(manga)
         # manga_ = self.manager.create_manga("Nano Machine", sites=["AsuraScans"])
         # self.manager.add_new_manga(manga_)
         # manga__ = self.manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.manager.add_new_manga(manga__)
         
-        bn = self.manga_dashboard.add_manga(self.manager.get_manga("Boundless Necromancer"))
-        bn.chapter_clicked.connect(lambda n: self.show_manga("Boundless Necromancer", n))
-        it = self.manga_dashboard.add_manga(self.manager.get_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!"))
-        it.chapter_clicked.connect(lambda n: self.show_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!", n))
-        nm = self.manga_dashboard.add_manga(self.manager.get_manga("Nano Machine"))
-        nm.chapter_clicked.connect(lambda n: self.show_manga("Nano Machine", n))
+        bnm = self.manager.get_manga("Boundless Necromancer")
+        bn = self.manga_dashboard.add_manga(bnm)
+        bn.chapter_clicked.connect(lambda n: self.manga_state.set_manga(bnm, n))
         
-    def show_manga(self, manga_title, num):
-        if manga_title != self.cur_manga or num != self.cur_num:
-            self.manga_viewer.clear()
-            
-            manga = self.manager.get_manga(manga_title)
-            chapter = self.manager.get_chapter(manga, num)
-            placeholders, worker = self.manager.get_chapter_images(manga, chapter, manga_dex=True)
-            
-            self.manga_viewer.prev_button.setEnabled(num > 1)
-            self.manga_viewer.next_button.setEnabled(num < manga.last_chapter)
+        itm = self.manager.get_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
+        it = self.manga_dashboard.add_manga(itm)
+        it.chapter_clicked.connect(lambda n: self.manga_state.set_manga(itm, n))
         
-            current_y = 0
-            for width, height in placeholders:
-                self.manga_viewer.add_placeholder(width, height, current_y)
-                current_y += height + self.manga_viewer._vertical_spacing
-            
-            # Display each image as it downloads, replacing placeholders
-            worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
-            
-            self.cur_manga = manga_title
-            self.cur_num = num
-            
+        nmm = self.manager.get_manga("Nano Machine")
+        nm = self.manga_dashboard.add_manga(nmm)
+        nm.chapter_clicked.connect(lambda n: self.manga_state.set_manga(nmm, n))
+        
+    def show_manga(self):
+        if self.manga_state.worker:
+            self.manga_state.worker.cancel()
+        self.manga_viewer.clear()
+        
+        chapter = self.manager.get_chapter(self.manga_state.manga, self.manga_state.chapter)
+        self.manga_state.manga.add_chapter(chapter)
+        placeholders, worker = self.manager.get_chapter_images(self.manga_state.manga, chapter, manga_dex=True)
+        
+        self.manga_viewer.prev_button.setEnabled(not self.manga_state.is_first())
+        self.manga_viewer.next_button.setEnabled(not self.manga_state.is_last())
+    
+        current_y = 0
+        for width, height in placeholders:
+            self.manga_viewer.add_placeholder(width, height, current_y)
+            current_y += height + self.manga_viewer._vertical_spacing
+        
+        worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
+        self.manga_state.set_worker(worker)
+        
         self.root_layout.setCurrentIndex(1)
 
     def open_settings(self):
@@ -192,5 +204,11 @@ class MainWindow(QMainWindow):
         MM().pos_update()
 
         return super().resizeEvent(event)
+    
+    def closeEvent(self, event):
+        self.settings_window.close()
+        self.add_manga_window.close()
+        self.manager.save()
+        return super().closeEvent(event)
     
     

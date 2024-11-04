@@ -1,6 +1,6 @@
+import re
 from services.parsers import SitesJsonParser
 from models import Site, Manga
-import re
 
 
 class UrlParser:

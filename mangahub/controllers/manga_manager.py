@@ -4,9 +4,7 @@ from services.parsers import MangaJsonParser, SitesJsonParser, UrlParser
 from services.scrapers import MangaSiteScraper
 from services.scrapers import MangaDexScraper
 from models import Manga, MangaChapter, ChapterImage
-from utils import BatchWorker, retry
-import datetime
-import requests
+from utils import retry
 import os
 
             
@@ -19,17 +17,15 @@ class MangaManager:
         self.sites_scraper = MangaSiteScraper(self.sites_parser)
         self.manga_collection = self.get_all_manga()
         
-    @retry(max_retries=3, delay=1, exception_to_check=Exception)
     def get_manga(self, name) -> Manga | None:
         manga = self.manga_collection.get(name)
         if not manga:
             MM.show_message('error', f"Manga {name} not found")
-            return None
+            raise Exception(f"Manga {name} not found")
         return manga
     
     def add_new_manga(self, manga: Manga):
         self.manga_collection[manga.name] = manga
-        self.manga_parser.save_data(self.manga_collection)
         
     def create_manga(self, name, sites=[]):
         _id = name.lower().replace(' ', '-')
@@ -44,6 +40,8 @@ class MangaManager:
         manga = Manga(name, _id, _id_dex, cover, last_chapter=last, sites=sites)
         manga.add_chapter(self.get_chapter(manga, 1))
         manga.add_chapter(self.get_chapter(manga, last))
+        
+        self.add_new_manga(manga)
         return manga
     
     def get_chapter(self, manga: Manga, num):
@@ -123,3 +121,6 @@ class MangaManager:
     
     def get_chapter_images_iter(self, manga, num):
         scraper = MangaSiteScraper(self.sites_parser, manga=manga)
+        
+    def save(self):
+        self.manga_parser.save_data(self.manga_collection)

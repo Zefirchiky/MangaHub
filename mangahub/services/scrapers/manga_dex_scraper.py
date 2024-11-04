@@ -1,10 +1,10 @@
-from gui.gui_utils import MM
-from utils import BatchWorker
-from typing import Any
-from utils import convert_to_format
-from PIL import Image
 import requests
 import io
+
+from PIL import Image
+
+from gui.gui_utils import MM
+from utils import BatchWorker, convert_to_format
 
 
 class MangaDexScraper:
@@ -108,8 +108,8 @@ class MangaDexScraper:
         data = response.json()["data"]
         if data:
             data = data[0]
-            self.chapters_data[manga_id][num] = data
             return data
+        self.chapters_data[manga_id][num] = data
         
         MM.show_message('error', f"Chapter {manga_id} {num} not found on MangaDex")
         return None
@@ -132,7 +132,7 @@ class MangaDexScraper:
         data = response.json()
         if not data:
             MM.show_message('error', f"Chapter {chapter_id} not found")
-            raise Exception(f"Chapter {chapter_id} not found")
+            return []
         chapter_data = data["chapter"]
         
         base_url = data["baseUrl"]
@@ -148,7 +148,7 @@ class MangaDexScraper:
         headers = {"Range": "bytes=0-1023"}
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-                
+        
         image = Image.open(io.BytesIO(response.content))
         return image.size
 

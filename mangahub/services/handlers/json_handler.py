@@ -1,6 +1,7 @@
-from .file_handler import FileHandler
 import json
 import os
+
+from .file_handler import FileHandler
 
 class JsonHandler(FileHandler):
     def __init__(self, file):
