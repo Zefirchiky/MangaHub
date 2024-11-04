@@ -14,43 +14,34 @@ from utils import BatchWorker, get_webp_dimensions
 class MangaSiteScraper:
     def __init__(self, sites_parser: SitesJsonParser):
         self.sites_parser = sites_parser
+        self.title_pages = {}
         self.chapter_pages = {}
 
-    def get_title_page(self) -> requests.Response | BeautifulSoup:
-        if self.manga:
-            for _site in self.manga.sites:
-                self.site = self.sites_parser.get_site(_site)
-                url = self.sites_parser.get_title_page_url(self.site, self.manga)
+    def get_title_page(self, manga: Manga) -> BeautifulSoup:
+        if manga.name in self.title_pages:
+            return self.title_pages[manga.name]
 
-                return self.get_bs_from_url(url)
-
-            MM.show_message('error', f"No site for the {self.manga.name} available")
-            raise Exception(f"No site for the {self.manga.name} available")
+        if not manga.sites:
+            MM.show_message('error', f"No sites for {manga.name} was found")
+            return None
         
-        elif self.url_parser:                
-            return self.get_bs_from_url(self.url_parser.url)
+        for _site in manga.sites:
+            self.site = self.sites_parser.get_site(_site)
+            url = UrlParser.get_title_page_url(self.site, manga)
 
-        MM.show_message('error', "Manga or url not found")
-        raise Exception("Manga or url not found")      
+            title_page = self.get_bs_from_url(url)
+            self.title_pages[manga.name] = title_page
+            return title_page
     
-    def get_manga_cover(self) -> bytes:
-        if not self.title_page:
-            self.title_page = self.get_title_page()
+    def get_manga_cover(self) -> bytes: # TODO
+        title_page: BeautifulSoup = self.get_title_page()
     
-        cover = self.title_page.find('img', class_=self.site.title_page['cover_html_class'])
+        cover = title_page.find('img', class_=self.site.title_page['cover_html_class'])
+        if not cover:
+            return None
+        
         img_data = requests.get(cover.get('src')).content
-
         return img_data
-    
-    def save_manga_cover_path(self, path, file='cover.jpg') -> str:
-        file_path = os.path.join(path, file)
-        
-        image = self.get_manga_cover()
-
-        with open(file_path, 'wb') as f:
-            f.write(image)
-
-        return file_path
 
     def get_chapter_page(self, manga: Manga, num) -> BeautifulSoup | None:
         if manga.name in self.chapter_pages:
@@ -131,5 +122,5 @@ class MangaSiteScraper:
             response = requests.get(url)
         except requests.exceptions.RequestException as e:
             MM.show_message('error', str(e), 5000)
-            raise Exception(e)
+            return None
         return BeautifulSoup(response.text, 'html.parser')

@@ -1,114 +1,70 @@
-from typing import Callable, Optional, List, Any, Tuple
-import traceback
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
+from PySide6.QtCore import QUrl, Slot
+import sys
+import json
 
-from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool, QEventLoop
-
-class WorkerSignals(QObject):
-    progress = Signal(int)
-    finished = Signal()
-    result = Signal(object)
-    error = Signal(tuple)
-    status = Signal(str)
-
-class BatchWorkerSignals(QObject):
-    item_completed = Signal(object)
-    all_completed = Signal(list)
-    progress = Signal(int)
-    error = Signal(tuple)
-    status = Signal(str)
-
-class Worker(QRunnable):
-    def __init__(self, 
-                 num: int, 
-                 fn: Callable, 
-                 *args, 
-                 progress_callback: bool = False, 
-                 status_callback: bool = False, 
-                 **kwargs):
-
-        super().__init__()
-        self.num = num
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
-        
-        if progress_callback:
-            self.kwargs["progress_callback"] = self.signals.progress
-        if status_callback:
-            self.kwargs["status_callback"] = self.signals.status
-        
-    @Slot()
-    def run(self):
-        try:
-            result = self.fn(*self.args, **self.kwargs)
-            self.signals.result.emit((self.num, result))
-        except Exception as e:
-            self.signals.error.emit((type(e), str(e), traceback.format_exc()))
-        finally:
-            self.signals.finished.emit()
-
-
-class BatchWorker(QObject):
+class MangaDexApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.threadpool = QThreadPool.globalInstance()
-        self.signals = BatchWorkerSignals()
-        self._workers = []
-        self._results = []
-        self.processed_items = 0
+        self.setWindowTitle("MangaDex API with PySide6")
+        self.setGeometry(300, 300, 400, 200)
 
-    def process_batch(
-        self,
-        fn: Callable,
-        items: List[Any],
-        *args,
-        blocking: bool = True,
-        progress_workers_callback: Optional[Callable[[int], None]] = None,
-        status_workers_callback: Optional[Callable[[str], None]] = None,
-        **kwargs
-    ) -> List[Any]:
-
-        self._results = [None] * len(items)
-        loop = QEventLoop() if blocking else None
+        # Set up the main label to display the results
+        self.result_label = QLabel("Fetching manga data...", self)
         
-        for item in items:
-            worker = Worker(
-                fn,
-                item,
-                *args,
-                progress_callback=bool(progress_workers_callback),
-                status_callback=bool(status_workers_callback),
-                **kwargs
-            )
-            worker.signals.result.connect(self._handle_result)
-            worker.signals.error.connect(self._handle_error)
-            
-            if progress_workers_callback:
-                worker.signals.progress.connect(progress_workers_callback)
-            if status_workers_callback:
-                worker.signals.status.connect(status_workers_callback)
+        # Layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.result_label)
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+        # Initialize the QNetworkAccessManager
+        self.network_manager = QNetworkAccessManager()
         
-        if blocking:
-            loop.exec_()
-            return self._results
-        return []
+        self.network_manager.finished.connect(self.handle_response)
 
-    def _handle_result(self, result: Tuple[int, Any]):
-        num, value = result
-        self._results[num] = value
-        self.processed_items += 1
-        self.signals.item_completed.emit((num, value))
-        self.signals.progress.emit(int((self.processed_items / len(self._results)) * 100))
-        
-        if self.processed_items == len(self._results):
-            self.signals.all_completed.emit(self._results)
+        self.fetch_manga("nano machine")
 
-    def _handle_error(self, error: Tuple[type, str, str]):
-        self.signals.error.emit(error)
-        self.signals.status.emit(f"Error occurred: {error[1]}")
+    def fetch_manga(self, title):
+        # Construct the URL for MangaDex API search
+        url = f"https://api.mangadex.org/manga?title={title}"
+        request = QNetworkRequest(QUrl(url))
 
-    def cancel(self):
-        self._workers.clear()
-        self._results.clear()
-        self.signals.status.emit("Operation cancelled")
+        # Set a User-Agent header to prevent the server from rejecting the request
+        request.setRawHeader(b"User-Agent", b"PySide6 MangaDex Client")
+
+        # Send the GET request
+        self.network_manager.get(request)
+
+
+    @Slot("QNetworkReply*")
+    def handle_response(self, reply: QNetworkReply):
+        # Check for network errors and log details
+        if not reply.error():
+            error_code = reply.error()
+            error_string = reply.errorString()
+            print(reply)
+            print(f"Error Code: {error_code}, Error Message: {error_string}")
+            self.result_label.setText(f"Error: {error_string}")
+            return
+
+        # Parse JSON data if no errors
+        data = reply.readAll().data()
+        try:
+            json_data = json.loads(data)
+            if "data" in json_data:
+                manga_title = json_data["data"][0]["attributes"]["title"]["en"]
+                self.result_label.setText(f"Manga title: {manga_title}")
+            else:
+                self.result_label.setText("No results found.")
+        except json.JSONDecodeError:
+            self.result_label.setText("Error decoding JSON.")
+
+
+# Running the application
+app = QApplication(sys.argv)
+window = MangaDexApp()
+window.show()
+sys.exit(app.exec())

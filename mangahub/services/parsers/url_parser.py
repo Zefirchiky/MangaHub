@@ -1,6 +1,7 @@
 import re
 from services.parsers import SitesJsonParser
 from models import Site, Manga
+from gui.gui_utils import MM
 
 
 class UrlParser:
@@ -20,7 +21,7 @@ class UrlParser:
             if site.url in self.url:
                 return site
 
-        print("Site not found")
+        MM.show_message('error', f"No site for {self.url} was found")
         return None
 
     def get_regex_match(self):
@@ -41,22 +42,21 @@ class UrlParser:
         return self.regex_match.group('num_identifier')
     
     @staticmethod
-    def get_title_page_url(site: Site, manga: Manga) -> str:
+    def get_title_page_url(site: Site, manga_id, manga_name) -> str:
         url = site.url + "/" + site.title_page['url_format'].replace(
-                '$manga_id$', manga._id
+                '$manga_id$', manga_id
             ).replace(
-                '$num_identifier$', site.manga[manga.name]['num_identifier']
+                '$num_identifier$', site.manga[manga_name]['num_identifier']
             )
-        print(url)
 
         return url
 
     @staticmethod
-    def get_chapter_page_url(site: Site, manga: Manga, chapter_num: int) -> str:
+    def get_chapter_page_url(site: Site, manga_id, manga_name, chapter_num: int) -> str:
         url = site.url + "/" + site.chapter_page['url_format'].replace(
-                '$manga_id$', manga._id
+                '$manga_id$', manga_id
             ).replace(
-                '$num_identifier$', 'ffffffff'
+                '$num_identifier$', site.manga[manga_name]['num_identifier']
             ).replace(
                 '$chapter_num$', str(chapter_num)
             )

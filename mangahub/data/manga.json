@@ -4,14 +4,14 @@
         "_id": "boundless-necromancer",
         "_id_dex": "9342c30d-2f4b-4527-a66e-08616f348038",
         "cover": "d:\\AllArtem\\Programmer\\WIP\\MangaHub\\mangahub\\data\\manga/boundless-necromancer/cover.jpg",
-        "current_chapter": 2,
+        "current_chapter": null,
         "last_chapter": 109,
         "description": null,
         "author": null,
         "artist": null,
         "status": "Unknown",
         "year": null,
-        "last_updated": "2024-11-04 05:29:31.692662",
+        "last_updated": "2024-11-04 18:52:09.871618",
         "sites": [
             "AsuraScans"
         ],
@@ -32,36 +32,6 @@
                 "_id_dex": "fa746db8-7274-4ac5-93c3-e8aefa90f6d6",
                 "url": "",
                 "upload_date": "2024-11-02T19:31:41+00:00",
-                "translator": null,
-                "language": "en",
-                "images": {}
-            },
-            "2": {
-                "number": 2,
-                "name": null,
-                "_id_dex": "6b5af395-5603-4025-8f05-27cf9268dbd8",
-                "url": "",
-                "upload_date": "2023-06-23T04:17:16+00:00",
-                "translator": null,
-                "language": "en",
-                "images": {}
-            },
-            "3": {
-                "number": 3,
-                "name": null,
-                "_id_dex": "618918e8-96b2-406a-96cd-081d60bb6577",
-                "url": "",
-                "upload_date": "2023-06-23T04:17:51+00:00",
-                "translator": null,
-                "language": "en",
-                "images": {}
-            },
-            "4": {
-                "number": 4,
-                "name": null,
-                "_id_dex": "bdd2a298-d3cf-4843-b8f3-33921c7feb14",
-                "url": "",
-                "upload_date": "2023-06-23T04:18:27+00:00",
                 "translator": null,
                 "language": "en",
                 "images": {}
@@ -114,14 +84,14 @@
         "_id": "i,-the-demon-lord,-am-being-targeted-by-my-female-disciples!",
         "_id_dex": "df3ffe06-af50-46cb-bdb3-79f760190234",
         "cover": "d:\\AllArtem\\Programmer\\WIP\\MangaHub\\mangahub\\data\\manga/i,-the-demon-lord,-am-being-targeted-by-my-female-disciples!/cover.jpg",
-        "current_chapter": 5,
+        "current_chapter": 1,
         "last_chapter": 39,
         "description": null,
         "author": null,
         "artist": null,
         "status": "Unknown",
         "year": null,
-        "last_updated": "2024-11-04 13:02:35.137731",
+        "last_updated": "2024-11-04 14:55:56.580689",
         "sites": [],
         "chapters": {
             "1": {
@@ -150,6 +120,16 @@
                 "_id_dex": "9093ef38-fd44-437e-9e41-4effc96f3697",
                 "url": "",
                 "upload_date": "2024-03-28T04:51:55+00:00",
+                "translator": null,
+                "language": "en",
+                "images": {}
+            },
+            "2": {
+                "number": 2,
+                "name": null,
+                "_id_dex": "c53601d2-3ccc-408e-a17e-9c3efe814268",
+                "url": "",
+                "upload_date": "2024-02-14T17:03:32+00:00",
                 "translator": null,
                 "language": "en",
                 "images": {}

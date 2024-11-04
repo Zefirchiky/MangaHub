@@ -38,18 +38,22 @@ class MangaDexScraper:
             self.manga_data[name] = manga
             return manga
         
-        MM.show_message('error', f"Manga {name} not found")
-        raise Exception(f"Manga {name} not found")
+        MM.show_message('warning', f"Manga {name} not found on MangaDex")
+        return None
     
     def get_manga_id(self, name):
         data = self.get_manga_data(name)
+        if not data:
+            return None
         return data["id"]
     
     def get_manga_cover_filename(self, manga_id):
         response = requests.get(f"{self.cover_id_url}", params={"manga[]": manga_id})
-        response.raise_for_status()
-        data = response.json()["data"][0]
-        return data["attributes"]["fileName"]
+        data = response.json()["data"]
+        if not data:
+            MM.show_message('error', f"Manga {manga_id} not found")
+            return None
+        return data[0]["attributes"]["fileName"]
     
     def get_manga_cover(self, name):
         manga_id = self.get_manga_id(name)

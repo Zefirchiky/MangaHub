@@ -10,8 +10,8 @@ from .tags.tag import Tag
 class Manga(BaseModel):
     name: str
     _id: str
-    _id_dex: str
-    cover: str
+    _id_dex: str = ''
+    cover: str = ''
     current_chapter: Optional[int] = None
     last_chapter: Optional[int] = None
     description: Optional[str] = None

@@ -27,17 +27,14 @@ class MangaManager:
     def add_new_manga(self, manga: Manga):
         self.manga_collection[manga.name] = manga
         
-    def create_manga(self, name, sites=[]):
+    def create_manga(self, name, sites=[], **kwargs):
         _id = name.lower().replace(' ', '-')
         _id_dex = self.dex_scraper.get_manga_id(name)
         last = self.dex_scraper.get_last_chapter_num(_id_dex)
         
-        cover = f'{MANGA_DIR}/{_id}/cover.jpg'
-        os.makedirs(f'{MANGA_DIR}/{_id}', exist_ok=True)
-        with open(cover, 'wb') as f:
-            f.write(self.dex_scraper.get_manga_cover(_id))
+        cover = self.ensure_cover(_id, _id_dex, sites)
         
-        manga = Manga(name, _id, _id_dex, cover, last_chapter=last, sites=sites)
+        manga = Manga(name, _id, _id_dex, cover, last_chapter=last, sites=sites, **kwargs)
         manga.add_chapter(self.get_chapter(manga, 1))
         manga.add_chapter(self.get_chapter(manga, last))
         
@@ -88,15 +85,25 @@ class MangaManager:
 
         return Manga(name, _id, cover, [site.name])
     
-    def ensure_cover(self, _id, url_parser):
+    def ensure_cover(self, _id, _id_dex=None, sites=[]):
         dir = f'{MANGA_DIR}/{_id}'
+        os.makedirs(dir, exist_ok=True)
         if os.path.exists(f'{dir}/cover.jpg'):
-            cover = f'{dir}/cover.jpg'
+            return f'{dir}/cover.jpg'
+        
+        if _id_dex:
+            cover = self.dex_scraper.get_manga_cover(_id_dex)
+        elif sites:
+            scraper = MangaSiteScraper(self.sites_parser, sites=sites)
+            cover = scraper.get_manga_cover(dir)  # TODO
         else:
-            scraper = MangaSiteScraper(self.sites_parser, url_parser=url_parser)
-            cover = scraper.save_manga_cover_path(dir)
+            MM.show_message('error', f"No cover for {_id} was found")
+            return None
+            
+        with open(f'{dir}/cover.jpg', 'wb') as f:
+            f.write(cover)
 
-        return cover
+        return f'{dir}/cover.jpg'
     
     def get_all_manga(self):
         return self.manga_parser.get_all_manga()
@@ -118,9 +125,6 @@ class MangaManager:
     
     def add_chapter(self, manga: Manga, chapter: MangaChapter):
         manga.add_chapter(chapter)
-    
-    def get_chapter_images_iter(self, manga, num):
-        scraper = MangaSiteScraper(self.sites_parser, manga=manga)
         
     def save(self):
         self.manga_parser.save_data(self.manga_collection)
