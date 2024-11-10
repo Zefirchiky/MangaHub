@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(1, self.manga_viewer)
 
 
-        # self.manager.create_manga("Boundless Necromancer", sites=["AsuraScans"])
+        self.manager.create_manga("Boundless Necromancer", sites=["AsuraScans"])
         # self.manager.create_manga("Nano Machine", sites=["AsuraScans"])
         # self.manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.manager.create_manga("Dragon-Devouring Mage")

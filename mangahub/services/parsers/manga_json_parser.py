@@ -1,35 +1,21 @@
-from typing import Dict
-from services.handlers import JsonHandler
-from models import Manga, MangaChapter
-from gui.gui_utils import MM
+from .model_json_parser import ModelJsonParser
+from .manga_chapters_json_parser import MangaChaptersJsonParser
+from models import Manga
 
 
-class MangaJsonParser:
+class MangaJsonParser(ModelJsonParser):
     def __init__(self, file="data/manga.json"):
-        self.file = file
-        self.json_parser = JsonHandler(self.file)
-        self.data = self.json_parser.get_data()
-        self.manga_collection = {}
+        super().__init__(file, Manga)
+        self.manga_collection = self.models_collection
 
     def get_manga(self, name) -> Manga | None:
-        if name in self.manga_collection.keys():
-            return self.manga_collection[name]
-        else:
-            try:
-                manga = Manga.model_validate(self.data[name])
-                self.manga_collection[name] = manga
-                return manga
-            except KeyError:
-                MM.show_message('error', f"Manga {name} not found")
-                return None
+        return self.get_model(name)
 
     def get_all_manga(self) -> dict:
-        for manga_name in self.data.keys():
-            if manga_name not in self.manga_collection.keys():
-                self.manga_collection[manga_name] = self.get_manga(manga_name)
-        
-        return self.manga_collection
+        return self.get_all_models()
     
-    def save_manga(self, manga_dict: Dict[str, Manga]):
-        manga_list = {name: manga.model_dump(mode="json") for name, manga in manga_dict.items()}
-        self.json_parser.save_data(manga_list)
+    def save_manga(self, manga_dict: dict[str, Manga]):
+        for manga in manga_dict.values():
+            chapters_parser = MangaChaptersJsonParser(manga)
+            chapters_parser.save(manga._chapters_data)
+        super().save(manga_dict)

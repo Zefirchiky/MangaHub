@@ -8,19 +8,24 @@ class Manga(TagModel, BaseModel):
     name: str
     id_: str
     id_dex: str = ''
+    
+    folder: str = ''
     cover: str = ''
-    current_chapter: int = 0
-    last_chapter: int = 0
+    
     description: str = ''
     author: str = ''
     artist: str = ''
     status: str = "Unknown"
     year: int = 0
     last_updated: str = Field(default_factory=lambda: str(datetime.now))
+    
     site: str = 'MangaDex'
     backup_sites: set[str] = set()
-    chapters: set[int] = set()
-    _chapters_data: dict[int, MangaChapter] = PrivateAttr(default_factory=dict)
+    
+    current_chapter: int = 0
+    last_chapter: int = 0
+    chapters: set[float] = set()
+    _chapters_data: dict[float, MangaChapter] = PrivateAttr(default_factory=dict)
     
     def add_backup_site(self, site_name) -> None:
         self.backup_sites.add(site_name)

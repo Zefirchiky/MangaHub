@@ -108,7 +108,7 @@ class MangaDashboard(SmoothScrollArea):
         self.manga = {}
         
     def add_manga(self, manga: Manga):
-        mc = MangaCard(manga.name, manga.cover)
+        mc = MangaCard(manga.name, f"{manga.folder}/{manga.cover}")
         
         if manga.last_chapter:
             mc.add_chapter_button(manga.last_chapter, manga._chapters_data[manga.last_chapter].name, manga._chapters_data[manga.last_chapter].upload_date, 'last')

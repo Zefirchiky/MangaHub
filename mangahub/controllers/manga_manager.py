@@ -1,8 +1,8 @@
 from directories import *
 from gui.gui_utils import MM
 from services.parsers import MangaJsonParser, SitesJsonParser, UrlParser
-from services.scrapers import MangaSiteScraper
-from services.scrapers import MangaDexScraper
+from services.scrapers import MangaSiteScraper, MangaDexScraper
+from services.handlers import JsonHandler
 from models import Manga, MangaChapter, ChapterImage
 from utils import retry
 import os
@@ -28,12 +28,13 @@ class MangaManager:
         self.manga_collection[manga.name] = manga
         
     def create_manga(self, name, site='MangaDex', backup_sites=[], **kwargs):
-        _id = name.lower().replace(' ', '-')
-        _id_dex = self.dex_scraper.get_manga_id(name)
-        last = self.dex_scraper.get_last_chapter_num(_id_dex)
+        id_ = name.lower().replace(' ', '-').replace(',', '').replace('.', '')
+        id_dex = self.dex_scraper.get_manga_id(name)
+        folder = f'{MANGA_DIR}/{id_}'
+        os.makedirs(folder, exist_ok=True)
+        last = self.dex_scraper.get_last_chapter_num(id_dex)
         
-        
-        manga = Manga(name=name, id_=_id, id_dex=_id_dex, last_chapter=last, site=site, backup_sites=backup_sites, **kwargs)
+        manga = Manga(name=name, id_=id_, id_dex=id_dex, folder=folder, last_chapter=last, site=site, backup_sites=backup_sites, **kwargs)
         # manga.add_chapter(self.get_chapter(manga, 1))
         # manga.add_chapter(self.get_chapter(manga, last))
         
@@ -44,6 +45,10 @@ class MangaManager:
         return manga
     
     def get_chapter(self, manga: Manga, num):
+        json = JsonHandler(f"{manga.folder}/chapters.json").get_data()
+        if json.get(num):
+            return json[num]
+        
         chapter = manga._chapters_data.get(num)
         if chapter:
             return chapter
@@ -100,10 +105,8 @@ class MangaManager:
         return Manga(name, _id, cover, [site.name])
     
     def ensure_cover(self, manga: Manga):
-        dir = f'{MANGA_DIR}/{manga.id_}'
-        os.makedirs(dir, exist_ok=True)
-        if os.path.exists(f'{dir}/cover.jpg'):
-            return f'{dir}/cover.jpg'
+        if os.path.exists(f'{manga.folder}/cover.jpg'):
+            return f'cover.jpg'
         
         if manga.id_dex:
             cover = self.dex_scraper.get_manga_cover(manga.id_dex)
@@ -115,10 +118,10 @@ class MangaManager:
             return None
         
         if cover:    
-            with open(f'{dir}/cover.jpg', 'wb') as f:
+            with open(f'{manga.folder}/cover.jpg', 'wb') as f:
                 f.write(cover)
 
-            return f'{dir}/cover.jpg'
+            return f'cover.jpg'
         return None
     
     def get_all_manga(self) -> dict[str, Manga]:
