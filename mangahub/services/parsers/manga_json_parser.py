@@ -1,4 +1,4 @@
-from dataclasses import asdict
+from typing import Dict
 from services.handlers import JsonHandler
 from models import Manga, MangaChapter
 from gui.gui_utils import MM
@@ -9,19 +9,15 @@ class MangaJsonParser:
         self.file = file
         self.json_parser = JsonHandler(self.file)
         self.data = self.json_parser.get_data()
-        self.manga = {}
+        self.manga_collection = {}
 
     def get_manga(self, name) -> Manga | None:
-        if name in self.manga.keys():
-            return self.manga[name]
+        if name in self.manga_collection.keys():
+            return self.manga_collection[name]
         else:
             try:
-                for num, chapter in self.data[name]["chapters"].copy().items():
-                    if isinstance(num, str):
-                        del self.data[name]["chapters"][num]
-                    self.data[name]["chapters"][int(num)] = MangaChapter(**chapter)
-                manga = Manga(**self.data[name])
-                self.manga[name] = manga
+                manga = Manga.model_validate(self.data[name])
+                self.manga_collection[name] = manga
                 return manga
             except KeyError:
                 MM.show_message('error', f"Manga {name} not found")
@@ -29,11 +25,11 @@ class MangaJsonParser:
 
     def get_all_manga(self) -> dict:
         for manga_name in self.data.keys():
-            if manga_name not in self.manga.keys():
-                self.manga[manga_name] = self.get_manga(manga_name)
+            if manga_name not in self.manga_collection.keys():
+                self.manga_collection[manga_name] = self.get_manga(manga_name)
         
-        return self.manga
+        return self.manga_collection
     
-    def save_data(self, data):
-        manga_list = {manga.name: asdict(manga) for manga in data.values()}
+    def save_manga(self, manga_dict: Dict[str, Manga]):
+        manga_list = {name: manga.model_dump(mode="json") for name, manga in manga_dict.items()}
         self.json_parser.save_data(manga_list)

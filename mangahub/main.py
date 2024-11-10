@@ -21,7 +21,7 @@ class App:
         self.gui_app = QApplication(sys.argv)
         self.gui_app.setWindowIcon(QIcon("resources/app_icon.ico"))
         self.gui_window = MainWindow(self)
-        self.mm = MM(self)
+        self.message_manager = MM(self)
 
         self.manga_json_parser = MangaJsonParser(MANGA_JSON)
         self.sites_json_parser = SitesJsonParser(SITES_JSON)

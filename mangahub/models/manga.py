@@ -1,38 +1,40 @@
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional
+from pydantic import BaseModel, Field, PrivateAttr
 from datetime import datetime
-from .base_model import BaseModel
 from .manga_chapter import MangaChapter
-from .tags.tag import Tag
+from .tags.tag_model import TagModel
 
 
-@dataclass
-class Manga(BaseModel):
+class Manga(TagModel, BaseModel):
     name: str
-    _id: str
-    _id_dex: str = ''
+    id_: str
+    id_dex: str = ''
     cover: str = ''
-    current_chapter: Optional[int] = None
-    last_chapter: Optional[int] = None
-    description: Optional[str] = None
-    author: Optional[str] = None
-    artist: Optional[str] = None
+    current_chapter: int = 0
+    last_chapter: int = 0
+    description: str = ''
+    author: str = ''
+    artist: str = ''
     status: str = "Unknown"
-    year: Optional[int] = None
-    last_updated: str = str(datetime.now())
-    sites: List[str] = field(default_factory=list)
-    chapters: Dict[int, MangaChapter] = field(default_factory=dict)
-    tags: List[Tag] = field(default_factory=list)
+    year: int = 0
+    last_updated: str = Field(default_factory=lambda: str(datetime.now))
+    site: str = 'MangaDex'
+    backup_sites: set[str] = set()
+    chapters: set[int] = set()
+    _chapters_data: dict[int, MangaChapter] = PrivateAttr(default_factory=dict)
     
-    def add_site(self, site) -> None:
-        if site not in self.sites:
-            self.sites.append(site)
+    def add_backup_site(self, site_name) -> None:
+        self.backup_sites.add(site_name)
             
     def add_chapter(self, chapter: MangaChapter) -> None:
-        if chapter.number not in self.chapters:
-            self.chapters[chapter.number] = chapter
-            self.last_updated = str(datetime.now())
+        if chapter.number not in self._chapters_data.keys():
+            self._chapters_data[chapter.number] = chapter
+            self.update()
+            
+    def check_chapter(self, chapter_num) -> None:
+        self.chapters.add(chapter_num)
         
-    def add_tag(self, tag: Tag) -> None:
-        if tag not in self.tags:
-            self.tags.append(tag)
+    def uncheck_chapter(self, chapter_num) -> None:
+        self.chapters.remove(chapter_num)
+        
+    def update(self) -> None:
+        self.last_updated = str(datetime.now())

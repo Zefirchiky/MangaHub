@@ -21,11 +21,11 @@ class MangaSiteScraper:
         if manga.name in self.title_pages:
             return self.title_pages[manga.name]
 
-        if not manga.sites:
+        if not manga.backup_sites:
             MM.show_message('error', f"No sites for {manga.name} was found")
             return None
         
-        for _site in manga.sites:
+        for _site in manga.backup_sites:
             self.site = self.sites_parser.get_site(_site)
             url = UrlParser.get_title_page_url(self.site, manga)
 
@@ -48,11 +48,11 @@ class MangaSiteScraper:
             if num in self.chapter_pages[manga.name]:
                 return self.chapter_pages[manga.name][num]
             
-        if not manga.sites:
+        if not manga.backup_sites:
             MM.show_message('error', f"No sites for {manga.name} {num} was found")
             return None
         
-        for _site in manga.sites:
+        for _site in manga.backup_sites:
             self.site = self.sites_parser.get_site(_site)
             url = UrlParser.get_chapter_page_url(self.site, manga, num)
 

@@ -16,8 +16,6 @@ class Message(QFrame):
     def __init__(self, parent=None, message_type='error', message=None, width=250, min_height=40):
         super().__init__(parent)
         self.setStyleSheet(self._get_style(message_type))
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.SubWindow)
-        self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFixedWidth(width)
         self.setMinimumHeight(min_height)
         
@@ -105,7 +103,7 @@ class MM:
             
             self.width = width
             self.min_height = 40
-            self.x = self.window.width() - self.width - 10
+            self.x = 10
             
             self.active_messages = []
             self.move_anim_group = {}
@@ -140,7 +138,7 @@ class MM:
             animation.setDuration(150)
             animation.setEasingCurve(QEasingCurve.Type.InBack)
             animation.setStartValue(message.geometry())
-            animation.setEndValue(QRect(self.x + self.width + 10, message.geometry().y(), message.width(), message.height()))
+            animation.setEndValue(QRect(-self.width - 10, message.geometry().y(), message.width(), message.height()))
             animation.finished.connect(lambda: self._destroy_message(message))
 
             self.active_messages.remove(message)
@@ -169,7 +167,6 @@ class MM:
                 animation.start()
             
     def pos_update(self):
-        self.x = self.window.width() - self.width - 10      
         self.move_messages(0)  
         
         

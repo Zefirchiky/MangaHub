@@ -77,7 +77,7 @@ class MangaCard(QFrame):
         chapter_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         chapter_button.clicked.connect(lambda _: self.chapter_clicked.emit(num))
         
-        self.chapter_buttons[type] = chapter_button
+        self.chapter_buttons[type] = [chapter_button, name_label, date_label]
         if not insertion:
             self.root_layout.addWidget(chapter_button)
         else:
@@ -110,13 +110,13 @@ class MangaDashboard(SmoothScrollArea):
     def add_manga(self, manga: Manga):
         mc = MangaCard(manga.name, manga.cover)
         
-        if manga.last_chapter is not None:
-            mc.add_chapter_button(manga.last_chapter, manga.chapters[manga.last_chapter].name, manga.chapters[manga.last_chapter].upload_date, 'last')
+        if manga.last_chapter:
+            mc.add_chapter_button(manga.last_chapter, manga._chapters_data[manga.last_chapter].name, manga._chapters_data[manga.last_chapter].upload_date, 'last')
             
-        if manga.current_chapter is not None:
-            mc.add_chapter_button(manga.current_chapter, manga.chapters[manga.current_chapter].name, manga.chapters[manga.current_chapter].upload_date, 'current')
+        if manga.current_chapter and manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter:
+            mc.add_chapter_button(manga.current_chapter, manga._chapters_data[manga.current_chapter].name, manga._chapters_data[manga.current_chapter].upload_date, 'current')
             
-        mc.add_chapter_button(1, manga.chapters[1].name, manga.chapters[1].upload_date, 'first')
+        mc.add_chapter_button(1, manga._chapters_data[1].name, manga._chapters_data[1].upload_date, 'first')
         
         self.manga[manga.name] = mc
         self.root_layout.addWidget(mc)
@@ -124,9 +124,11 @@ class MangaDashboard(SmoothScrollArea):
     
     def update_manga(self, manga: Manga):
         mc: MangaCard = self.manga[manga.name]
-        if mc.chapter_buttons.get('current'):
-            mc.root_layout.removeWidget(mc.chapter_buttons['current'])
-        mc.add_chapter_button(manga.current_chapter, manga.chapters[manga.current_chapter].name, manga.chapters[manga.current_chapter].upload_date, 'current', 3)
+        if manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter:
+            if mc.chapter_buttons.get('current'):
+                mc.chapter_buttons['current'][1].setText(f"Chapter {manga.current_chapter}{': ' if manga._chapters_data[manga.current_chapter].name else ''}{manga._chapters_data[manga.current_chapter].name if manga._chapters_data[manga.current_chapter].name else ''}")
+            else:
+                mc.add_chapter_button(manga.current_chapter, manga._chapters_data[manga.current_chapter].name, manga._chapters_data[manga.current_chapter].upload_date, 'current', 3)
         
     def resizeEvent(self, arg__1):
         self.add_manga_button.move(self.width() - self.add_manga_button.width() - 15, 10)

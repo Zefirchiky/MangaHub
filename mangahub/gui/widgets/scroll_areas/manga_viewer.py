@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem, QPushButto
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QPixmap, QColor
 from .smooth_graphics_view import SmoothGraphicsView
+from models import Manga
 from gui.widgets import SvgIcon
 from directories import *
 
@@ -47,6 +48,8 @@ class MangaViewer(SmoothGraphicsView):
         self.prev_button.setIconSize(QSize(24, 24))
         self.prev_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.prev_button.move(self.width() - self.prev_button.width() - self.next_button.width() - 15, self.height() - self.prev_button.height() - 15)
+        
+        self.manga = None
 
     def add_placeholder(self, width, height, y_pos):
         placeholder = QGraphicsRectItem((0 - width) // 2, y_pos, width, height)
@@ -69,9 +72,14 @@ class MangaViewer(SmoothGraphicsView):
             item.setPos(placeholder.rect().x(), placeholder.rect().y())
             self.scene.addItem(item)
             
-    def set_chapters_selection(self, final_chapter):
+    def set_manga(self, manga: Manga):
+        self.manga = manga
         self.chapter_selection.clear()
-        self.chapter_selection.addItems([f"Chapter {i}" for i in range(1, final_chapter + 1)])
+        self.chapter_selection.addItems([f"Chapter {i}" for i in range(1, manga.last_chapter + 1)])
+        self.chapter_selection.setCurrentIndex(manga.current_chapter - 1 if manga.current_chapter else 0)
+        
+    def set_chapter(self, chapter: int):
+        self.chapter_selection.setCurrentIndex(chapter - 1)
 
     def wheelEvent(self, event):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:

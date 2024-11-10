@@ -1,25 +1,23 @@
-from dataclasses import dataclass, field
-from typing import Dict, Optional
-from .base_model import BaseModel
+from pydantic import BaseModel, Field
+from .tags.tag_model import TagModel
 from .chapter_image import ChapterImage
 
 
-@dataclass
-class MangaChapter(BaseModel):
+class MangaChapter(TagModel, BaseModel):
     number: int
     name: str = ''
-    _id_dex: str = ''
+    id_dex: str = ''
     url: str = ''
     upload_date: str = ''
-    translator: Optional[str] = None
+    translator: str = ''
     language: str = 'en'
-    images: Dict[int, ChapterImage] = field(default_factory=dict)
+    images: dict[int, ChapterImage] = {}
     
     def add_image(self, num: int, image: str) -> None:
         self.images[num] = image
     
-    def add_images(self, images: Dict[int, str]) -> None:
+    def add_images(self, images: dict[int, str]) -> None:
         self.images.update(images)
         
-    def get_image(self, num: int) -> Optional[str]:
+    def get_image(self, num: int) -> str:
         return self.images.get(num)
