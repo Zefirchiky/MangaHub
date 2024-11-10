@@ -1,8 +1,7 @@
 from directories import *
 from gui.gui_utils import MM
-from services.parsers import MangaJsonParser, SitesJsonParser, UrlParser
+from services.parsers import MangaJsonParser, MangaChaptersJsonParser, SitesJsonParser, UrlParser
 from services.scrapers import MangaSiteScraper, MangaDexScraper
-from services.handlers import JsonHandler
 from models import Manga, MangaChapter, ChapterImage
 from utils import retry
 import os
@@ -45,9 +44,9 @@ class MangaManager:
         return manga
     
     def get_chapter(self, manga: Manga, num):
-        json = JsonHandler(f"{manga.folder}/chapters.json").get_data()
-        if json.get(num):
-            return json[num]
+        chapter = MangaChaptersJsonParser(manga).get_chapter(num)
+        if chapter:
+            return chapter
         
         chapter = manga._chapters_data.get(num)
         if chapter:
@@ -72,8 +71,17 @@ class MangaManager:
         return image
     
     def get_chapter_images(self, manga: Manga, chapter: MangaChapter, manga_dex=True):
+        placeholders = []
+        if chapter._images:
+            for image in chapter._images.values():
+                placeholders.append((image.width, image.height))
+        
         if manga_dex and chapter.id_dex:
-            placeholders, images = self.dex_scraper.get_chapter_placeholders(chapter.id_dex), self.dex_scraper.start_chapter_images_download(chapter.id_dex)
+            if not placeholders:
+                placeholders = self.dex_scraper.get_chapter_placeholders(chapter.id_dex)
+                
+            images = self.dex_scraper.start_chapter_images_download(chapter.id_dex)
+            
             if not placeholders:
                 placeholders = self.sites_scraper.get_chapter_placeholders(manga, chapter.number)
             if not images:

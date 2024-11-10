@@ -12,7 +12,7 @@ from .widgets.scroll_areas import MangaViewer, MangaDashboard
 from .widgets.slide_menus import SideMenu
 from .widgets.svg import SvgIcon
 from controllers import MangaManager
-from models import MangaState
+from models import MangaState, ChapterImage
 from gui.gui_utils import MM
 from directories import *
 
@@ -77,14 +77,16 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(1, self.manga_viewer)
 
 
-        self.manager.create_manga("Boundless Necromancer", sites=["AsuraScans"])
-        # self.manager.create_manga("Nano Machine", sites=["AsuraScans"])
+        # self.manager.create_manga("Boundless Necromancer", sites=["AsuraScans"])
+        # self.manager.create_manga("Nano Machine", backup_sites=["AsuraScans"])
         # self.manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.manager.create_manga("Dragon-Devouring Mage")
         
         for manga in self.manager.get_all_manga().values():
             manga.add_chapter(self.manager.get_chapter(manga, 1))
             manga.add_chapter(self.manager.get_chapter(manga, manga.last_chapter))
+            if manga.current_chapter and manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter:
+                manga.add_chapter(self.manager.get_chapter(manga, manga.current_chapter))
             mc = self.manga_dashboard.add_manga(manga)
             mc.chapter_clicked.connect(lambda n, manga=manga: self.manga_state.set_manga(manga, n))
         
@@ -94,6 +96,8 @@ class MainWindow(QMainWindow):
         chapter = self.manager.get_chapter(self.manga_state._manga, self.manga_state.chapter)
         self.manga_state._manga.add_chapter(chapter)
         placeholders, worker = self.manager.get_chapter_images(self.manga_state._manga, chapter, manga_dex=True)
+        for num, placeholder in enumerate(placeholders):
+            chapter.add_image(num, ChapterImage(number=num, width=placeholder[0], height=placeholder[1]))
         
         self.manga_viewer.prev_button.setEnabled(not self.manga_state.is_first())
         self.manga_viewer.next_button.setEnabled(not self.manga_state.is_last())

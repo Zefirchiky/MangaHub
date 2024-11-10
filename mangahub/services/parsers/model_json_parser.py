@@ -12,17 +12,21 @@ class ModelJsonParser:
         self.data = self.json_parser.get_data()
         self.models_collection = {}
         
-    def get_model(self, name) -> Manga | MangaChapter | ChapterImage | Site | None:
+    def get_model(self, name: str | float) -> Manga | MangaChapter | ChapterImage | Site | None:
         if name in self.models_collection.keys():
             return self.models_collection[name]
         
         try:
-            model = self.model.model_validate(self.data[name])
-            self.models_collection[name] = model
-            return model
+            name = float(name) if isinstance(name, int) else name
+            data = self.data.get(str(name))
+            if data:
+                model = self.model.model_validate(data)
+                self.models_collection[name] = model
+                return model
+            return 
         except KeyError:
             MM.show_message('error', f"{model.__name__} {name} not found")
-            return None
+            return 
         
     def get_all_models(self) -> dict[str | float, Manga | MangaChapter | ChapterImage | Site]:
         for name in self.data.keys():

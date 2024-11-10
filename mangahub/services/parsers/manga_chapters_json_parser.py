@@ -12,8 +12,10 @@ class MangaChaptersJsonParser(ModelJsonParser):
     def get_chapter(self, num: float) -> MangaChapter | None:
         images_parser = ChapterImagesJsonParser(f"{self.manga.folder}/chapter{num}/images.json")
         chapter = super().get_model(num)
-        chapter._images = images_parser.get_all_images()
-        return chapter
+        if chapter:
+            chapter._images = images_parser.get_all_images()
+            return chapter
+        return 
     
     def get_model(self, name) -> MangaChapter | None:
         return self.get_chapter(name)   # so get_all_chapters() uses custom get_chapter()

@@ -37,6 +37,7 @@ class MangaCard(QFrame):
         self.image.fit(vec2(250, 300))
         
         manga_name_label = QLabel(manga_name)
+        manga_name_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         manga_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         manga_name_label.setFont(QFont("Georgia", 15, 5))
         
