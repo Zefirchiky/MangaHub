@@ -41,7 +41,7 @@ class MangaCard(QFrame):
         manga_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         manga_name_label.setFont(QFont("Georgia", 15, 5))
         
-        manga_name_scroll = SmoothScrollArea(False)
+        manga_name_scroll = SmoothScrollArea(vertical=False)
         manga_name_scroll.scroll_duration = 100
         manga_name_scroll.step_size = 15
         manga_name_scroll.setContentsMargins(0, 0, 0, 0)

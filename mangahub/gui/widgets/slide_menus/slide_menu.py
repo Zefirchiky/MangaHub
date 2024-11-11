@@ -29,7 +29,7 @@ class SlideMenu(QFrame):
         self.buttons = {}
         self.buttons_layout = QBoxLayout(QBoxLayout.Direction.TopToBottom if is_vertical else QBoxLayout.Direction.LeftToRight)
 
-        expand_button_icon = SvgIcon(f"{ICONS_DIR}/menu-outline.svg")
+        expand_button_icon = SvgIcon(f"{ICONS_DIR}/menu.svg")
 
         expansion_button = QPushButton()
         expansion_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))

@@ -10,7 +10,7 @@ from .multi_window.add_manga import AddMangaWindow
 from .multi_window.settings import SettingsWindow
 from .widgets.scroll_areas import MangaViewer, MangaDashboard
 from .widgets.slide_menus import SideMenu
-from .widgets.svg import SvgIcon
+from .widgets import SvgIcon, SelectionMenu
 from controllers import MangaManager
 from models import MangaState, ChapterImage
 from gui.gui_utils import MM
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
 
 
         # side menu
-        book_svg_icon = SvgIcon(f"{ICONS_DIR}/book-outline.svg")
+        book_svg_icon = SvgIcon(f"{ICONS_DIR}/book.svg")
 
         self.side_menu = SideMenu(self)
         self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
@@ -51,7 +51,10 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.check_mouse_position)
         self.timer.start(100)
         
-    def init(self):        
+    def init(self):
+        self.selection_menu = SelectionMenu(self)
+        self.selection_menu.show()
+        
         self.settings_window = SettingsWindow()
         self.add_manga_window = AddMangaWindow()
         

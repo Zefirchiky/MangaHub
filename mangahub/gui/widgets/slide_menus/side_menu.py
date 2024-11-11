@@ -48,14 +48,14 @@ class SideMenu(QFrame):
                                 ''')
         menu_button.setFixedHeight(56)
         menu_button.setIconSize(QSize(40, 40))
-        menu_button.setIcon(SvgIcon(f"{ICONS_DIR}/menu-outline.svg").get_icon('white', fill='white'))
+        menu_button.setIcon(SvgIcon(f"{ICONS_DIR}/menu.svg").get_icon('white', fill='white'))
         menu_button.clicked.connect(lambda: self.handle_full_menu())
 
         # Buttons
         self.buttons_layout = QVBoxLayout()
 
         # Settings
-        self.settings_svg_icon = SvgIcon(f"{ICONS_DIR}/settings-outline.svg")
+        self.settings_svg_icon = SvgIcon(f"{ICONS_DIR}/settings.svg")
         self.settings_button = QPushButton()
         self.settings_button.setCheckable(True)
         self.settings_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))

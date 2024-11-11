@@ -29,7 +29,7 @@ class AddMangaWindow(QMainWindow):
 
         sites_add_button = QPushButton()
         sites_add_button.setStyleSheet("QPushButton { background-color: transparent; border: 2px dashed grey; border-radius: 5px; }")
-        sites_add_button.setIcon(SvgIcon(f"{ICONS_DIR}/add-outline.svg").get_icon('white'))
+        sites_add_button.setIcon(SvgIcon(f"{ICONS_DIR}/plus.svg").get_icon('white'))
         sites_add_button.setIconSize(QSize(16, 16))
 
         sites_layout = QVBoxLayout()
