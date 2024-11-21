@@ -2,6 +2,7 @@ from typing import Callable, Optional, List, Any, Tuple
 import traceback
 
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool, QEventLoop
+from loguru import logger
 
 
 class WorkerSignals(QObject):
@@ -71,6 +72,9 @@ class BatchWorker(QObject):
         **kwargs
     ) -> List[Any]:
         
+        fn_name = fn.__qualname__
+        logger.info(f"Starting batch processing: {fn_name} - [{items[0]} - {len(items)}]")
+        
         self._results = [None for _ in range(len(items))]
         self._workers = []
         total_items = len(items)
@@ -90,6 +94,7 @@ class BatchWorker(QObject):
                 self.signals.all_completed.emit(self._results)
                 if loop:
                     loop.quit()
+                logger.success(f"Batch processing completed: {fn_name} - [{items[0]} - {len(items)}]")
                 return self._results
         
         for i, item in enumerate(items):
@@ -122,6 +127,7 @@ class BatchWorker(QObject):
     def _handle_error(self, error: Tuple[type, str, str]):
         self.signals.error.emit(error)
         self.signals.status.emit(f"Error occurred: {error[1]}")
+        logger.error(f"Error occurred: {error[1]}")
     
     def cancel(self):
         self._workers.clear()

@@ -2,6 +2,7 @@ import requests
 import io
 
 from PIL import Image
+from loguru import logger
 
 from gui.gui_utils import MM
 from utils import BatchWorker, convert_to_format
@@ -20,6 +21,8 @@ class MangaDexScraper:
         
         self.manga_data = {}
         self.chapters_data = {}
+        
+        logger.success('MangaDexScraper initialized')
     
     def get_manga_data(self, name):
         if name in self.manga_data.keys():
@@ -38,7 +41,7 @@ class MangaDexScraper:
             self.manga_data[name] = manga
             return manga
         
-        MM.show_message('warning', f"Manga {name} not found on MangaDex")
+        MM.show_message('warning', f"Manga {name} was not found on MangaDex")
         return None
     
     def get_manga_id(self, name):
@@ -186,7 +189,7 @@ class MangaDexScraper:
         placeholders_worker.signals.all_completed.connect(lambda _: MM.show_message('success', "Image sizes downloaded"))
         return list(placeholders_worker.process_batch(self.get_image_size, image_urls, blocking=True))
     
-    def start_chapter_images_download(self, chapter_id, data_saver=1):
+    def get_chapter_images(self, chapter_id, data_saver=1):
         image_urls = self.get_chapter_image_urls(chapter_id, data_saver)
         if not image_urls:
             return None

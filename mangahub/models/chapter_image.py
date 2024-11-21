@@ -1,8 +1,7 @@
-from pydantic import BaseModel
 from .tags.tag_model import TagModel
 
 
-class ChapterImage(TagModel, BaseModel):
+class ChapterImage(TagModel):
     number: int
     width: int
     height: int

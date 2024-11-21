@@ -8,6 +8,7 @@ from PySide6.QtCore import (
     Qt, QRect, QTimer, Signal,
     QPropertyAnimation, QEasingCurve
 )
+from loguru import logger
 
 
 class Message(QFrame):
@@ -38,7 +39,7 @@ class Message(QFrame):
 
         self.setLayout(root_layout)
         self.adjust_height()
-
+        
     def adjust_height(self):
         label_height = self.label.sizeHint().height()
         self.setFixedHeight(max(self.min_height, label_height + 30))
@@ -108,6 +109,8 @@ class MM:
             self.active_messages = []
             self.move_anim_group = {}
             self.destroy_anim_group = {}
+            
+            logger.success("MessageManager initialized")
     
     @classmethod
     def show_message(cls, message_type='error', message_text=None, progress=False, duration=5000):

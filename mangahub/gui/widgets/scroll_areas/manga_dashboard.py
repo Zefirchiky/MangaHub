@@ -15,9 +15,9 @@ from directories import *
 
 
 class MangaCard(QFrame):
-    chapter_clicked = Signal(int)
+    chapter_clicked = Signal(str, float)
     
-    def __init__(self, manga_name, image, parent=None):
+    def __init__(self, manga: Manga, parent=None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setObjectName("manga_card")
@@ -31,12 +31,14 @@ class MangaCard(QFrame):
             ''')
         self.setAutoFillBackground(True)
         
-        self.image = ImageWidget(image)
+        self.manga = manga
+        
+        self.image = ImageWidget(f"{self.manga.folder}/{self.manga.cover}")
         self.image.scale_to_width(25)
         self.image.scale_to_width(250)
         self.image.fit(vec2(250, 300))
         
-        manga_name_label = QLabel(manga_name)
+        manga_name_label = QLabel(self.manga.name)
         manga_name_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         manga_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         manga_name_label.setFont(QFont("Georgia", 15, 5))
@@ -60,7 +62,7 @@ class MangaCard(QFrame):
         self.chapter_buttons = {}
         
     def add_chapter_button(self, num, name, upload_date, type='last', insertion=0):
-        name_label = QLabel(f"Chapter {num}{': ' if name else ''}{name if name else ''}")
+        name_label = QLabel(f"Chapter {num}{': ' if name else ''}{name if name else ''}")   # 'Chapter 1: Name' or 'Chapter 1'
         name_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         
         date_label = QLabel(f"{upload_date.split('T')[0] if upload_date else ''}")
@@ -76,7 +78,7 @@ class MangaCard(QFrame):
         chapter_button = QPushButton()
         chapter_button.setLayout(vb)
         chapter_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        chapter_button.clicked.connect(lambda _: self.chapter_clicked.emit(num))
+        chapter_button.clicked.connect(lambda _: self.chapter_clicked.emit(self.manga.name, num))
         
         self.chapter_buttons[type] = [chapter_button, name_label, date_label]
         if not insertion:
@@ -106,10 +108,10 @@ class MangaDashboard(SmoothScrollArea):
         
         self.setWidget(self.root_widget)
         
-        self.manga = {}
+        self.manga: dict[str, MangaCard] = {}
         
     def add_manga(self, manga: Manga):
-        mc = MangaCard(manga.name, f"{manga.folder}/{manga.cover}")
+        mc = MangaCard(manga)
         
         if manga.last_chapter:
             mc.add_chapter_button(manga.last_chapter, manga._chapters_data[manga.last_chapter].name, manga._chapters_data[manga.last_chapter].upload_date, 'last')

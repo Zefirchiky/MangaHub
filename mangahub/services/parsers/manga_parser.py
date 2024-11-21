@@ -1,9 +1,11 @@
-from .model_json_parser import ModelJsonParser
-from .manga_chapters_json_parser import MangaChaptersJsonParser
+from loguru import logger
+
+from .models_json_parser import ModelsJsonParser
+from .manga_chapters_parser import MangaChaptersParser
 from models import Manga
 
 
-class MangaJsonParser(ModelJsonParser):
+class MangaParser(ModelsJsonParser):
     def __init__(self, file="data/manga.json"):
         super().__init__(file, Manga)
         self.manga_collection = self.models_collection
@@ -16,6 +18,8 @@ class MangaJsonParser(ModelJsonParser):
     
     def save_manga(self, manga_dict: dict[str, Manga]):
         for manga in manga_dict.values():
-            chapters_parser = MangaChaptersJsonParser(manga)
+            chapters_parser = MangaChaptersParser(manga)
             chapters_parser.save(manga._chapters_data)
         super().save(manga_dict)
+        
+        logger.success("All manga saved successfully")

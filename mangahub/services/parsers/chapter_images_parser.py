@@ -1,8 +1,8 @@
 from models import ChapterImage
-from .model_json_parser import ModelJsonParser
+from .models_json_parser import ModelsJsonParser
 
 
-class ChapterImagesJsonParser(ModelJsonParser):
+class ChapterImagesParser(ModelsJsonParser):
     def __init__(self, file):
         super().__init__(file, ChapterImage)
         

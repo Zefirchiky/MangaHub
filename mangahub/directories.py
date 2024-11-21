@@ -1,10 +1,21 @@
+from pathlib import Path
 import os
 
-STD_DIR = os.path.abspath(os.path.dirname(__file__))
+STD_DIR = Path(__file__).parent
 os.chdir(STD_DIR)
 
-MANGA_JSON = os.path.join(STD_DIR, 'data', 'manga.json')
-SITES_JSON = os.path.join(STD_DIR, 'data', 'sites.json')
+LOG_DIR = STD_DIR / 'logs'
 
-ICONS_DIR = os.path.join(STD_DIR, 'resources', 'icons')
-MANGA_DIR = os.path.join(STD_DIR, 'data', 'manga')
+MANGA_JSON = STD_DIR / 'data' / 'manga.json'
+SITES_JSON = STD_DIR / 'data' / 'sites.json'
+
+ICONS_DIR = STD_DIR / 'resources' / 'icons'
+MANGA_DIR = STD_DIR / 'data' / 'manga'
+
+STATE_DIR = STD_DIR / 'data' / 'state'
+
+
+LOG_DIR.mkdir(exist_ok=True)
+ICONS_DIR.mkdir(exist_ok=True)
+MANGA_DIR.mkdir(exist_ok=True)
+STATE_DIR.mkdir(exist_ok=True)

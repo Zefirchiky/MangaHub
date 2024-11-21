@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem, QPushButto
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QPixmap, QColor
 from .smooth_graphics_view import SmoothGraphicsView
-from models import Manga
+from models import Manga, MangaChapter
 from gui.widgets import SvgIcon
 from directories import *
 
@@ -78,14 +78,14 @@ class MangaViewer(SmoothGraphicsView):
         self.chapter_selection.addItems([f"Chapter {i}" for i in range(1, manga.last_chapter + 1)])
         self.chapter_selection.setCurrentIndex(manga.current_chapter - 1 if manga.current_chapter else 0)
         
-    def set_chapter(self, chapter: int):
-        self.chapter_selection.setCurrentIndex(chapter - 1)
+    def set_chapter(self, chapter: MangaChapter):
+        self.chapter_selection.setCurrentIndex(chapter.number - 1)
 
     def wheelEvent(self, event):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             zoom_in = event.angleDelta().y() > 0
             
-            factor = self._zoom_factor if zoom_in else 1 / self._zoom_factor
+            self.scale_multiplier = factor = self._zoom_factor if zoom_in else 1 / self._zoom_factor
             new_scale = self._current_scale * factor
             
             if 0.2 <= new_scale <= 5.0:

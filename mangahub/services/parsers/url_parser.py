@@ -1,11 +1,11 @@
 import re
-from services.parsers import SitesJsonParser
+from services.parsers import SitesParser
 from models import Site, Manga
 from gui.gui_utils import MM
 
 
 class UrlParser:
-    def __init__(self, url: str, parser: SitesJsonParser):
+    def __init__(self, url: str, parser: SitesParser):
         self.url = url
         self.parser = parser
 
@@ -42,21 +42,21 @@ class UrlParser:
         return self.regex_match.group('num_identifier')
     
     @staticmethod
-    def get_title_page_url(site: Site, manga_id, manga_name) -> str:
+    def get_title_page_url(site: Site, manga: Manga) -> str:
         url = site.url + "/" + site.title_page['url_format'].replace(
-                '$manga_id$', manga_id
+                '$manga_id$', manga.id_
             ).replace(
-                '$num_identifier$', site.manga[manga_name]['num_identifier']
+                '$num_identifier$', site.manga[manga.name]['num_identifier']
             )
 
         return url
 
     @staticmethod
-    def get_chapter_page_url(site: Site, manga_id, manga_name, chapter_num: int) -> str:
+    def get_chapter_page_url(site: Site, manga: Manga, chapter_num: int) -> str:
         url = site.url + "/" + site.chapter_page['url_format'].replace(
-                '$manga_id$', manga_id
+                '$manga_id$', manga.id_
             ).replace(
-                '$num_identifier$', site.manga[manga_name]['num_identifier']
+                '$num_identifier$', site.manga[manga.name]['num_identifier']
             ).replace(
                 '$chapter_num$', str(chapter_num)
             )
