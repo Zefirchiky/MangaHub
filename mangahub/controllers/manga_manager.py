@@ -1,7 +1,8 @@
 from loguru import logger
 
 from gui.gui_utils import MM
-from services.parsers import MangaParser, MangaChaptersParser, SitesParser, UrlParser
+from .sites_manager import SitesManager
+from services.parsers import MangaParser, MangaChaptersParser, UrlParser
 from services.scrapers import MangaSiteScraper, MangaDexScraper
 from models import Manga, MangaChapter, ChapterImage
 from directories import *
@@ -13,9 +14,9 @@ class MangaManager:
     def __init__(self, app):
         self.app = app
         self.manga_parser: MangaParser = self.app.manga_json_parser
-        self.sites_parser: SitesParser = self.app.sites_json_parser
+        self.sites_manager: SitesManager = self.app.sites_manager
         self.dex_scraper = MangaDexScraper()
-        self.sites_scraper = MangaSiteScraper(self.sites_parser)
+        self.sites_scraper = MangaSiteScraper(self.sites_manager)
         self.manga_collection = []
         self.manga_collection = self.get_all_manga()
         
@@ -76,13 +77,18 @@ class MangaManager:
         if chapter:
             return chapter
         
-        _id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, num)
-        name = self.dex_scraper.get_chapter_name(manga.id_dex, num)
-        # if not name:
-        #     self.sites_scraper.get_chapter_name(manga, num)
+        id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, num)
+        name = ''
+        if manga.site == 'MangaDex':
+            if id_dex:
+                name = self.dex_scraper.get_chapter_name(manga.id_dex, num)
+            else:
+                logger.warning(f"No id_dex for chapter {num} of '{manga.name}'")
+        else:
+            name = self.sites_scraper.get_chapter_name(self.sites_manager.get_site(manga.site), manga, num)
         
         upload_date = self.dex_scraper.get_chapter_upload_date(manga.id_dex, num)
-        chapter = MangaChapter(number=num, name=name, id_dex=_id_dex, upload_date=upload_date)
+        chapter = MangaChapter(number=num, name=name, id_dex=id_dex, upload_date=upload_date)
         return chapter
     
     def get_image(self, chapter: MangaChapter, num):
@@ -103,11 +109,15 @@ class MangaManager:
         for site in sites:
             if site == 'MangaDex':
                 if not chapter.id_dex:
-                    logger.warning(f"No id_dex for chapter {chapter.number} of '{manga.name}'")
-                    continue
+                    chapter.id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, chapter.number)
+                    if not chapter.id_dex:
+                        logger.warning(f"No id_dex for chapter {chapter.number} of '{manga.name}'")
+                        continue
+                    logger.success(f"Got id_dex for '{manga.name}' chapter {chapter.number}")
+                    
                 images = self.dex_scraper.get_chapter_images(chapter.id_dex)
             else:
-                images = self.sites_scraper.get_chapter_images(self.sites_parser.get_site(site), manga, chapter.number)
+                images = self.sites_scraper.get_chapter_images(self.sites_manager.get_site(site), manga, chapter.number)
                 
             if images:
                 break
@@ -141,7 +151,7 @@ class MangaManager:
                     continue
                 placeholders = self.dex_scraper.get_chapter_placeholders(chapter.id_dex)
             else:
-                placeholders = self.sites_scraper.get_chapter_placeholders(self.sites_parser.get_site(site), manga, chapter.number)
+                placeholders = self.sites_scraper.get_chapter_placeholders(self.sites_manager.get_site(site), manga, chapter.number)
                 
             if placeholders:
                 break
@@ -159,7 +169,7 @@ class MangaManager:
         return placeholders
 
     def get_manga_from_url(self, url):
-        url_parser = UrlParser(url, self.sites_parser)
+        url_parser = UrlParser(url, self.sites_manager.parser)
         site = url_parser.site
         _id = url_parser.get_manga_id()
         name = _id.title().replace('-', ' ')
@@ -178,7 +188,7 @@ class MangaManager:
         if manga.id_dex:
             cover = self.dex_scraper.get_manga_cover(manga.id_dex)
         elif manga.backup_sites:
-            scraper = MangaSiteScraper(self.sites_parser, sites=manga.backup_sites)
+            scraper = MangaSiteScraper(self.sites_manager, sites=manga.backup_sites)
             cover = scraper.get_manga_cover(manga)  # TODO
         else:
             MM.show_message('error', f"No available site for {manga.id_} was found")

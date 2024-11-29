@@ -53,12 +53,15 @@ class UrlParser:
 
     @staticmethod
     def get_chapter_page_url(site: Site, manga: Manga, chapter_num: int) -> str:
-        url = site.url + "/" + site.chapter_page['url_format'].replace(
+        url = site.url + "/" + site.chapter_page.url_format.replace(
                 '$manga_id$', manga.id_
             ).replace(
-                '$num_identifier$', site.manga[manga.name]['num_identifier']
-            ).replace(
                 '$chapter_num$', str(chapter_num)
+            )
+            
+        if site.manga.get(manga.name):
+            url = url.replace(
+                '$num_identifier$', site.manga[manga.name]['num_identifier']
             )
 
         return url

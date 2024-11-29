@@ -73,7 +73,6 @@ class BatchWorker(QObject):
     ) -> List[Any]:
         
         fn_name = fn.__qualname__
-        logger.info(f"Starting batch processing: {fn_name} - [{items[0]} - {len(items)}]")
         
         self._results = [None for _ in range(len(items))]
         self._workers = []
@@ -95,6 +94,7 @@ class BatchWorker(QObject):
                 if loop:
                     loop.quit()
                 logger.success(f"Batch processing completed: {fn_name} - [{items[0]} - {len(items)}]")
+                print()
                 return self._results
         
         for i, item in enumerate(items):

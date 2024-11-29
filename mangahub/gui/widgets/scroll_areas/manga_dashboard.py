@@ -61,7 +61,7 @@ class MangaCard(QFrame):
         
         self.chapter_buttons = {}
         
-    def add_chapter_button(self, num, name, upload_date, type='last', insertion=0):
+    def add_chapter_button(self, num: int | float, name: str, upload_date, type='last', insertion=0):
         name_label = QLabel(f"Chapter {num}{': ' if name else ''}{name if name else ''}")   # 'Chapter 1: Name' or 'Chapter 1'
         name_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         
@@ -129,7 +129,9 @@ class MangaDashboard(SmoothScrollArea):
         mc: MangaCard = self.manga[manga.name]
         if manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter:
             if mc.chapter_buttons.get('current'):
-                mc.chapter_buttons['current'][1].setText(f"Chapter {manga.current_chapter}{': ' if manga._chapters_data[manga.current_chapter].name else ''}{manga._chapters_data[manga.current_chapter].name if manga._chapters_data[manga.current_chapter].name else ''}")
+                mc.chapter_buttons['current'][1].setText(f"Chapter {manga.current_chapter}")
+                mc.chapter_buttons['current'][0].clicked.disconnect()
+                mc.chapter_buttons['current'][0].clicked.connect(lambda _: mc.chapter_clicked.emit(manga.name, manga.current_chapter))
             else:
                 mc.add_chapter_button(manga.current_chapter, manga._chapters_data[manga.current_chapter].name, manga._chapters_data[manga.current_chapter].upload_date, 'current', 3)
         

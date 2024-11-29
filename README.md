@@ -5,3 +5,4 @@ Map
 Chapter cards
 Event history
 Notifications
+Redo UrlParser

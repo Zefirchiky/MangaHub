@@ -10,7 +10,7 @@ __builtins__.print = rich_print # Use rich print as a default
 from gui import MainWindow
 from gui.gui_utils import MM
 from services.parsers import MangaParser, SitesParser
-from controllers import MangaManager, AppController
+from controllers import MangaManager, SitesManager, AppController
 from directories import *
 
 VERSION = '0.1.0'
@@ -27,13 +27,14 @@ class App:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         
         self.gui_app = QApplication(sys.argv)
-        self.gui_app.setWindowIcon(QIcon(f"resources/app_icon.ico"))
+        self.gui_app.setWindowIcon(QIcon(f"{RESOURCES_DIR}/app_icon.ico"))
         self.gui_window = MainWindow(self)
         self.message_manager = MM(self)
 
         self.manga_json_parser = MangaParser(MANGA_JSON)
         self.sites_json_parser = SitesParser(SITES_JSON)
 
+        self.sites_manager = SitesManager(self)
         self.manga_manager = MangaManager(self)
         self.app_controller = AppController(self)
 

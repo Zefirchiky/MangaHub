@@ -1,20 +1,20 @@
 import requests # type: ignore
 import io
-import os
+import re
 
 from bs4 import BeautifulSoup
 from PIL import Image
 from loguru import logger
 
-from services.parsers import SitesParser, UrlParser
+from services.parsers import UrlParser
 from models import Manga, Site
 from gui.gui_utils import MM
 from utils import BatchWorker, get_webp_dimensions
 
 
 class MangaSiteScraper:
-    def __init__(self, sites_parser: SitesParser):
-        self.sites_parser = sites_parser
+    def __init__(self, sites_manager):
+        self.sites_manager = sites_manager
         self.title_pages = {}
         self.chapter_pages = {}
         
@@ -29,7 +29,7 @@ class MangaSiteScraper:
             return None
         
         for _site in manga.backup_sites:
-            self.site = self.sites_parser.get_site(_site)
+            self.site: Site = self.sites_manager.get_site(_site)
             url = UrlParser.get_title_page_url(self.site, manga)
 
             title_page = self.get_bs_from_url(url)
@@ -52,7 +52,6 @@ class MangaSiteScraper:
                 return self.chapter_pages[manga.name][num]
 
         url = UrlParser.get_chapter_page_url(site, manga, num)
-        print(url)
 
         soup = self.get_bs_from_url(url)
         if soup:
@@ -65,13 +64,13 @@ class MangaSiteScraper:
         MM.show_message('error', f"Chapter '{manga.name}' {num}: No site responded")
         return None
     
-    def get_chapter_name(self, manga: Manga, num) -> str:
-        chapter_page = self.get_chapter_page(manga, num)
+    def get_chapter_name(self, site: Site, manga: Manga, num) -> str:
+        chapter_page = self.get_chapter_page(site, manga, num)
         
         if not chapter_page:
             return None
         
-        name = chapter_page.find('h2', class_=self.site.chapter_page['title_html_class'])
+        name = chapter_page.find('h2', class_=site.chapter_page.title_class)
         return name.text if name else ''
     
     def get_chapter_image_urls(self, site: Site, manga: Manga, num) -> list[str]:
@@ -81,8 +80,29 @@ class MangaSiteScraper:
             logger.warning(f"No chapter page for '{manga.name}' chapter {num} with site '{site.name}'")
             return None
         
-        urls = [img.get('src') for img in chapter_page.find_all('img', class_=site.chapter_page['images_html_class'])]
-        return urls
+        if not site.images_parsing.is_set:
+            logger.warning(f"No images_parsing is set for '{site.name}'")
+            return None
+        
+        if site.images_parsing.read_from_script:
+            scripts: list[BeautifulSoup] = chapter_page.find_all('script')
+            for script in scripts:
+                if script.string:
+                    urls = re.findall(re.compile(site.images_parsing.url_regex), script.string)
+                    if urls:
+                        return urls
+        
+        elif site.images_parsing.read_from_html:
+            urls = [img.get('src') for img in chapter_page.find_all(
+                'img', 
+                class_=site.images_parsing.class_,
+                id_=site.images_parsing.id_format,
+                alt_=site.images_parsing.alts_format
+                )]
+            return urls
+        
+        logger.warning(f"No image urls for '{manga.name}' chapter {num} with site '{site.name}'")
+        return None
     
     def get_image_size(self, url):
         headers = {"Range": "bytes=0-1023"}

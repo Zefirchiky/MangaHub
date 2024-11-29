@@ -23,7 +23,7 @@ class MangaViewer(SmoothGraphicsView):
         
         # close
         self.close_button = QPushButton(self)
-        self.close_button.setIcon(SvgIcon(f"{ICONS_DIR}/close.svg").get_icon('white'))
+        self.close_button.setIcon(SvgIcon(ICONS_DIR / "close.svg").get_icon('white'))
         self.close_button.setFixedSize(32, 32)
         self.close_button.setIconSize(QSize(24, 24))
         self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -36,14 +36,14 @@ class MangaViewer(SmoothGraphicsView):
         
         # prev/next
         self.next_button = QPushButton(self)
-        self.next_button.setIcon(SvgIcon(f"{ICONS_DIR}/right.svg").get_icon('white'))
+        self.next_button.setIcon(SvgIcon(ICONS_DIR / "right.svg").get_icon('white'))
         self.next_button.setFixedSize(32, 32)
         self.next_button.setIconSize(QSize(24, 24))
         self.next_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.next_button.move(self.width() - self.next_button.width() - 15, self.height() - self.next_button.height() - 15)
         
         self.prev_button = QPushButton(self)
-        self.prev_button.setIcon(SvgIcon(f"{ICONS_DIR}/left.svg").get_icon('white'))
+        self.prev_button.setIcon(SvgIcon(ICONS_DIR / "left.svg").get_icon('white'))
         self.prev_button.setFixedSize(32, 32)
         self.prev_button.setIconSize(QSize(24, 24))
         self.prev_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -76,7 +76,6 @@ class MangaViewer(SmoothGraphicsView):
         self.manga = manga
         self.chapter_selection.clear()
         self.chapter_selection.addItems([f"Chapter {i}" for i in range(1, manga.last_chapter + 1)])
-        self.chapter_selection.setCurrentIndex(manga.current_chapter - 1 if manga.current_chapter else 0)
         
     def set_chapter(self, chapter: MangaChapter):
         self.chapter_selection.setCurrentIndex(chapter.number - 1)

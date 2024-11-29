@@ -13,7 +13,7 @@ from .widgets.scroll_areas import MangaViewer, MangaDashboard
 from .widgets.slide_menus import SideMenu
 from .widgets import SvgIcon, SelectionMenu
 from controllers import MangaManager, AppController
-from models import MangaState, ChapterImage
+from models import SiteChapterPage, ImageParsingMethod
 from gui.gui_utils import MM
 from directories import *
 
@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("MangaHub")
         self.setMinimumSize(1200, 800)
-        self.setWindowIcon(QIcon(f"resources/app_icon.ico"))
+        self.setWindowIcon(QIcon(f"{RESOURCES_DIR}/app_icon.ico"))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         
         self.settings_is_opened = False
@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
 
 
         # side menu
-        book_svg_icon = SvgIcon(f"{ICONS_DIR}/book.svg")
+        book_svg_icon = SvgIcon(ICONS_DIR / "book.svg")
 
         self.side_menu = SideMenu(self)
         self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
@@ -70,9 +70,12 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(0, self.manga_dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
 
+        self.app.sites_manager.create_site("AsuraScans", "https://asuracomic.net", 
+                                           SiteChapterPage(url_format="series/$manga_id$-ffffffff/chapter/$chapter_num$"), 
+                                           ImageParsingMethod().set_url_regex('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp'))
         
         # self.manager.create_manga("Boundless Necromancer", site="AsuraScans")
-        # self.manager.create_manga("Nano Machine", backup_sites=["AsuraScans"])
+        # self.manager.create_manga("Nano Machine", site="AsuraScans")
         # self.manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.manager.create_manga("Dragon-Devouring Mage")
         # self.manager.create_manga("Hero? I Quit A Long Time Ago")
@@ -84,7 +87,7 @@ class MainWindow(QMainWindow):
                 manga.add_chapter(self.manager.get_chapter(manga, manga.current_chapter))
             mc = self.manga_dashboard.add_manga(manga)
             mc.chapter_clicked.connect(self.app_controller.select_manga_chapter)
-            
+
         # self.app_controller.manga_state._signals.manga_changed.connect(lambda _: self.show_manga())
         
         self.init_connections()
@@ -94,11 +97,13 @@ class MainWindow(QMainWindow):
     def init_connections(self):
         self.app_controller.init_connections()
         
-        self.app_controller.chapter_changed.connect(lambda _: self.show_manga())
-        self.app_controller.manga_changed.connect(lambda _: self.manga_viewer.set_manga(self.app_controller.manga_state._manga))
+        self.app_controller.chapter_changed.connect(self.show_manga)
+        self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
+        self.app_controller.chapter_changed.connect(lambda _: self.manga_dashboard.update_manga(self.app_controller.manga_state._manga))
+        self.app_controller.manga_changed.connect(self.manga_viewer.set_manga)
         
         self.manga_viewer.close_button.clicked.connect(lambda _: self.root_layout.setCurrentIndex(0))
-        self.manga_viewer.chapter_selection.activated.connect(self.app_controller.select_chapter)
+        self.manga_viewer.chapter_selection.activated.connect(lambda x: self.app_controller.select_chapter(x + 1))
         self.manga_viewer.prev_button.clicked.connect(self.app_controller.select_prev_chapter)
         self.manga_viewer.next_button.clicked.connect(self.app_controller.select_next_chapter)
         
@@ -160,6 +165,7 @@ class MainWindow(QMainWindow):
         self.settings_window.close()
         self.add_manga_window.close()
         self.manager.save()
+        self.app.sites_manager.save()
         return super().closeEvent(event)
     
     

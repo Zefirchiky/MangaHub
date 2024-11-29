@@ -5,14 +5,16 @@ from utils import BatchWorker
 
 
 class MangaStateSignals(QObject):
-    manga_changed = Signal(str)
-    chapter_changed = Signal(int)
+    manga_changed = Signal(Manga)
+    chapter_changed = Signal(MangaChapter)
+    chapter_num_changed = Signal(int)
 
 class MangaState(BaseModel):
-    _manga: Manga | None = PrivateAttr(default=None)
     manga_name: str = ''
-    _chapter: MangaChapter | None = PrivateAttr(default=None)
     chapter_num: int | float = 0
+    
+    _manga: Manga | None = PrivateAttr(default=None)
+    _chapter: MangaChapter | None = PrivateAttr(default=None)
     _worker: BatchWorker | None = PrivateAttr(default=None)
     _signals: MangaStateSignals = PrivateAttr(default_factory=MangaStateSignals)
     
@@ -24,13 +26,15 @@ class MangaState(BaseModel):
         
     def set_chapter(self, chapter: MangaChapter):
         self._chapter = chapter
-        self.set_chapter_num(chapter.number)
+        self._signals.chapter_changed.emit(chapter)
         
-    def set_chapter_num(self, chapter_num: int):
+    def set_chapter_num(self, chapter_num: int | float):
+        if isinstance(chapter_num, float) and chapter_num.is_integer():
+            chapter_num = int(chapter_num)
         self.chapter_num = chapter_num
         self._manga.current_chapter = self.chapter_num
         self._manga.check_chapter(self.chapter_num)
-        self._signals.chapter_changed.emit(self._chapter)
+        self._signals.chapter_num_changed.emit(self.chapter_num)
         
     def set_worker(self, worker: BatchWorker):
         self._worker = worker
