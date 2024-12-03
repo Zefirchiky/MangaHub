@@ -4,7 +4,7 @@ from gui.gui_utils import MM
 from .sites_manager import SitesManager
 from services.parsers import MangaParser, MangaChaptersParser, UrlParser
 from services.scrapers import MangaSiteScraper, MangaDexScraper
-from models import Manga, MangaChapter, ChapterImage
+from models import Manga, MangaChapter, ChapterImage, URL
 from directories import *
 import shutil
 import os
@@ -32,12 +32,22 @@ class MangaManager:
     def add_new_manga(self, manga: Manga):
         self.manga_collection[manga.name] = manga
         
-    def create_manga(self, name: str, site='MangaDex', backup_sites=[], **kwargs):
+    def create_manga(self, name: str, url: str | URL='', site='MangaDex', backup_sites=[], **kwargs):
+        if self.get_manga(name):
+            MM.show_message('warning', f"Manga {name} already exists")
+            logger.warning(f"Manga {name} already exists")
+            return
+        
+        if url:
+            url = url if isinstance(url, URL) else URL(url)
+            site = self.sites_manager.get_site(url=url).name
+            
         id_ = name.lower().replace(' ', '-').replace(',', '').replace('.', '').replace('?', '').replace('!', '')
         id_dex = self.dex_scraper.get_manga_id(name)
         folder = f'{MANGA_DIR}/{id_}'
         os.makedirs(folder, exist_ok=True)
-        last = self.dex_scraper.get_last_chapter_num(id_dex)
+        if id_dex:
+            last = self.dex_scraper.get_last_chapter_num(id_dex)
         
         if site != 'MangaDex':
             backup_sites = list(backup_sites)
@@ -47,22 +57,27 @@ class MangaManager:
             backup_sites.remove(site)
         
         manga = Manga(name=name, id_=id_, id_dex=id_dex, folder=folder, last_chapter=last, site=site, backup_sites=backup_sites, **kwargs)
-        # manga.add_chapter(self.get_chapter(manga, 1))
-        # manga.add_chapter(self.get_chapter(manga, last))
         
         cover = self.ensure_cover(manga)
         manga.cover = cover
         
         self.add_new_manga(manga)
+        if site != 'MangaDex':
+            self.sites_manager.get_site(manga.site).add_manga(manga)
+        for site in manga.backup_sites:
+            if site != 'MangaDex':
+                self.sites_manager.get_site(manga.site).add_manga(manga)
         logger.success(f"Manga '{manga.name}' created")
         return manga
     
-    def delete_manga(self, manga: Manga) -> Manga:
+    def remove_manga(self, manga: Manga | str) -> Manga:
+        if isinstance(manga, str):
+            manga = self.manga_collection.get(manga)
         if manga:
             shutil.rmtree(manga.folder)
             mg = self.manga_collection.pop(manga.name)
-            logger.info(f"Manga '{manga.name}' deleted")
-            MM.show_message('success', f"Manga '{manga.name}' deleted")
+            logger.success(f"Manga '{manga.name}' successfully removed")
+            MM.show_message('success', f"Manga '{manga.name}' successfully removed")
             return mg
         
         logger.warning(f"Manga '{manga.name}' was not found for deletion")
@@ -169,9 +184,9 @@ class MangaManager:
         return placeholders
 
     def get_manga_from_url(self, url):
-        url_parser = UrlParser(url, self.sites_manager.parser)
+        url_parser = UrlParser(url)
         site = url_parser.site
-        _id = url_parser.get_manga_id()
+        _id = url_parser.manga_id
         name = _id.title().replace('-', ' ')
 
         if not os.path.exists(f'{MANGA_DIR}/{_id}'):

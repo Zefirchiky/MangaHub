@@ -9,5 +9,5 @@ class SitesParser(ModelsJsonParser):
     def get_site(self, name) -> Site | None:
         return self.get_model(name)
 
-    def get_all_sites(self) -> dict:
+    def get_all_sites(self) -> dict[str, Site]:
         return self.get_all_models()

@@ -12,8 +12,8 @@ from .multi_window.settings import SettingsWindow
 from .widgets.scroll_areas import MangaViewer, MangaDashboard
 from .widgets.slide_menus import SideMenu
 from .widgets import SvgIcon, SelectionMenu
-from controllers import MangaManager, AppController
-from models import SiteChapterPage, ImageParsingMethod
+from controllers import SitesManager, MangaManager, AppController
+from models import SiteChapterPage, SiteTitlePage, ImageParsingMethod
 from gui.gui_utils import MM
 from directories import *
 
@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("MangaHub")
         self.setMinimumSize(1200, 800)
-        self.setWindowIcon(QIcon(f"{RESOURCES_DIR}/app_icon.ico"))
+        self.setWindowIcon(QIcon(str(RESOURCES_DIR / "app_icon.ico")))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         
         self.settings_is_opened = False
@@ -40,10 +40,12 @@ class MainWindow(QMainWindow):
 
 
         # side menu
-        book_svg_icon = SvgIcon(ICONS_DIR / "book.svg")
+        book_svg_icon = QIcon(str(ICONS_DIR / "comic.png"))
+        novel_svg_icon = SvgIcon(ICONS_DIR / "novel.svg")
 
         self.side_menu = SideMenu(self)
         self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
+        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(10), novel_svg_icon, "Novel")
 
         self.side_menu.set_settings_function(self.open_settings)
 
@@ -55,12 +57,13 @@ class MainWindow(QMainWindow):
         logger.success('MainWindow widget initialized')
         
     def init(self):
-        self.manager: MangaManager = self.app.manga_manager
+        self.manga_manager: MangaManager = self.app.manga_manager
+        self.sites_manager: SitesManager = self.app.sites_manager
         self.app_controller: AppController = self.app.app_controller
         
         self.selection_menu = SelectionMenu(self)
         self.settings_window = SettingsWindow()
-        self.add_manga_window = AddMangaWindow()
+        self.add_manga_window = AddMangaWindow(self.app_controller)
         self.manga_dashboard = MangaDashboard()
         self.manga_viewer = MangaViewer()
 
@@ -70,26 +73,28 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(0, self.manga_dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
 
-        self.app.sites_manager.create_site("AsuraScans", "https://asuracomic.net", 
-                                           SiteChapterPage(url_format="series/$manga_id$-ffffffff/chapter/$chapter_num$"), 
-                                           ImageParsingMethod().set_url_regex('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp'))
+        # self.sites_manager.create_site("AsuraScans", "https://asuracomic.net",
+        #                                    SiteChapterPage(url_format="series/$manga_id$-\\w{8}/chapter/$chapter_num$"), 
+        #                                    ImageParsingMethod().set_regex_from_html('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp'),
+        #                                    title_page=SiteTitlePage(url_format="series/$manga_id$-\\w{8}"))
         
-        # self.manager.create_manga("Boundless Necromancer", site="AsuraScans")
-        # self.manager.create_manga("Nano Machine", site="AsuraScans")
-        # self.manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
-        # self.manager.create_manga("Dragon-Devouring Mage")
-        # self.manager.create_manga("Hero? I Quit A Long Time Ago")
+        # self.manga_manager.create_manga("Boundless Necromancer", site="AsuraScans")
+        # self.manga_manager.create_manga("Nano Machine", site="AsuraScans")
+        # self.manga_manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
+        # self.manga_manager.create_manga("Dragon-Devouring Mage")
+        # self.manga_manager.create_manga("Hero? I Quit A Long Time Ago")
+        # self.manga_manager.remove_manga(self.manga_manager.get_manga('Circles'))
+        # self.manga_manager.remove_manga('Bad Born Blood')
+        # self.manga_manager.get_manga('I, The Demon Lord, Am Being Targeted by My Female Disciples!').description = 'lol'
         
-        for manga in self.manager.get_all_manga().values():
-            manga.add_chapter(self.manager.get_chapter(manga, 1))
-            manga.add_chapter(self.manager.get_chapter(manga, manga.last_chapter))
+        for manga in self.manga_manager.get_all_manga().values():
+            manga.add_chapter(self.manga_manager.get_chapter(manga, 1))
+            manga.add_chapter(self.manga_manager.get_chapter(manga, manga.last_chapter))
             if manga.current_chapter and manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter:
-                manga.add_chapter(self.manager.get_chapter(manga, manga.current_chapter))
+                manga.add_chapter(self.manga_manager.get_chapter(manga, manga.current_chapter))
             mc = self.manga_dashboard.add_manga(manga)
             mc.chapter_clicked.connect(self.app_controller.select_manga_chapter)
 
-        # self.app_controller.manga_state._signals.manga_changed.connect(lambda _: self.show_manga())
-        
         self.init_connections()
         
         logger.success('MainWindow initialized')
@@ -116,7 +121,7 @@ class MainWindow(QMainWindow):
         
         chapter = self.app_controller.manga_state._chapter
         placeholders = self.app_controller.get_manga_chapter_placeholders()
-        worker = self.manager.get_chapter_images(self.app_controller.manga_state._manga, chapter)
+        worker = self.manga_manager.get_chapter_images(self.app_controller.manga_state._manga, chapter)
         
         self.manga_viewer.prev_button.setEnabled(not self.app_controller.manga_state.is_first())
         self.manga_viewer.next_button.setEnabled(not self.app_controller.manga_state.is_last())
@@ -164,8 +169,5 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self.settings_window.close()
         self.add_manga_window.close()
-        self.manager.save()
-        self.app.sites_manager.save()
+        self.app_controller.save()
         return super().closeEvent(event)
-    
-    

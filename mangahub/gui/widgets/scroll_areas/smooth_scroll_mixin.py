@@ -9,6 +9,7 @@ class SmoothScrollMixin:
         # Scroll state tracking
         self.prev_delta = 0
         self.accumulated_scroll = 0
+        self.dscroll_amount = 0
         self.animation_running = False
         
         # Configurable parameters
@@ -22,7 +23,7 @@ class SmoothScrollMixin:
                 
     def wheelEvent(self, event):
         delta = event.angleDelta().y()
-        scroll_amount = -delta / 120 * self.step_size * self.scale_multiplier
+        scroll_amount = round(-delta / 120 * self.step_size * self.scale_multiplier)    # Float error
         
         # Reset or accumulate scroll based on direction change
         if self.prev_delta != delta:
@@ -30,7 +31,7 @@ class SmoothScrollMixin:
         self.accumulated_scroll += scroll_amount
         
         current_value = self.scroll_bar.value()
-        dcurrent_value = current_value % scroll_amount  # snipping to nearest step (current value is any number, while accumulated scroll is fixed to steps)
+        dcurrent_value = current_value % scroll_amount  # Snapping to nearest step (current value is any number, while accumulated scroll is fixed to steps)
         target_value = current_value + self.accumulated_scroll - dcurrent_value
 
         # Ensure target is within bounds

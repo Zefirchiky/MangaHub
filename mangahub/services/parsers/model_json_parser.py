@@ -13,4 +13,4 @@ class ModelJsonParser:
         return self.model.model_validate(self.data)
     
     def save(self, model: BaseModel) -> None:
-        self.json_parser.save_data(model)
+        self.json_parser.save_data(model.model_dump())

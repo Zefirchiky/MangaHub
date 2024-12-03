@@ -84,7 +84,7 @@ class MangaSiteScraper:
             logger.warning(f"No images_parsing is set for '{site.name}'")
             return None
         
-        if site.images_parsing.read_from_script:
+        if site.images_parsing.regex_from_html:
             scripts: list[BeautifulSoup] = chapter_page.find_all('script')
             for script in scripts:
                 if script.string:
@@ -92,7 +92,7 @@ class MangaSiteScraper:
                     if urls:
                         return urls
         
-        elif site.images_parsing.read_from_html:
+        elif site.images_parsing.bs_from_loaded_html:
             urls = [img.get('src') for img in chapter_page.find_all(
                 'img', 
                 class_=site.images_parsing.class_,

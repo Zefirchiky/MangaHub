@@ -1,4 +1,4 @@
-from .tags.tag_model import TagModel
+from ..tags.tag_model import TagModel
 from .chapter_image import ChapterImage
 
 

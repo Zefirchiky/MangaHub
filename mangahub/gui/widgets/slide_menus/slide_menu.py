@@ -44,9 +44,14 @@ class SlideMenu(QFrame):
         self.root.addWidget(Separator())
         self.root.addLayout(self.buttons_layout)
 
-    def adjust_geometry_with_animation(self, geom1: QRect, geom2: QRect, 
-                                       anim_time=1000, easing: QEasingCurve.Type = QEasingCurve.Type.InOutCubic,
+    def adjust_geometry_with_animation(self, geom1: QRect | list | tuple, geom2: QRect | list | tuple, 
+                                       anim_time=300, easing: QEasingCurve.Type = QEasingCurve.Type.InOutCubic,
                                        fn_at_animation=None, fn_after_animation=None):
+        if isinstance(geom1, (list, tuple)):
+            geom1 = QRect(*geom1)
+        if isinstance(geom2, (list, tuple)):
+            geom2 = QRect(*geom2)
+            
         self.geometry_animation = QPropertyAnimation(self, b"geometry")
         self.geometry_animation.setDuration(anim_time)
         self.geometry_animation.setEasingCurve(easing)

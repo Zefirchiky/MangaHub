@@ -9,7 +9,7 @@ __builtins__.print = rich_print # Use rich print as a default
 
 from gui import MainWindow
 from gui.gui_utils import MM
-from services.parsers import MangaParser, SitesParser
+from services.parsers import MangaParser, SitesParser, UrlParser
 from controllers import MangaManager, SitesManager, AppController
 from directories import *
 
@@ -33,6 +33,7 @@ class App:
 
         self.manga_json_parser = MangaParser(MANGA_JSON)
         self.sites_json_parser = SitesParser(SITES_JSON)
+        UrlParser.set_parser(self.sites_json_parser)
 
         self.sites_manager = SitesManager(self)
         self.manga_manager = MangaManager(self)

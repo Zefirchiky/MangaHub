@@ -1,44 +1,74 @@
 import re
+from loguru import logger
 from services.parsers import SitesParser
-from models import Site, Manga
+from models import Site, Manga, URL
 from gui.gui_utils import MM
 
 
 class UrlParser:
-    def __init__(self, url: str, parser: SitesParser):
+    parser: SitesParser
+    def __init__(self, url: URL | str):
+        if isinstance(url, str):
+            url = URL(url)
         self.url = url
-        self.parser = parser
 
-        self.site = None
-        self.site = self.get_site()
-        self.regex_match = self.get_regex_match()
-
-    def get_site(self):
-        if self.site:
-            return self.site
+        self._cached_regex_match = None
         
+    @classmethod
+    def set_parser(cls, parser: SitesParser):
+        cls.parser = parser
+
+    @property
+    def site(self) -> Site | None:
         for site in self.parser.get_all_sites().values():
-            if site.url in self.url:
+            if site.url == self.url.site_url:
                 return site
 
         MM.show_message('error', f"No site for {self.url} was found")
         return None
+    
+    @property
+    def manga_name(self):
+        for name, manga in self.site.manga.items():
+            if manga['id'] == self.manga_id:
+                return name
+        
+        logger.warning(f"No manga name for {self.url} was found, attempting to parse...")
+        return self.manga_id.title().replace('-', ' ')
 
-    def get_regex_match(self):
-        url_pattern = self.site.url + "/" + self.site.title_page['url_format'].replace(
+    @property
+    def regex_match(self):
+        if self._cached_regex_match:
+            return self._cached_regex_match
+        
+        if self.site.title_page.url_format:
+            format_ = self.site.title_page.url_format
+        elif self.site.chapter_page.url_format:
+            format_ = self.site.chapter_page.url_format
+            logger.warning(f"No title page url format for {self.site.name} was found, attempting to parse with chapter page url format...")
+            
+        url_pattern = self.site.url.url + '/' + format_.replace(
             '$manga_id$', r'(?P<manga_id>[a-zA-Z0-9\-]+)'
         ).replace(
             '$num_identifier$', r'(?P<num_identifier>[a-zA-Z0-9]+)'
-        )
+        ).replace(
+            '$chapter_num$', r'(?P<chapter_num>[0-9]+)'
+        )   # TODO: trying to match a full string, make it match every option 1
 
         regex = re.compile(url_pattern)
+        self._cached_regex_match = regex.match(self.url.url)
+        if not self._cached_regex_match:
+            logger.error(f"No match for {self.url} was foundP{' (no title page url format)' if not self.site.title_page.url_format else ''}")
+            MM.show_message('error', f"No match for {self.url} was found{' (try adding title page url format to the site)' if not self.site.title_page.url_format else ''}")
         
-        return regex.match(self.url)
+        return self._cached_regex_match
 
-    def get_manga_id(self):
+    @property
+    def manga_id(self):
         return self.regex_match.group('manga_id')
     
-    def get_num_identifier(self):
+    @property
+    def num_identifier(self):
         return self.regex_match.group('num_identifier')
     
     @staticmethod
@@ -53,13 +83,13 @@ class UrlParser:
 
     @staticmethod
     def get_chapter_page_url(site: Site, manga: Manga, chapter_num: int) -> str:
-        url = site.url + "/" + site.chapter_page.url_format.replace(
+        url = site.url.url + "/" + site.chapter_page.url_format.replace(
                 '$manga_id$', manga.id_
             ).replace(
                 '$chapter_num$', str(chapter_num)
             )
             
-        if site.manga.get(manga.name):
+        if "$num_identifier$" in url and site.manga.get(manga.name).get('num_identifier'):
             url = url.replace(
                 '$num_identifier$', site.manga[manga.name]['num_identifier']
             )

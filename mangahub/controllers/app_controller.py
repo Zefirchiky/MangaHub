@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 from loguru import logger
 
-from .manga_manager import MangaManager
+from .manga_manager import MangaManager, SitesManager
 from services.parsers import StateParser
 from models import MangaState, Manga, MangaChapter
 
@@ -10,6 +10,7 @@ class AppController:
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.sites_manager: SitesManager = app.sites_manager
         self.manga_manager: MangaManager = app.manga_manager
         self.manga_state = MangaState()
         
@@ -55,5 +56,6 @@ class AppController:
             
     def save(self) -> None:
         self.manga_manager.save()
-        StateParser('manga_state.json').save(self.manga_state)
+        self.sites_manager.save()
+        StateParser('manga_state.json', MangaState).save(self.manga_state)
         

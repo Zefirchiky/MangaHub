@@ -84,7 +84,7 @@ class MangaViewer(SmoothGraphicsView):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             zoom_in = event.angleDelta().y() > 0
             
-            self.scale_multiplier = factor = self._zoom_factor if zoom_in else 1 / self._zoom_factor
+            factor = self._zoom_factor if zoom_in else 1 / self._zoom_factor
             new_scale = self._current_scale * factor
             
             if 0.2 <= new_scale <= 5.0:

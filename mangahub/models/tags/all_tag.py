@@ -1,5 +1,5 @@
-from ..manga import Manga
-from ..manga_chapter import MangaChapter
+from ..manga.manga import Manga
+from ..manga.manga_chapter import MangaChapter
 from .tag import Tag
 from dataclasses import dataclass, field
 from typing import Dict

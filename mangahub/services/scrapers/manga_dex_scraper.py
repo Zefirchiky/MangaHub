@@ -89,8 +89,12 @@ class MangaDexScraper:
         
         response = requests.get(self.chapter_url, params=params)
         response.raise_for_status()
-        data = response.json()["data"][0]
-        num = int(data['attributes']['chapter'])
+        data: dict = response.json()
+        data = data.get("data")
+        if not data:
+            MM.show_message('warning', f"Empty site response (data: {data}) for manga {manga_id}, when getting last chapter: {response.status_code}")
+            return 0
+        num = data[0]['attributes']['chapter']
         
         self.chapters_data[manga_id][num] = data
         

@@ -23,7 +23,7 @@ RESOURCES_DIR = STD_DIR / 'resources'
 ICONS_DIR = RESOURCES_DIR / 'icons'
 
 
-
+'''=== CREATE FOLDERS ==='''
 LOG_DIR.mkdir(exist_ok=True)
 
 DATA_DIR.mkdir(exist_ok=True)

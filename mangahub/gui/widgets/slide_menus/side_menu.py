@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QGraphicsOpacityEffect, QSizePolicy,
     QPushButton, QLabel
 )
-from PySide6.QtGui import QFont, QCursor
+from PySide6.QtGui import QFont, QCursor, QIcon
 from PySide6.QtCore import Qt, QSize, QRect, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve
 
 from ..separators import Separator
@@ -25,7 +25,7 @@ class SideMenu(QFrame):
         self.y_offset = 1
         self.current_x = self.hidden_x
         
-        self.is_visible = False
+        self.opened_state = False
         self.is_fully_opened = False
         self.checked_button = None
 
@@ -88,14 +88,14 @@ class SideMenu(QFrame):
         self.full_open_close_animation.setDuration(300)
         self.full_open_close_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
-    def add_button(self, fn, svg_icon=None, text=None, is_default=False):
+    def add_button(self, fn, svg_icon: SvgIcon | QIcon=None, text=None, is_default=False):
         button_index = len(self.buttons)
 
         layout = QHBoxLayout()
 
         icon = QLabel()
         icon.setFixedSize(32, 32)
-        icon.setPixmap(svg_icon.get_pixmap('white', 32, 32))
+        icon.setPixmap(svg_icon.get_pixmap('white', 32, 32) if isinstance(svg_icon, SvgIcon) else svg_icon.pixmap(32, 32))
 
         opacity_effect = QGraphicsOpacityEffect()
         opacity_effect.setOpacity(0)
@@ -143,24 +143,24 @@ class SideMenu(QFrame):
         self.hidden_x = -self._width + 1
 
     def show_menu(self):
-        if self.is_visible != 2:
-            self.is_visible = 2
+        if self.opened_state != 2:
+            self.opened_state = 2
             self.current_x = self.visible_x
             self.open_close_animation.setStartValue(self.geometry())
             self.open_close_animation.setEndValue(QRect(self.current_x - 3, self.y_offset, self._width, self.parent.geometry().height() - self.y_offset))
             self.open_close_animation.start()
 
     def show_half_menu(self):
-        if self.is_visible != 1:
-            self.is_visible = 1
+        if self.opened_state != 1:
+            self.opened_state = 1
             self.current_x = self.visible_x
             self.open_close_animation.setStartValue(self.geometry())
             self.open_close_animation.setEndValue(QRect(10 - self._width, self.y_offset, self._width, self.parent.geometry().height() - self.y_offset))
             self.open_close_animation.start()
 
     def hide_menu(self):
-        if self.is_visible:
-            self.is_visible = False
+        if self.opened_state:
+            self.opened_state = False
             self.current_x = self.hidden_x
             self.open_close_animation.setStartValue(self.geometry())
             self.open_close_animation.setEndValue(QRect(self.current_x, self.y_offset, self._width, self.parent.geometry().height() - self.y_offset))
