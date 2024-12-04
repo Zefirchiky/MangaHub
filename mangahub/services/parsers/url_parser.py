@@ -53,14 +53,14 @@ class UrlParser:
             '$num_identifier$', r'(?P<num_identifier>[a-zA-Z0-9]+)'
         ).replace(
             '$chapter_num$', r'(?P<chapter_num>[0-9]+)'
-        )   # TODO: trying to match a full string, make it match every option 1
+        ) + r'.*'
 
         regex = re.compile(url_pattern)
         self._cached_regex_match = regex.match(self.url.url)
         if not self._cached_regex_match:
             logger.error(f"No match for {self.url} was foundP{' (no title page url format)' if not self.site.title_page.url_format else ''}")
             MM.show_message('error', f"No match for {self.url} was found{' (try adding title page url format to the site)' if not self.site.title_page.url_format else ''}")
-        
+         
         return self._cached_regex_match
 
     @property
@@ -73,10 +73,16 @@ class UrlParser:
     
     @staticmethod
     def get_title_page_url(site: Site, manga: Manga) -> str:
-        url = site.url + "/" + site.title_page['url_format'].replace(
+        url = site.url.url + "/" + site.title_page.url_format.replace(
                 '$manga_id$', manga.id_
-            ).replace(
-                '$num_identifier$', site.manga[manga.name]['num_identifier']
+            )
+        
+        num_identifier = site.manga.get(manga.name)
+        if num_identifier: num_identifier = num_identifier.get('num_identifier')
+        if not num_identifier: num_identifier = site.num_identifier
+        if "$num_identifier$" in url and num_identifier:
+            url = url.replace(
+                '$num_identifier$', num_identifier
             )
 
         return url
@@ -89,9 +95,12 @@ class UrlParser:
                 '$chapter_num$', str(chapter_num)
             )
             
-        if "$num_identifier$" in url and site.manga.get(manga.name).get('num_identifier'):
+        num_identifier = site.manga.get(manga.name)
+        if num_identifier: num_identifier = num_identifier.get('num_identifier')
+        if not num_identifier: num_identifier = site.num_identifier
+        if "$num_identifier$" in url and num_identifier:
             url = url.replace(
-                '$num_identifier$', site.manga[manga.name]['num_identifier']
+                '$num_identifier$', num_identifier
             )
 
         return url

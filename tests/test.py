@@ -3,23 +3,16 @@ from rich import print
 from bs4 import BeautifulSoup
 import re
 
-url = 'https://asuracomic.net/series/nano-machine-b0c4445b/chapter/1'  # Replace with your target URL
-regex = re.compile('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp')
-regex = re.compile(r'https://gg\.asuracomic\.net/storage/media/\d{6}/conversions/\d{2}-optimized\.webp')
-response = requests.get(url)
+url = 'https://asuracomic.net/series/bad-born-blood-ffffffff'  # Replace with your target URL
+regex = re.compile('bad-born-blood-\\w+/chapter/$chapter_num$'.replace('$chapter_num$', r'(?P<chapter_num>[0-9]+)'))
+print('bad-born-blood-\\w+/chapter/$chapter_num$'.replace('$chapter_num$', r'(?P<chapter_num>[0-9]+)'))
+response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
 html_content = response.text
+
+# bad-born-blood-\w+/chapter/(?P<chapter_num>[0-9]+)
+# bad-born-blood-\w+/chapter/(?P<chapter_num>[0-9]+)
 
 soup = BeautifulSoup(html_content, 'html.parser')
 
-scripts = soup.find_all('script')
-
-urls = {}
-for script in scripts:
-    if script.string:
-        urls_ = re.findall(regex, script.string)
-        if urls_:
-            for i, url in enumerate(urls_, 1):
-                if not i in urls.keys():
-                    urls[i] = url
-                
-print(urls)
+links = regex.findall(soup.)
+print(max([int(i) for i in links]))

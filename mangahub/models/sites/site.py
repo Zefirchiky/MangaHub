@@ -4,16 +4,19 @@ from ..manga.image_parsing_method import ImageParsingMethod
 from ..manga.manga import Manga
 from .site_chapter_page import SiteChapterPage
 from .site_title_page import SiteTitlePage
+from .last_chapter_parsing_method import LastChapterParsingMethod
 from ..url import URL
 
 
 class Site(TagModel):
     name: str
     url: str | URL
+    num_identifier: str = ''
     language: str = 'en'
     title_page: SiteTitlePage = SiteTitlePage()
     chapter_page: SiteChapterPage
     images_parsing: ImageParsingMethod
+    last_chapter_parsing: LastChapterParsingMethod
     manga: dict[str, dict[str, str]] = {}
     
     @field_validator('url')

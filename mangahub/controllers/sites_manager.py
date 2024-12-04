@@ -12,8 +12,8 @@ class SitesManager:
         
         logger.success('SitesManager initialized')
         
-    def create_site(self, name: str, url: str, chapter_page: SiteChapterPage, image_parsing: ImageParsingMethod, **kwargs) -> Site:
-        site = Site(name=name, url=url, chapter_page=chapter_page, images_parsing=image_parsing, **kwargs)
+    def create_site(self, name: str, url: str, chapter_page: SiteChapterPage, image_parsing: ImageParsingMethod, last_chapter_parsing: ImageParsingMethod, **kwargs) -> Site:
+        site = Site(name=name, url=url, chapter_page=chapter_page, images_parsing=image_parsing, last_chapter_parsing=last_chapter_parsing, **kwargs)
         self.sites[name] = site
         return site
         

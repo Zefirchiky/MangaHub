@@ -13,7 +13,7 @@ from .widgets.scroll_areas import MangaViewer, MangaDashboard
 from .widgets.slide_menus import SideMenu
 from .widgets import SvgIcon, SelectionMenu
 from controllers import SitesManager, MangaManager, AppController
-from models import SiteChapterPage, SiteTitlePage, ImageParsingMethod
+from models import SiteChapterPage, SiteTitlePage, LastChapterParsingMethod, ImageParsingMethod
 from gui.gui_utils import MM
 from directories import *
 
@@ -74,9 +74,11 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(1, self.manga_viewer)
 
         # self.sites_manager.create_site("AsuraScans", "https://asuracomic.net",
-        #                                    SiteChapterPage(url_format="series/$manga_id$-\\w{8}/chapter/$chapter_num$"), 
+        #                                    SiteChapterPage(url_format="series/$manga_id$-$num_identifier$/chapter/$chapter_num$"), 
         #                                    ImageParsingMethod().set_regex_from_html('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp'),
-        #                                    title_page=SiteTitlePage(url_format="series/$manga_id$-\\w{8}"))
+        #                                    LastChapterParsingMethod(string_format="$manga_id$-$num_identifier$/chapter/$chapter_num$", on_title_page=True),
+        #                                    title_page=SiteTitlePage(url_format="series/$manga_id$-$num_identifier$"),
+        #                                    num_identifier="ffffffff")
         
         # self.manga_manager.create_manga("Boundless Necromancer", site="AsuraScans")
         # self.manga_manager.create_manga("Nano Machine", site="AsuraScans")

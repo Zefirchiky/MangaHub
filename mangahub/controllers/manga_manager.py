@@ -58,6 +58,11 @@ class MangaManager:
         
         manga = Manga(name=name, id_=id_, id_dex=id_dex, folder=folder, last_chapter=last, site=site, backup_sites=backup_sites, **kwargs)
         
+        if not id_dex or not last:
+            last = self.sites_scraper.get_last_chapter_num(self.sites_manager.get_site(site), manga)
+            if last:
+                manga.last_chapter = last
+                
         cover = self.ensure_cover(manga)
         manga.cover = cover
         
@@ -72,6 +77,7 @@ class MangaManager:
     
     def remove_manga(self, manga: Manga | str) -> Manga:
         if isinstance(manga, str):
+            manga_name = manga
             manga = self.manga_collection.get(manga)
         if manga:
             shutil.rmtree(manga.folder)
@@ -80,7 +86,7 @@ class MangaManager:
             MM.show_message('success', f"Manga '{manga.name}' successfully removed")
             return mg
         
-        logger.warning(f"Manga '{manga.name}' was not found for deletion")
+        logger.warning(f"Manga '{manga_name}' was not found for deletion")
         return
         
     def get_chapter(self, manga: Manga, num: float):
