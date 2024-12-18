@@ -24,7 +24,7 @@ class ImageWidget(QLabel):
     def __init__(self, image_data=None, width=0, height=0, save_original=True, parent=None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setCursor(Qt.CursorShape.ArrowCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         
         if not ImageWidget._default_placeholder:
             logger.warning("No default placeholder set, setting standard placeholder...")
@@ -42,13 +42,11 @@ class ImageWidget(QLabel):
 
         if save_original:
             self._original_image = self.image
-        else:
-            self._original_image = None
             
         self.error_image = self._default_error_image
         
         if width and height:
-            self.fit(width, height)
+            self.scale_to_fit(vec2(width, height))
         elif width:
             self.scale_to_width(width)
         elif height:
@@ -59,6 +57,7 @@ class ImageWidget(QLabel):
         self.clickable_right = False
         self.save_original = save_original
         
+        self.scale(self.placeholder.width(), self.placeholder.height())
         self.update_size()
         
     @staticmethod
@@ -83,7 +82,7 @@ class ImageWidget(QLabel):
         self.status.emit(f"{error_message}: {error}")
         logger.error(f"{error_message}: {error}")
         self.image = QPixmap(self.error_image)
-        self.fit(self.width(), self.height())
+        self.scale_to_fit(self.width(), self.height())
         return self.image
         
     def set_image(self, image_data: image_types, replace_default_size=False):
@@ -91,12 +90,11 @@ class ImageWidget(QLabel):
         self.setPixmap(self.image)
         if self.save_original:
             self.original_image = self.image
-            
         if replace_default_size:
             self.set_placeholder(self.image.width(), self.image.height())
             self.setFixedSize(self.image.width(), self.image.height())
         else:
-            self.fit(self.width(), self.height())
+            self.scale_to_fit(self.width(), self.height())
             
         return self
         
@@ -131,28 +129,27 @@ class ImageWidget(QLabel):
         self.clickable_right = right
         if not left and not right:
             self.setCursor(Qt.CursorShape.ArrowCursor)
-        if left or right:
-            self.setCursor(Qt.CursorShape.PointingHandCursor)
             
-    def fit(self, width, height, x='auto', y='auto', expand=True, change_placeholder=True) -> 'ImageWidget':
-        if self.original_image:
-            self.image = self.original_image
-        if change_placeholder:
-            self.set_placeholder(width=width, height=height)
-        if expand:
-            self.image = self.image.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
-        
+    def fit(self, width, height, x='auto', y='auto') -> 'ImageWidget':
         if x == 'auto':
-            x = -(width//2 - self.image.width()//2) if width < self.image.width() else 0
+            x = self.width()//2
         elif x <= 0:
-            x = self.placeholder.width() - width + x
+            x = self.width() - width + x
             
         if y == 'auto':
-            y = -(height//2 - self.image.height()//2) if height < self.image.height() else 0
+            y = self.height()//2
         elif y <= 0:
-            y = self.placeholder.height() - height + y
+            y = self.height() - height + y
             
         self.image = self.image.copy(x, y, width, height)
+        self.setPixmap(self.image)
+        self.update_size()
+        return self
+            
+    def scale_to_fit(self, width, height) -> 'ImageWidget':
+        if self.original_image:
+            self.image = self.original_image
+        self.image = self.image.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         self.setPixmap(self.image)
         self.update_size()
         return self
@@ -209,7 +206,6 @@ class ImageWidget(QLabel):
             else:
                 error_image = QPixmap(100, 100)
                 error_image.fill(QColor(200, 200, 200, 50))
-            cls._default_error_image = error_image
         else:
             cls._default_error_image = cls._process_image(error_image)
             
@@ -219,6 +215,7 @@ class ImageWidget(QLabel):
     def original_image(self) -> QPixmap:
         if self._original_image:
             return self._original_image
+        logger.warning("No original image saved")
         return None
     
     @Property(int)

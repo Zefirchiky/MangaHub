@@ -34,7 +34,7 @@ class UrlParser:
                 return name
         
         logger.warning(f"No manga name for {self.url} was found, attempting to parse...")
-        return self.manga_id.title().replace('-', ' ')
+        return self.manga_id.replace('-', ' ').title()
 
     @property
     def regex_match(self):

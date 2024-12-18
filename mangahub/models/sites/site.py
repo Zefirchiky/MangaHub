@@ -30,6 +30,13 @@ class Site(TagModel):
         if num_identifier:
             self.manga[manga.name]['num_identifier'] = num_identifier
         self.manga = self.manga
+        return self.manga
+        
+    def remove_manga(self, manga_name: Manga | str) -> None:
+        if isinstance(manga_name, Manga):    
+            manga_name = manga_name.name
+        self.manga.pop(manga_name)
+        return self.manga
         
     def get_manga_identifier(self, manga_name: str) -> str:
         return self.manga.get(manga_name, {}).get('num_identifier')

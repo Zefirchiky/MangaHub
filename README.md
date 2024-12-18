@@ -6,3 +6,4 @@ Chapter cards
 Event history
 Notifications
 Redo UrlParser
+Manga search

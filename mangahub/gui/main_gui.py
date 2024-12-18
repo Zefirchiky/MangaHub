@@ -11,9 +11,8 @@ from .multi_window.add_manga import AddMangaWindow
 from .multi_window.settings import SettingsWindow
 from .widgets.scroll_areas import MangaViewer, MangaDashboard
 from .widgets.slide_menus import SideMenu
-from .widgets import SvgIcon, SelectionMenu
+from .widgets import SvgIcon, SelectionMenu, ImageWidget
 from controllers import SitesManager, MangaManager, AppController
-from models import SiteChapterPage, SiteTitlePage, LastChapterParsingMethod, ImageParsingMethod
 from gui.gui_utils import MM
 from directories import *
 
@@ -27,6 +26,9 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1200, 800)
         self.setWindowIcon(QIcon(str(RESOURCES_DIR / "app_icon.ico")))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        
+        ImageWidget.set_default_placeholder(width=200, height=300)
+        ImageWidget.set_default_error_image(IMAGES_DIR / "placeholder.jpg")
         
         self.settings_is_opened = False
         self.manga_cards = {}
@@ -85,6 +87,8 @@ class MainWindow(QMainWindow):
         # self.manga_manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.manga_manager.create_manga("Dragon-Devouring Mage")
         # self.manga_manager.create_manga("Hero? I Quit A Long Time Ago")
+        # self.manga_manager.remove_manga('Dragon-Devouring Mage')
+        # self.manga_manager.remove_manga('return of the disaster class hero')
         # self.manga_manager.remove_manga(self.manga_manager.get_manga('Circles'))
         # self.manga_manager.remove_manga('Bad Born Blood')
         # self.manga_manager.get_manga('I, The Demon Lord, Am Being Targeted by My Female Disciples!').description = 'lol'

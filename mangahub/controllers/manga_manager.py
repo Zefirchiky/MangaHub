@@ -82,6 +82,8 @@ class MangaManager:
         if manga:
             shutil.rmtree(manga.folder)
             mg = self.manga_collection.pop(manga.name)
+            site = self.sites_manager.get_site(manga.site)
+            site.remove_manga(manga)
             logger.success(f"Manga '{manga.name}' successfully removed")
             MM.show_message('success', f"Manga '{manga.name}' successfully removed")
             return mg

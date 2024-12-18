@@ -47,7 +47,7 @@ class App:
         
         logger.success(f"MangaHub v{VERSION} initialized")
         self.gui_app.exec()
-        logger.info(f"MangaHub v{VERSION} finished") 
+        logger.info(f"MangaHub v{VERSION} finished")
 
 
 if __name__ == "__main__":

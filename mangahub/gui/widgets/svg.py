@@ -20,6 +20,7 @@ class SvgIcon(QIcon):
         except FileNotFoundError as e:
             MM.show_message('error', str(e), 5000)
             logger.error(str(e))
+            return
 
     def get_svg_with_color(self, color, fill = 'none'):
         return self.svg_content.replace('stroke="currentColor"', f'stroke="{color}"').replace('fill="none', f'fill="{fill}')
