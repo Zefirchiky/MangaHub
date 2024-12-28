@@ -15,6 +15,7 @@ class SmoothScrollArea(QScrollArea, SmoothScrollMixin):
             vertical_policy = Qt.ScrollBarPolicy.ScrollBarAlwaysOn if vertical else Qt.ScrollBarPolicy.ScrollBarAsNeeded
         self.setHorizontalScrollBarPolicy(horizontal_policy)
         self.setVerticalScrollBarPolicy(vertical_policy)
+        self.update()
         
     def wheelEvent(self, event):
         SmoothScrollMixin.wheelEvent(self, event)

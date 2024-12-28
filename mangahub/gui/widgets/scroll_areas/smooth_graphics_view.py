@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter, QPixmap
 from .smooth_scroll_mixin import SmoothScrollMixin
+from directories import *
 
 
 class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
@@ -9,14 +10,17 @@ class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
         super().__init__(parent)
         self.init_smooth_scroll()
         self.setObjectName("smooth_graphics_view")
+        self.viewport().setObjectName("smooth_graphics_view")
         self.setStyleSheet(f'''
                            #smooth_graphics_view {{
                                border: 1px solid {self.palette().window().color().lighter().name()};
                                border-radius: 5px;
+                               background: url({str(BACKGROUNDS_DIR).replace('\\', '/')}/novel_viewer.jpg) repeat;
                             }}''')
         
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
+        self.background_image = QPixmap(str(BACKGROUNDS_DIR/'manga_viewer.jpg').replace('\\', '/'))
         
         # Optimize rendering
         self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.SmartViewportUpdate)
@@ -33,3 +37,6 @@ class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
         
     def wheelEvent(self, event):
         SmoothScrollMixin.wheelEvent(self, event)
+        
+    def drawBackground(self, painter: QPainter, rect):
+        painter.drawTiledPixmap(rect, self.background_image)

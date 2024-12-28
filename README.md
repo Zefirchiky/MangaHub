@@ -1,9 +1,13 @@
 # TODO
-ASYNC
-Custom chapters naming
-Map
-Chapter cards
-Event history
-Notifications
-Redo UrlParser
-Manga search
+- ASYNC
+- Custom chapters naming
+- Chapter cards
+- Event history
+- Redo UrlParser
+- Manga search
+
+# LONG-TERM TODO
+- Notifications
+- Map
+- Plugins
+- ZIP

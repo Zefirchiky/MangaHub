@@ -7,11 +7,10 @@ from PySide6.QtCore import Qt, QTimer, QPoint
 from PySide6.QtGui import QCursor, QIcon
 from loguru import logger
 
-from .multi_window.add_manga import AddMangaWindow
-from .multi_window.settings import SettingsWindow
-from .widgets.scroll_areas import MangaViewer, MangaDashboard
-from .widgets.slide_menus import SideMenu
-from .widgets import SvgIcon, SelectionMenu, ImageWidget
+from gui.multi_window import AddMangaWindow, SettingsWindow
+from gui.widgets.scroll_areas import MangaViewer, MangaDashboard, NovelViewer
+from gui.widgets.slide_menus import SideMenu
+from gui.widgets import SvgIcon, SelectionMenu, ImageWidget
 from controllers import SitesManager, MangaManager, AppController
 from gui.gui_utils import MM
 from directories import *
@@ -47,7 +46,7 @@ class MainWindow(QMainWindow):
 
         self.side_menu = SideMenu(self)
         self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
-        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(10), novel_svg_icon, "Novel")
+        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(2), novel_svg_icon, "Novel")
 
         self.side_menu.set_settings_function(self.open_settings)
 
@@ -68,12 +67,14 @@ class MainWindow(QMainWindow):
         self.add_manga_window = AddMangaWindow(self.app_controller)
         self.manga_dashboard = MangaDashboard()
         self.manga_viewer = MangaViewer()
+        self.novel_viewer = NovelViewer()
 
         self.selection_menu.show()
         
         
         self.root_layout.insertWidget(0, self.manga_dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
+        self.root_layout.insertWidget(2, self.novel_viewer)
 
         # self.sites_manager.create_site("AsuraScans", "https://asuracomic.net",
         #                                    SiteChapterPage(url_format="series/$manga_id$-$num_identifier$/chapter/$chapter_num$"), 
@@ -82,7 +83,7 @@ class MainWindow(QMainWindow):
         #                                    title_page=SiteTitlePage(url_format="series/$manga_id$-$num_identifier$"),
         #                                    num_identifier="ffffffff")
         
-        # self.manga_manager.create_manga("Boundless Necromancer", site="AsuraScans")
+        self.manga_manager.create_manga("Boundless Necromancer", site="AsuraScans")
         # self.manga_manager.create_manga("Nano Machine", site="AsuraScans")
         # self.manga_manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.manga_manager.create_manga("Dragon-Devouring Mage")

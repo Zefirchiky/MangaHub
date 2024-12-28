@@ -22,6 +22,7 @@ RESOURCES_DIR = STD_DIR / 'resources'
 
 ICONS_DIR = RESOURCES_DIR / 'icons'
 IMAGES_DIR = RESOURCES_DIR / 'img'
+BACKGROUNDS_DIR = RESOURCES_DIR / 'background'
 
 
 '''=== CREATE FOLDERS ==='''
@@ -34,3 +35,4 @@ STATE_DIR.mkdir(exist_ok=True)
 RESOURCES_DIR.mkdir(exist_ok=True)
 ICONS_DIR.mkdir(exist_ok=True)
 IMAGES_DIR.mkdir(exist_ok=True)
+BACKGROUNDS_DIR.mkdir(exist_ok=True)
