@@ -1,9 +1,8 @@
-from PySide6.QtCore import QObject, Signal
 from loguru import logger
 
 from .manga_manager import MangaManager, SitesManager
 from services.parsers import StateParser
-from models import MangaState, Manga, MangaChapter
+from models import MangaState
 
 
 class AppController:

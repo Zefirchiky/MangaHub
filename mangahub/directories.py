@@ -11,9 +11,11 @@ LOG_DIR = STD_DIR / 'logs'
 '''=== DATA ==='''
 DATA_DIR = STD_DIR / 'data'
 
+NOVELS_DIR = DATA_DIR / 'novels'
 MANGA_DIR = DATA_DIR / 'manga'
 STATE_DIR = DATA_DIR / 'state'
 
+NOVELS_JSON = DATA_DIR / 'novels.json'
 MANGA_JSON = DATA_DIR / 'manga.json'
 SITES_JSON = DATA_DIR / 'sites.json'
 

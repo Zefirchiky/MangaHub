@@ -2,8 +2,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from PySide6.QtGui import QPixmap, QImage, QPainter, QPainterPath, QColor
-from PySide6.QtCore import Qt, QObject, Signal, Property
-from glm import vec2
+from PySide6.QtCore import Qt, Signal, Property
 from loguru import logger
 
 

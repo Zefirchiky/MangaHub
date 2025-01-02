@@ -5,7 +5,11 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
 
 from modules_init import *
-__builtins__.print = rich_print # Use rich print as a default
+from icecream import ic
+ic("something")
+# from rich import print as rich_print
+# __builtins__.print = rich_print # Use rich print as a default
+__builtins__.print = ic
 
 from gui import MainWindow
 from gui.gui_utils import MM

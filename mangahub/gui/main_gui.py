@@ -55,6 +55,8 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.check_mouse_position)
         self.timer.start(100)
         
+        from icecream import ic
+        ic("something")
         logger.success('MainWindow widget initialized')
         
     def init(self):
@@ -83,7 +85,7 @@ class MainWindow(QMainWindow):
         #                                    title_page=SiteTitlePage(url_format="series/$manga_id$-$num_identifier$"),
         #                                    num_identifier="ffffffff")
         
-        self.manga_manager.create_manga("Boundless Necromancer", site="AsuraScans")
+        # self.manga_manager.create_manga("Boundless Necromancer", site="AsuraScans")
         # self.manga_manager.create_manga("Nano Machine", site="AsuraScans")
         # self.manga_manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.manga_manager.create_manga("Dragon-Devouring Mage")
@@ -152,6 +154,11 @@ class MainWindow(QMainWindow):
 
     def add_manga(self):
         self.add_manga_window.show()
+        self.add_manga_window.add_manga_button.clicked.connect(
+            lambda _: self.manga_dashboard.add_manga(
+                self.manga_manager.get_manga(self.add_manga_window.name_input.text())
+                )
+            )
 
     def check_mouse_position(self):
         cursor_pos = QCursor.pos()

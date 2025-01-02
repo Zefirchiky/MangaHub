@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QStackedLayout, QVBoxLayout, QHBoxLayout
+from PySide6.QtWidgets import QStackedLayout, QHBoxLayout
 
 
 class ComplexLayout(QStackedLayout):

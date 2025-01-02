@@ -7,7 +7,7 @@ class MangaChaptersParser(ModelsJsonParser):
     def __init__(self, manga: Manga):
         super().__init__(f"{manga.folder}/chapters.json", MangaChapter)
         self.manga = manga
-        self.chapters_collection = self.models_collection
+        self.chapters_collection = self._models_collection
 
     def get_chapter(self, num: int | float) -> MangaChapter | None:
         images_parser = ChapterImagesParser(f"{self.manga.folder}/chapter{num}/images.json")

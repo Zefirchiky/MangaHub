@@ -8,6 +8,8 @@
 
 # LONG-TERM TODO
 - Notifications
+- System/Cultivation calculation and display
 - Map
 - Plugins
 - ZIP
+- Music

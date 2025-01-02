@@ -1,6 +1,5 @@
 from pathlib import Path
 import json
-import os
 
 from .file_handler import FileHandler
 

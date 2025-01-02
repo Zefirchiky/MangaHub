@@ -8,3 +8,8 @@ class AbstractChapter(ABC, TagModel):
     upload_date: str = ''
     translator: str = ''
     language: str = 'en'
+    
+    is_read: bool = False
+    
+    def set_is_read(self, is_read: bool=True):
+        self.is_read = is_read

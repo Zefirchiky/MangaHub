@@ -206,7 +206,7 @@ class MangaManager:
     
     def ensure_cover(self, manga: Manga):
         if os.path.exists(f'{manga.folder}/cover.jpg'):
-            return f'cover.jpg'
+            return 'cover.jpg'
         
         if manga.id_dex:
             cover = self.dex_scraper.get_manga_cover(manga.id_dex)
@@ -221,16 +221,16 @@ class MangaManager:
             with open(f'{manga.folder}/cover.jpg', 'wb') as f:
                 f.write(cover)
 
-            return f'cover.jpg'
+            return 'cover.jpg'
         return None
     
     def get_all_manga(self) -> dict[str, Manga]:
         if self.manga_collection:
             return self.manga_collection
-        return self.manga_parser.get_all_manga()
+        return self.manga_parser.get_all()
     
     def add_chapter(self, manga: Manga, chapter: MangaChapter):
         manga.add_chapter(chapter)
         
     def save(self):
-        self.manga_parser.save_manga(self.manga_collection)
+        self.manga_parser.save(self.manga_collection)

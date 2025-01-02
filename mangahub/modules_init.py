@@ -1,7 +1,6 @@
 from directories import *
 
 import rich.traceback
-from rich import print as rich_print
 rich.traceback.install(show_locals=True)
 
 from loguru import logger

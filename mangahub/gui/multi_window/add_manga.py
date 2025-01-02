@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import (
     QMainWindow,
-    QHBoxLayout, QVBoxLayout, QFormLayout,
+    QVBoxLayout, QFormLayout,
     QWidget, QPushButton, QLabel, QLineEdit, QComboBox
 )
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import QSize
 from gui.widgets import SvgIcon
 from controllers import AppController
 from services.parsers import UrlParser
@@ -50,15 +50,15 @@ class AddMangaWindow(QMainWindow):
         sites_layout.addWidget(main_site_list)
         sites_layout.addWidget(sites_add_button)
 
-        button = QPushButton("Add Manga")
-        button.clicked.connect(lambda: self.manager.create_manga(self.name_input.text(), site=main_site_list.currentText()))
+        self.add_manga_button = QPushButton("Add Manga")
+        self.add_manga_button.clicked.connect(lambda: self.manager.create_manga(self.name_input.text(), site=main_site_list.currentText()))
         
         # root layout
         root_layout = QFormLayout()
         root_layout.addRow(name_label, self.name_input)
         root_layout.addRow(url_label, self.url_input)
         root_layout.addRow(sites_label, sites_layout)
-        root_layout.addWidget(button)
+        root_layout.addWidget(self.add_manga_button)
 
         root = QWidget()
         root.setLayout(root_layout)

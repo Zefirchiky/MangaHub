@@ -71,7 +71,7 @@ class MangaSiteScraper:
 
         chapter_page = requests.get(url,  headers={'User-Agent': 'Mozilla/5.0'}).text
         if chapter_page:
-            if not manga.name in self.chapter_pages:
+            if manga.name not in self.chapter_pages:
                 self.chapter_pages[manga.name] = {}
             self.chapter_pages[manga.name][num] = chapter_page
             MM.show_message('success', f"Chapter '{manga.name}' {num} page loaded")

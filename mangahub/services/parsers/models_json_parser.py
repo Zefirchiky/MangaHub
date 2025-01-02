@@ -10,17 +10,17 @@ class ModelsJsonParser:
         self.model = model
         self.json_parser = JsonHandler(self.file)
         self.data = self.json_parser.get_data()
-        self.models_collection = {}
+        self._models_collection = {}
         
     def get_model(self, name: str | int | float) -> BaseModel | None:
-        if name in self.models_collection.keys():
-            return self.models_collection[name]
+        if name in self._models_collection.keys():
+            return self._models_collection[name]
         
         try:
             data = self.data.get(str(name))
             if data:
                 model = self.model.model_validate(data)
-                self.models_collection[name] = model
+                self._models_collection[name] = model
                 return model
             return 
         except KeyError:
@@ -30,10 +30,10 @@ class ModelsJsonParser:
         
     def get_all_models(self) -> dict[str | float, BaseModel]:
         for name in self.data.keys():
-            if name not in self.models_collection.keys():
-                self.models_collection[name] = self.get_model(name)
+            if name not in self._models_collection.keys():
+                self._models_collection[name] = self.get_model(name)
         
-        return self.models_collection
+        return self._models_collection
     
     def save(self, models_dict: dict[str, BaseModel]):
         models_list = {name: model.model_dump(mode="json", exclude_unset=True, exclude_none=True) for name, model in models_dict.items()}
