@@ -1,5 +1,5 @@
 from .pyside_threading import Worker, BatchWorker
-from .image_convertion import convert_to_format
+from .image_conversion import convert_to_format
 from .webp_dimensions import get_webp_dimensions
 from .retry_dec import retry
 

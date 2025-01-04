@@ -1,0 +1,2 @@
+class FML:
+    pass
