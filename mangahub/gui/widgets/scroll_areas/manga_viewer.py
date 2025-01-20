@@ -2,20 +2,14 @@ from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem, QPushButto
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QPixmap, QColor
 from .smooth_graphics_view import SmoothGraphicsView
-from models import Manga, MangaChapter
-from gui.widgets import SvgIcon
+from models.manga import Manga, MangaChapter
+from gui.widgets.svg import SvgIcon
 from directories import *
 
 
 class MangaViewer(SmoothGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
-        # self.setObjectName("mangaViewer")
-        # self.setStyleSheet(f"""
-        #                     #mangaViewer {{
-        #                         background: url({str(BACKGROUNDS_DIR).replace('\\', '/')}/novel_viewer.jpg) repeat;
-        #                     }}
-        #                    """)
         
         self._vertical_spacing = 0
         self._base_width = 480

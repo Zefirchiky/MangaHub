@@ -1,8 +1,10 @@
 import re
 from loguru import logger
 from services.parsers import SitesParser
-from models import Site, Manga, URL
-from gui.gui_utils import MM
+from models import URL
+from models.sites import Site
+from models.manga import Manga
+from utils import MM
 
 
 class UrlParser:

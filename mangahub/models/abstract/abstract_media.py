@@ -7,6 +7,7 @@ from .abstract_chapter import AbstractChapter
 
 class AbstractMedia(ABC, TagModel):
     name: str
+    id_: str
     description: str = ''
     author: str = ''
     status: str = "Unknown"

@@ -19,7 +19,7 @@ class Attack:
         self.attacker = attacker
         self.target = target
         
-        self._damage: list[Damage] = []
+        self._damage_list: list[Damage] = []
         
     def attack(self, attacker: 'Entity'=None, target: 'Entity'=None) -> None:
         if attacker:
@@ -27,23 +27,26 @@ class Attack:
         if target:
             self.target = target
         self.damage_dealt = self.skill.attack(self.target)
-        self.target.damaged(self.get_damage_dealt())
+        self.target.damaged(self.get_damage())
         print(self)
         
     @property
-    def damage(self) -> list[Damage]:
-        self._damage = []
+    def damage_list(self) -> list[Damage]:
+        self._damage_list = []
         for dmg in self.skill.damage:
-            self._damage.append(dmg)
-        return self._damage
+            self._damage_list.append(dmg)
+        return self._damage_list
         
-    def get_damage_dealt(self) -> float:
-        return sum([dmg.get_damage(self.target.max_hp, self.target.defense) for dmg in self.damage])
+    def get_damage(self) -> float:
+        damage_dealt = 0
+        for dmg in self.damage_list:
+            damage_dealt += self.target.defense(dmg.get_damage(self.target.max_hp, self.target.defense))
+        return sum([dmg.get_damage(self.target.max_hp, self.target.defense) for dmg in self.damage_list])
     
     def __repr__(self) -> str:
-        string = f'{self.attacker.name} attacked {self.target.name} with [{self.skill.name}]: {self.target.hp}/{self.target.max_hp} (-{self.get_damage_dealt()})\n'
+        string = f'{self.attacker.name} attacked {self.target.name} with [{self.skill.name}]: {self.target.hp}/{self.target.max_hp} (-{self.get_damage()})\n'
         
-        for dmg in self.damage:
+        for dmg in self.damage_list:
             string += f'\t -{dmg.get_damage(self.target.max_hp, self.target.defense)} by [{dmg.damage} {dmg.type.name} damage]\n'
         
         return string

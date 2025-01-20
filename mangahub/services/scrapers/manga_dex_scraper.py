@@ -4,8 +4,9 @@ import io
 from PIL import Image
 from loguru import logger
 
-from gui.gui_utils import MM
-from utils import BatchWorker, convert_to_format
+# from utils import MM
+from utils import BatchWorker
+from utils.image_conversion import convert_to_format
 
 
 class MangaDexScraper:
@@ -41,7 +42,7 @@ class MangaDexScraper:
             self.manga_data[name] = manga
             return manga
         
-        MM.show_message('warning', f"Manga {name} was not found on MangaDex")
+        # MM.show_message('warning', f"Manga {name} was not found on MangaDex")
         return None
     
     def get_manga_id(self, name):
@@ -54,7 +55,7 @@ class MangaDexScraper:
         response = requests.get(f"{self.cover_id_url}", params={"manga[]": manga_id})
         data = response.json()["data"]
         if not data:
-            MM.show_message('error', f"Manga {manga_id} not found")
+            # MM.show_message('error', f"Manga {manga_id} not found")
             return None
         return data[0]["attributes"]["fileName"]
     
@@ -92,7 +93,7 @@ class MangaDexScraper:
         data: dict = response.json()
         data = data.get("data")
         if not data:
-            MM.show_message('warning', f"Empty site response (data: {data}) for manga {manga_id}, when getting last chapter: {response.status_code}")
+            # MM.show_message('warning', f"Empty site response (data: {data}) for manga {manga_id}, when getting last chapter: {response.status_code}")
             return 0
         num = data[0]['attributes']['chapter']
         
@@ -123,7 +124,7 @@ class MangaDexScraper:
             return data
         self.chapters_data[manga_id][num] = data
         
-        MM.show_message('error', f"Chapter {manga_id} {num} not found on MangaDex")
+        # MM.show_message('error', f"Chapter {manga_id} {num} not found on MangaDex")
         return None
     
     def get_chapter_name(self, manga_id, num):
@@ -158,12 +159,12 @@ class MangaDexScraper:
             response = requests.get(f"{self.chapter_images_url}/{chapter_id}")
             response.raise_for_status()
         except requests.exceptions.HTTPError:
-            MM.show_message('error', f"Chapter {chapter_id} not found: {response.status_code}")
+            # MM.show_message('error', f"Chapter {chapter_id} not found: {response.status_code}")
             return []
         
         data = response.json()
         if not data:
-            MM.show_message('error', f"Chapter {chapter_id} not found")
+            # MM.show_message('error', f"Chapter {chapter_id} not found")
             return []
         chapter_data = data["chapter"]
         
@@ -190,7 +191,7 @@ class MangaDexScraper:
             return []
         
         placeholders_worker = BatchWorker()
-        placeholders_worker.signals.all_completed.connect(lambda _: MM.show_message('success', "Image sizes downloaded"))
+        # placeholders_worker.signals.all_completed.connect(lambda _: MM.show_message('success', "Image sizes downloaded"))
         return list(placeholders_worker.process_batch(self.get_image_size, image_urls, blocking=True))
     
     def get_chapter_images(self, chapter_id, data_saver=1):
@@ -200,6 +201,6 @@ class MangaDexScraper:
         
         # TODO: add a progress bar
         images_worker = BatchWorker()
-        images_worker.signals.all_completed.connect(lambda _: MM.show_message('success', "Images downloaded"))
+        # images_worker.signals.all_completed.connect(lambda _: MM.show_message('success', "Images downloaded"))
         images_worker.process_batch(requests.get, image_urls, blocking=False)
         return images_worker

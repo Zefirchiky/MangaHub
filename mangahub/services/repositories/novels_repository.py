@@ -1,16 +1,16 @@
-from models import Novel
+from models.novels import Novel
 from services.parsers.models_json_parser import ModelsJsonParser
-from directories import NOVELS_JSON
 
 
 class NovelsRepository(ModelsJsonParser):
-    def __init__(self, file=NOVELS_JSON) -> None:
+    def __init__(self, file) -> None:
         super().__init__(file, Novel)
 
-    def add_novel(self, Novel: Novel) -> None:
-        self._models_collection[Novel.name] = Novel
+    def add(self, novel: Novel) -> dict[str, Novel]:
+        self._models_collection[novel.name] = novel
+        return self._models_collection
 
-    def get_novel(self, name) -> Novel:
+    def get(self, name) -> Novel:
         return super().get_model(name)
 
     def get_all(self) -> dict[str, Novel]:

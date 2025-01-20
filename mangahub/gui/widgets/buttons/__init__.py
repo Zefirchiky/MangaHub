@@ -1,8 +1,8 @@
-from .action_button import ActionButton
+from .action_button import IconTypes, ActionButton
 from .chapter_button import ChapterButton
 
-
 __all__ = [
-    'ActionButton',
-    'ChapterButton'
+    'IconTypes', 
+	'ActionButton', 
+	'ChapterButton',
 ]

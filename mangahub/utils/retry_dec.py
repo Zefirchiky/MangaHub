@@ -1,5 +1,5 @@
 from functools import wraps
-from gui.gui_utils import MM
+from utils import MM
 
 def retry(max_retries=5, delay=1, exception_to_check=Exception):
     """

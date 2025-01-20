@@ -1,4 +1,5 @@
 import re
+from typing import Union
 from pydantic import BaseModel, PrivateAttr, field_validator
 
 
@@ -7,7 +8,10 @@ class URL(BaseModel):
     regex: str = ''
     _cached_elements: list[str] = PrivateAttr(default_factory=list)
     
-    def __init__(self, url: str, regex: str=''):
+    def __init__(self, url: Union['URL', str], regex: str=''):
+        if isinstance(url, URL):
+            regex = url.regex
+            url = url.url
         super().__init__(url=url, regex=regex)
     
     @field_validator('url')
@@ -130,4 +134,3 @@ class URL(BaseModel):
     
     def __hash__(self):
         return hash(self.url)
-    

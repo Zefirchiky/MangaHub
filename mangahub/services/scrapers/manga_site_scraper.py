@@ -7,9 +7,11 @@ from PIL import Image
 from loguru import logger
 
 from services.parsers import UrlParser
-from models import Manga, Site
-from gui.gui_utils import MM
-from utils import BatchWorker, get_webp_dimensions
+from models.manga import Manga
+from models.sites import Site
+from utils import MM
+from utils import BatchWorker
+from utils.webp_dimensions import get_webp_dimensions
 
 
 class MangaSiteScraper:

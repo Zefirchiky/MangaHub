@@ -8,9 +8,9 @@ from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt, Signal
 
 from .line_label import LineLabel
-from gui.widgets import ImageWidget, SvgIcon
+from gui.widgets import ImageWidget
 from gui.widgets.buttons import ChapterButton, ActionButton
-from models import Manga
+from models.manga import Manga
 from directories import *
 
 

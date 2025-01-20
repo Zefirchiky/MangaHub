@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from PySide6.QtWidgets import (
     QMainWindow,
     QVBoxLayout, QFormLayout,
@@ -5,14 +7,16 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QSize
 from gui.widgets import SvgIcon
-from controllers import AppController
 from services.parsers import UrlParser
 from models import URL
 from directories import ICONS_DIR
 
+if TYPE_CHECKING:
+    from controllers import AppController
+
 
 class AddMangaWindow(QMainWindow):
-    def __init__(self, app_controller: AppController, parent=None):
+    def __init__(self, app_controller: 'AppController', parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Manga")
         self.setFixedWidth(300)

@@ -1,5 +1,5 @@
 from .model_json_parser import ModelJsonParser
-from models import MangaState
+from models.manga import MangaState
 from directories import STATE_DIR
 
 

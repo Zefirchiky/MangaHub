@@ -2,7 +2,8 @@ from loguru import logger
 
 from .manga_manager import MangaManager, SitesManager
 from services.parsers import StateParser
-from models import MangaState
+from models import URL
+from models.manga import Manga, MangaState
 
 
 class AppController:
@@ -25,8 +26,24 @@ class AppController:
                 
         logger.success('AppController connections initialized')
         
+        
     def get_manga_chapter_placeholders(self):
         return self.manga_manager.get_chapter_placeholders(self.manga_state._manga, self.manga_state._chapter)
+    
+    def get_manga_chapter_images(self):
+        return self.manga_manager.get_chapter_images(self.manga_state._manga, self.manga_state._chapter)
+                
+    
+    def get_manga(self, name: str) -> Manga:
+        return self.manga_manager.get_manga(name)
+    
+    def create_manga(self, name: str, url: str | URL='', site='MangaDex', backup_sites=[], **kwargs):
+        manga = self.manga_manager.create_manga(name, url, site, backup_sites, **kwargs)
+        return manga
+    
+    def remove_manga(self, name: str) -> Manga:
+        return self.manga_manager.remove_manga(name)
+        
                 
     def select_manga_chapter(self, name: str, chapter: int | float) -> None:
         self.select_manga(name)
@@ -38,6 +55,7 @@ class AppController:
         
         manga = self.manager.get_manga(name)
         self.manga_state.set_manga(manga, 1)
+        
         
     def select_chapter(self, number: int | float) -> None:
         if self.state._manga:

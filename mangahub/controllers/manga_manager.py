@@ -1,19 +1,27 @@
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
-from gui.gui_utils import MM
+from utils import MM
 from .sites_manager import SitesManager
-from services.parsers import MangaParser, MangaChaptersParser, UrlParser
+from services.parsers import MangaChaptersParser, UrlParser
 from services.scrapers import MangaSiteScraper, MangaDexScraper
-from models import Manga, MangaChapter, ChapterImage, URL
+from services.repositories import MangaRepository
+from models import URL
+from models.manga import Manga, MangaChapter, ChapterImage
 from directories import *
 import shutil
 import os
 
+if TYPE_CHECKING:
+    from mangahub.main import App
+
             
 class MangaManager:
-    def __init__(self, app):
+    def __init__(self, app: 'App'):
         self.app = app
-        self.manga_parser: MangaParser = self.app.manga_json_parser
+        self.repository: MangaRepository = self.app.manga_repository
+        self.repository.load()
         self.sites_manager: SitesManager = self.app.sites_manager
         self.dex_scraper = MangaDexScraper()
         self.sites_scraper = MangaSiteScraper(self.sites_manager)
@@ -23,11 +31,27 @@ class MangaManager:
         logger.success('MangaManager initialized')
         
     def get_manga(self, name) -> Manga | None:
-        manga = self.manga_collection.get(name)
+        manga = self.repository.get(name)
         if not manga:
             MM.show_message('warning', f"Manga {name} not found")
             logger.warning(f"Manga {name} not found")
         return manga
+    
+    def get_all_manga(self) -> dict[str, Manga]:
+        if self.manga_collection:
+            return self.manga_collection
+        
+        self.manga_collection = self.repository.get_all()
+        for manga in self.manga_collection.values():
+            if not manga._chapters_data.get(1):
+                manga.add_chapter(self.get_chapter(manga, 1))
+            if not manga._chapters_data.get(manga.last_chapter):
+                manga.add_chapter(self.get_chapter(manga, manga.last_chapter))
+            if manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter and \
+                manga.current_chapter and not manga._chapters_data.get(manga.current_chapter):
+                manga.add_chapter(self.get_chapter(manga, manga.current_chapter))
+                
+        return self.manga_collection
     
     def add_new_manga(self, manga: Manga):
         self.manga_collection[manga.name] = manga
@@ -39,7 +63,7 @@ class MangaManager:
             return
         
         if url:
-            url = url if isinstance(url, URL) else URL(url)
+            url = URL(url)
             site = self.sites_manager.get_site(url=url).name
             
         id_ = name.lower().replace(' ', '-').replace(',', '').replace('.', '').replace('?', '').replace('!', '')
@@ -224,13 +248,8 @@ class MangaManager:
             return 'cover.jpg'
         return None
     
-    def get_all_manga(self) -> dict[str, Manga]:
-        if self.manga_collection:
-            return self.manga_collection
-        return self.manga_parser.get_all()
-    
     def add_chapter(self, manga: Manga, chapter: MangaChapter):
         manga.add_chapter(chapter)
         
     def save(self):
-        self.manga_parser.save(self.manga_collection)
+        self.repository.save(self.manga_collection)

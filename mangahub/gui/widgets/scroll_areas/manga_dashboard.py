@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt
 from gui.widgets.separators import Separator
 from .smooth_scroll_area import SmoothScrollArea
 from .manga_card import MangaCard, FullMangaCard
-from models import Manga
+from models.manga import Manga
 from directories import *
         
  

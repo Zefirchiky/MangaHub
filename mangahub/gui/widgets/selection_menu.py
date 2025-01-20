@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QSize, QRect, QPropertyAnimation, QEasingCurve
 
-from .scroll_areas.smooth_scroll_area import SmoothScrollArea
 from .svg import SvgIcon
+from .scroll_areas import SmoothScrollArea
 from directories import ICONS_DIR
 
 
@@ -30,7 +30,7 @@ class AddElement(QPushButton):
 class AddElementList(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
-        
+
         self.setFixedSize(80, 20)
         self.setIconSize(QSize(16, 16))
         self.setIcon(SvgIcon(ICONS_DIR / "plus.svg").get_icon('white'))
@@ -130,4 +130,3 @@ class SelectionMenu(SmoothScrollArea):
         self.add_element_animation.setStartValue(self.add_element_widget.geometry())
         self.add_element_animation.setEndValue(QRect(self.current_x, self.add_element_widget.geometry().y(), self.add_element_widget.width(), self.add_element_widget.height()))
         self.add_element_animation.start()
-        

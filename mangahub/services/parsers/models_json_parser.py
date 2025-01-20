@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from loguru import logger
 from services.handlers import JsonHandler
-from gui.gui_utils import MM
+from utils import MM
 
 
 class ModelsJsonParser:

@@ -1,7 +1,9 @@
-from .manga_site_scraper import MangaSiteScraper
 from .manga_dex_scraper import MangaDexScraper
+from .manga_site_scraper import MangaSiteScraper
+from .novels_site_scraper import NovelsSiteScraper
 
 __all__ = [
-    "MangaSiteScraper",
-    "MangaDexScraper"
+    'MangaDexScraper', 
+	'MangaSiteScraper', 
+	'NovelsSiteScraper',
 ]

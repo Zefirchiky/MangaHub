@@ -1,11 +1,16 @@
-from .svg import SvgIcon
+from .complex_layout import ComplexLayout
 from .image import ImageWidget
+from .selection_menu import AddElement, AddElementList, SelectionElement, SelectionMenu
 from .separators import Separator
-from .selection_menu import SelectionMenu
+from .svg import SvgIcon
 
 __all__ = [
-    'SvgIcon',
-    'ImageWidget',
-    'Separator',
-    'SelectionMenu'
+    'ComplexLayout', 
+	'ImageWidget', 
+	'AddElement', 
+	'AddElementList', 
+	'SelectionElement', 
+	'SelectionMenu', 
+	'Separator', 
+	'SvgIcon',
 ]

@@ -5,16 +5,14 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
 
 from modules_init import *
-from icecream import ic
-ic("something")
-# from rich import print as rich_print
-# __builtins__.print = rich_print # Use rich print as a default
-__builtins__.print = ic
+from rich import print as rich_print
+__builtins__.print = rich_print # Use rich print as a default
 
 from gui import MainWindow
-from gui.gui_utils import MM
-from services.parsers import MangaParser, SitesParser, UrlParser
-from controllers import MangaManager, SitesManager, AppController
+from utils import MM
+from services.parsers import SitesParser, UrlParser
+from services.repositories import MangaRepository, NovelsRepository
+from controllers import SitesManager, MangaManager, NovelsManager, AppController
 from directories import *
 
 VERSION = '0.1.0'
@@ -35,13 +33,37 @@ class App:
         self.gui_window = MainWindow(self)
         self.message_manager = MM(self)
 
-        self.manga_json_parser = MangaParser(MANGA_JSON)
+
         self.sites_json_parser = SitesParser(SITES_JSON)
         UrlParser.set_parser(self.sites_json_parser)
-
         self.sites_manager = SitesManager(self)
+        
+        self.manga_repository = MangaRepository(MANGA_JSON)
         self.manga_manager = MangaManager(self)
+        
+        self.novels_repository = NovelsRepository(NOVELS_JSON)
+        self.novels_manager = NovelsManager(self)
+        
         self.app_controller = AppController(self)
+        
+        
+        # self.sites_manager.create_site("AsuraScans", "https://asuracomic.net",
+        #                                    SiteChapterPage(url_format="series/$manga_id$-$num_identifier$/chapter/$chapter_num$"), 
+        #                                    ImageParsingMethod().set_regex_from_html('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp'),
+        #                                    LastChapterParsingMethod(string_format="$manga_id$-$num_identifier$/chapter/$chapter_num$", on_title_page=True),
+        #                                    title_page=SiteTitlePage(url_format="series/$manga_id$-$num_identifier$"),
+        #                                    num_identifier="ffffffff")
+        
+        # self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans")
+        # self.app_controller.create_manga("Nano Machine", site="AsuraScans")
+        # self.app_controller.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
+        # self.app_controller.create_manga("Dragon-Devouring Mage")
+        # self.app_controller.create_manga("Hero? I Quit A Long Time Ago")
+        # self.app_controller.remove_manga('Dragon-Devouring Mage')
+        # self.app_controller.remove_manga('return of the disaster class hero')
+        # self.app_controller.remove_manga(self.app_controller.get_manga('Circles'))
+        # self.app_controller.remove_manga('Bad Born Blood')
+        # self.app_controller.get_manga('I, The Demon Lord, Am Being Targeted by My Female Disciples!').description = 'lol'
 
     def run(self):
         self.gui_window.showMaximized()

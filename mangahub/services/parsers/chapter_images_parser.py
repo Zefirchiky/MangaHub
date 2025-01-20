@@ -1,4 +1,4 @@
-from models import ChapterImage
+from models.manga import ChapterImage
 from .models_json_parser import ModelsJsonParser
 
 

@@ -3,7 +3,7 @@ from PySide6.QtGui import QIcon, QPixmap, QPainter
 from PySide6.QtCore import Qt, QByteArray
 from PySide6.QtSvg import QSvgRenderer
 from loguru import logger
-from gui.gui_utils import MM
+from utils import MM
 
 
 class SvgIcon(QIcon):

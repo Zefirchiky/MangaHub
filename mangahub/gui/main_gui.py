@@ -11,8 +11,9 @@ from gui.multi_window import AddMangaWindow, SettingsWindow
 from gui.widgets.scroll_areas import MangaViewer, MangaDashboard, NovelViewer
 from gui.widgets.slide_menus import SideMenu
 from gui.widgets import SvgIcon, SelectionMenu, ImageWidget
+from utils import MM
 from controllers import SitesManager, MangaManager, AppController
-from gui.gui_utils import MM
+from app_status import AppStatus
 from directories import *
 
 
@@ -54,9 +55,7 @@ class MainWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_mouse_position)
         self.timer.start(100)
-        
-        from icecream import ic
-        ic("something")
+
         logger.success('MainWindow widget initialized')
         
     def init(self):
@@ -77,35 +76,14 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(0, self.manga_dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
         self.root_layout.insertWidget(2, self.novel_viewer)
-
-        # self.sites_manager.create_site("AsuraScans", "https://asuracomic.net",
-        #                                    SiteChapterPage(url_format="series/$manga_id$-$num_identifier$/chapter/$chapter_num$"), 
-        #                                    ImageParsingMethod().set_regex_from_html('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp'),
-        #                                    LastChapterParsingMethod(string_format="$manga_id$-$num_identifier$/chapter/$chapter_num$", on_title_page=True),
-        #                                    title_page=SiteTitlePage(url_format="series/$manga_id$-$num_identifier$"),
-        #                                    num_identifier="ffffffff")
         
-        # self.manga_manager.create_manga("Boundless Necromancer", site="AsuraScans")
-        # self.manga_manager.create_manga("Nano Machine", site="AsuraScans")
-        # self.manga_manager.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
-        # self.manga_manager.create_manga("Dragon-Devouring Mage")
-        # self.manga_manager.create_manga("Hero? I Quit A Long Time Ago")
-        # self.manga_manager.remove_manga('Dragon-Devouring Mage')
-        # self.manga_manager.remove_manga('return of the disaster class hero')
-        # self.manga_manager.remove_manga(self.manga_manager.get_manga('Circles'))
-        # self.manga_manager.remove_manga('Bad Born Blood')
-        # self.manga_manager.get_manga('I, The Demon Lord, Am Being Targeted by My Female Disciples!').description = 'lol'
-        
-        for manga in self.manga_manager.get_all_manga().values():
-            manga.add_chapter(self.manga_manager.get_chapter(manga, 1))
-            manga.add_chapter(self.manga_manager.get_chapter(manga, manga.last_chapter))
-            if manga.current_chapter and manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter:
-                manga.add_chapter(self.manga_manager.get_chapter(manga, manga.current_chapter))
+        for manga in self.app_controller.manga_manager.get_all_manga().values():
             mc = self.manga_dashboard.add_manga(manga)
             mc.chapter_clicked.connect(self.app_controller.select_manga_chapter)
 
         self.init_connections()
         
+        AppStatus.main_window_initialized = True
         logger.success('MainWindow initialized')
         
     def init_connections(self):
@@ -128,9 +106,8 @@ class MainWindow(QMainWindow):
     def show_manga(self):
         self.manga_viewer.clear()
         
-        chapter = self.app_controller.manga_state._chapter
         placeholders = self.app_controller.get_manga_chapter_placeholders()
-        worker = self.manga_manager.get_chapter_images(self.app_controller.manga_state._manga, chapter)
+        worker = self.manga_manager.get_chapter_images()
         
         self.manga_viewer.prev_button.setEnabled(not self.app_controller.manga_state.is_first())
         self.manga_viewer.next_button.setEnabled(not self.app_controller.manga_state.is_last())

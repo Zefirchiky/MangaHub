@@ -10,6 +10,8 @@ from PySide6.QtCore import (
 )
 from loguru import logger
 
+from app_status import AppStatus
+
 
 class Message(QFrame):
     clicked = Signal(QFrame)
@@ -85,6 +87,7 @@ class Message(QFrame):
 
 class MM:
     _instance = None
+    queue = []
     
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -109,14 +112,21 @@ class MM:
             self.active_messages = []
             self.move_anim_group = {}
             self.destroy_anim_group = {}
-            
+
             logger.success("MessageManager initialized")
     
     @classmethod
     def show_message(cls, message_type='error', message_text=None, progress=False, duration=5000):
         if cls._instance is None:
             raise Exception("MessageManager has not been initialized!")
-        return cls._instance._show_message(message_type, message_text, duration)
+        if not AppStatus.main_window_initialized:
+            cls.queue.append((message_type, message_text, progress, duration))
+            return 
+        else:
+            for message in cls.queue:
+                cls._instance._show_message(*message)
+            cls.queue.clear()
+            return cls._instance._show_message(message_type, message_text, duration)
     
     def _show_message(self, message_type='error', message_text=None, progress=False, duration=5000):
         message = Message(self.window, message_type, message_text, self.width, self.min_height)

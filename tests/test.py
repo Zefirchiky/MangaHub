@@ -1,12 +1,26 @@
-from ..mangahub.features.system import System, MC, FML, Antagonist, Entity, Skill
+# coding=utf8
+# the above tag defines encoding for this document and is for Python 2.x compatibility
 
-Entity.base_hp = 101
+import re
 
-mc = MC('John', System('Primordial Something System'))
+regex = r"([^a-zA-Z]'.*?'[^a-zA-Z])"
 
-amc = Antagonist('Not John')
+with open('tests/example_novel_chapter.txt', 'r') as f:
+    test_str = f.read()
 
-mc.attack(amc, Skill('Punch', 10))
+matches = re.finditer(regex, test_str, re.MULTILINE)
 
-print(mc)
-print(amc)
+for matchNum, match in enumerate(matches, start=1):
+    
+    print ("Match {matchNum} was found at {start}-{end}: {match}".format(matchNum = matchNum, start = match.start(), end = match.end(), match = match.group()))
+    
+    for groupNum in range(0, len(match.groups())):
+        groupNum = groupNum + 1
+        
+        print ("Group {groupNum} found at {start}-{end}: {group}".format(groupNum = groupNum, start = match.start(groupNum), end = match.end(groupNum), group = match.group(groupNum)))
+
+print()
+print()
+for m in re.finditer(regex, test_str, re.MULTILINE):
+    print(m.group(1))
+# Note: for Python 2.7 compatibility, use ur"" to prefix the regex and u"" to prefix the test string and substitution.

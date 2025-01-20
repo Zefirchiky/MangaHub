@@ -11,5 +11,5 @@ class NovelChapter(AbstractChapter):
         for i, chapter in enumerate(self._paragraphs_data):
             if i != 0:
                 text += "\n\n\t"
-            text += chapter.text
+            text += chapter.elements
         return text

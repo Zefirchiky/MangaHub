@@ -1,7 +1,9 @@
 from loguru import logger
 
 from services.parsers import SitesParser
-from models import Site, SiteChapterPage, ImageParsingMethod, URL
+from models import URL
+from models.sites import Site, SiteChapterPage
+from models.manga import ImageParsingMethod
 
 
 class SitesManager:
@@ -24,7 +26,7 @@ class SitesManager:
     
     def get_site(self, name: str=None, url: str | URL=None) -> Site | None:
         if url:
-            url = url if isinstance(url, URL) else URL(url)
+            url = URL(url)
             for site in self.sites.values():
                 if site['url'] == url.site_url:
                     return site
