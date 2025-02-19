@@ -6,6 +6,7 @@ from PySide6.QtGui import QCursor
 from PySide6.QtCore import Qt
 
 from gui.widgets.separators import Separator
+from gui.widgets.complex_layout import ComplexLayout
 from .smooth_scroll_area import SmoothScrollArea
 from .manga_card import MangaCard, FullMangaCard
 from models.manga import Manga
@@ -25,15 +26,12 @@ class MangaDashboard(SmoothScrollArea):
         self.fmc.cover.clicked_l.connect(self.fmc.close)
         self.fmc.close()
         
-        self.root_layout = QVBoxLayout()
-        self.root_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        self.root_layout.setSpacing(20)
-        self.root_layout.setContentsMargins(20, 40, 20, 40)
+        self.root_layout = ComplexLayout('main', ComplexLayout.Type.VERTICAL, self)
+        self.root_layout.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.root_layout.main_layout.setSpacing(20)
+        self.root_layout.main_layout.setContentsMargins(20, 40, 20, 40)
         
-        self.root_widget = QWidget()
-        self.root_widget.setLayout(self.root_layout)
-        
-        self.setWidget(self.root_widget)
+        self.setWidget(self.root_layout.get_widget())
         
         self.mcards: dict[str, MangaCard] = {}
         
@@ -55,21 +53,16 @@ class MangaDashboard(SmoothScrollArea):
         if self.mc_num % self.max_mc_num == 0:  # if the current row is full
             new_layout = QHBoxLayout()
             new_layout.addWidget(mc)
-            self.root_layout.addWidget(Separator())
-            self.root_layout.addLayout(new_layout)
-        else:
-            self.root_layout.itemAt(self.root_layout.count() - 1).addWidget(mc)
+            self.root_layout.add_widget(Separator())
+            self.root_layout.add(new_layout)
 
         self.mc_num += 1
         
     def update_cards_layout(self):
         self.max_mc_num = self.width() // self.mc_width
-        self.mc_num = 0
-        self.root_layout.deleteLater()
-        self.root_layout = QVBoxLayout()
-        for mc in self.mcards.values():
-            self._add_card_to_layout(mc)
-        self.setLayout(self.root_layout)
+        for layout in self.root_layout:
+            if layout.name:
+                print(layout.name)
     
     def update_manga(self, manga: Manga):
         mc: MangaCard = self.mcards[manga.name]
@@ -83,7 +76,7 @@ class MangaDashboard(SmoothScrollArea):
         
     def resizeEvent(self, arg__1):
         self.add_manga_button.move(self.width() - self.add_manga_button.width() - 15, 10)
-        self.root_widget.setFixedSize(self.size())
+        self.root_layout.get_widget().setFixedSize(self.size())
         self.fmc.update_geometry()
         self.update_cards_layout()              # TODO: Might cause optimization issues, not work man sad :(
         return super().resizeEvent(arg__1)

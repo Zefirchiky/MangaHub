@@ -10,9 +10,11 @@ __builtins__.print = rich_print # Use rich print as a default
 
 from gui import MainWindow
 from utils import MM
+from services.handlers import JsonHandler
 from services.parsers import SitesParser, UrlParser
 from services.repositories import MangaRepository, NovelsRepository
 from controllers import SitesManager, MangaManager, NovelsManager, AppController
+from models.novels import NovelFormatter
 from directories import *
 
 VERSION = '0.1.0'
@@ -27,6 +29,9 @@ class App:
         
         myappid = f'mangahub.{VERSION}'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        
+        # Set defaults
+        NovelFormatter.global_replaces = JsonHandler(f"{NOVELS_CONF_DIR}/global_replace.json").load()
         
         self.gui_app = QApplication(sys.argv)
         self.gui_app.setWindowIcon(QIcon(f"{RESOURCES_DIR}/app_icon.ico"))

@@ -5,7 +5,11 @@ from .novel_paragraph import NovelParagraph
 from .paragraph import Dialog, Thought, UnclearReference, Narration
 
 
+MULTILINE_PLACEHOLDER = '⏎'
+
 class NovelFormatter:
+    global_replaces = {}
+    
     def __init__(self, text: str) -> None:
         self.text = text
         
@@ -29,26 +33,10 @@ class NovelFormatter:
             
             paragraphs.append(paragraph)
             
-    def format_paragraph(self, raw_paragraph: str) -> NovelParagraph:        
-        paragraph = NovelParagraph()
-        prev_end = 0
-        
-        for m in re.finditer(self.regex, raw_paragraph, re.MULTILINE):
-            if m.start() > prev_end + 1:
-                paragraph.elements.append(Narration(text=raw_paragraph[prev_end+1:m.start()-1]))
-            if m.group(1):
-                paragraph.elements.append(Dialog(text=m.group(1)))
-            elif m.group(2):
-                paragraph.elements.append(Thought(text=m.group(2)))
-            elif m.group(3):
-                paragraph.elements.append(UnclearReference(text=m.group(3)))
-            prev_end = m.end()
-        
-        if prev_end + 1 < len(raw_paragraph):
-            paragraph.elements.append(Narration(text=raw_paragraph[prev_end:]))
-        
-        paragraph.validate_elements()
-        return paragraph
+    def format(self, raw_text: str) -> NovelParagraph:        
+        text = self._chapter_symbols_replaces(raw_text)
+        text, _ = self._preserve_line_breaks(text)
+        return text
     
     def _fix_new_lines(self, text: list[str]) -> str:
         prev = ''
@@ -66,7 +54,6 @@ class NovelFormatter:
             merge = False
             if not not_merge:
                 if (p == '"' or p == "'") and len(p) == 1:
-                    print(f'Merging "{p}" with "{prev}"')
                     merge = True
                 elif p[0].isspace():
                     merge = True
@@ -92,7 +79,30 @@ class NovelFormatter:
                 
         return text
     
+    def _preserve_line_breaks(self, text: str) -> str | list[int]:
+        """Replace newlines in quotes with placeholder"""
+        in_quote = None
+        result = []
+        line_break_positions = []
+        current_line_length = 0
+        
+        for c in text:
+            if c in ('"', "'"):
+                if in_quote == c:
+                    in_quote = None
+                else:
+                    in_quote = c
+                result.append(c)
+            elif c == '\n' and in_quote:
+                result.append(MULTILINE_PLACEHOLDER)
+                line_break_positions.append(current_line_length)
+            else:
+                result.append(c)
+                current_line_length += 1
+                
+        return ''.join(result), line_break_positions
+    
     def _chapter_symbols_replaces(self, text: str) -> str:
-        return text.replace(
-            '…', '...'
-        )
+        text = text.translate(self.global_replaces)
+        text = re.sub(r'\s+([,.!?;:])', r'\1', text)        # remove spaces before punctuation
+        return text

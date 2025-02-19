@@ -72,7 +72,6 @@ class MainWindow(QMainWindow):
 
         self.selection_menu.show()
         
-        
         self.root_layout.insertWidget(0, self.manga_dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
         self.root_layout.insertWidget(2, self.novel_viewer)

@@ -1,4 +1,9 @@
 # TODO
+- FIX THE FUCKING INTERFACE:
+    - Manga Dashboard (temp forget about scaling)
+    - Abstract Dashboard for future Novel and Anime boards
+    - Learn fucking Figma
+    - Create cool design for Dashboards in fucking Figma
 - ASYNC
 - Custom chapters naming
 - Chapter cards

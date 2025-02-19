@@ -9,11 +9,7 @@ class TextElement(TagModel):
     
     @field_validator('text')
     def validate_text(cls, text: str) -> str:
-        if text[0] == ' ':
-            text = text[1:]
-        if text[-1] == ' ':
-            text = text[:-1]
-        return text.replace('\n', '')
+        return text.strip().replace('\n', '')
     
     
     def __str__(self) -> str:

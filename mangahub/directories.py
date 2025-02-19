@@ -5,6 +5,10 @@ import os
 STD_DIR = Path(__file__).parent
 os.chdir(STD_DIR)
 
+'''=== CONFIGS ==='''
+CONF_DIR = STD_DIR / 'config'
+NOVELS_CONF_DIR = CONF_DIR / 'novels'
+
 '''=== LOGS ==='''
 LOG_DIR = STD_DIR / 'logs'
 

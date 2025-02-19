@@ -1,0 +1,60 @@
+"Unb
+elivable"
+->
+"Unbelivable"
+
+
+"What
+...?
+
+"
+->
+"What...?"
+
+
+"Sentence 1.
+
+sentence 2"
+->
+"Sentence 1. Sentence 2"
+
+
+"Never-
+ending"
+->
+"Never-ending"
+
+
+"Solutions:
+solution 1"
+->
+"Solutions:
+Solution 1"
+
+
+'But why
+
+would he do that'
+->
+'But why would he do that'
+
+
+"Even so,
+she can't do that"
+->
+"Even so, she can't do that"
+
+
+'Why?'
+->
+Thought('Why?)
+
+
+'I don't want to do it'
+->
+Thought('I don't want to do it')  # ' in don't should not count
+
+
+'She didn't want to steal Max's money'
+->
+Thought('She didn't want to steal Max's money')  # ' in didn't and Max's should not form a separate Thought
