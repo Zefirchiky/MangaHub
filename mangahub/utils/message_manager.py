@@ -1,3 +1,4 @@
+from __future__ import annotations
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QFrame,
@@ -89,9 +90,9 @@ class Message(QFrame):
 class MM:
     """MessageManager class handles the gui messages.
     Use MM.show_message() to show a message."""
-    _instance = None
+    _instance: MM | None = None
     _initialized = False
-    queue = []
+    queue: list[Message] = []
     
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:

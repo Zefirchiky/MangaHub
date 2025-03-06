@@ -11,15 +11,18 @@ from gui.multi_window import AddMangaWindow, SettingsWindow
 from gui.widgets.scroll_areas import MangaViewer, NovelViewer
 from gui.widgets.dashboard import Dashboard, MediaCard
 from gui.widgets.slide_menus import SideMenu
-from gui.widgets import SvgIcon, SelectionMenu, ImageWidget, SVGIcon, IconRepo
+from gui.widgets import SelectionMenu, ImageWidget, IconRepo
 from utils import MM
-from controllers import SitesManager, MangaManager, AppController
 from app_status import AppStatus
-from directories import *
+from directories import RESOURCES_DIR, IMAGES_DIR
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import App
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, app):
+    def __init__(self, app: App):
         super().__init__()
         self.app = app
 
@@ -34,7 +37,7 @@ class MainWindow(QMainWindow):
         IconRepo.init_default_icons()
         
         self.settings_is_opened = False
-        self.manga_cards = {}
+        self.manga_cards: dict[str, MediaCard] = {}
         
 
         # root layout
@@ -59,9 +62,9 @@ class MainWindow(QMainWindow):
         logger.success('MainWindow widget initialized')
         
     def init(self):
-        self.manga_manager: MangaManager = self.app.manga_manager
-        self.sites_manager: SitesManager = self.app.sites_manager
-        self.app_controller: AppController = self.app.app_controller
+        self.manga_manager = self.app.manga_manager
+        self.sites_manager = self.app.sites_manager
+        self.app_controller = self.app.app_controller
         
         self.selection_menu = SelectionMenu(self)
         self.settings_window = SettingsWindow()

@@ -7,4 +7,4 @@ class ChapterImagesParser(ModelsJsonParser):
         super().__init__(file, ChapterImage)
         
     def get_all_images(self) -> dict[float, ChapterImage]:
-        return self.get_all_models()
+        return self.get_all_models()    # type: ignore

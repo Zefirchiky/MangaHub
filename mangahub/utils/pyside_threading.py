@@ -119,7 +119,7 @@ class BatchWorker(QObject):
             self.threadpool.start(worker)
             
         if blocking:
-            loop.exec_()
+            loop.exec()     # type: ignore
             return self._results
             
         return []

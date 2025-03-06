@@ -3,10 +3,7 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
-
-from modules_init import *
-from rich import print as rich_print
-__builtins__.print = rich_print # Use rich print as a default
+from peek import peek as ic
 
 from gui import MainWindow
 from gui.widgets import IconRepo
@@ -17,15 +14,24 @@ from services.parsers import SitesParser, UrlParser
 from services.repositories import MangaRepository, NovelsRepository
 from controllers import SitesManager, MangaManager, NovelsManager, AppController
 from models.novels import NovelFormatter
-from directories import *
+from directories import (
+    STD_DIR, LOG_DIR,
+    RESOURCES_DIR, 
+    NOVELS_CONF_DIR, SITES_JSON, MANGA_JSON, NOVELS_JSON
+)
+
+from loguru import logger
+
+logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", level="DEBUG", retention=10)
 
 VERSION = '0.1.0'
 
 
 class App:
     def __init__(self):
-        self.console = rich.console.Console()
-        self.console.print(f"MangaHub v{VERSION}", style="bold cyan")
+        ic.values_only_for_fstrings = True
+        ic(f"MangaHub v{VERSION}")
+        logger.debug(f"MangaHub v{VERSION}")
         logger.info(f"Starting MangaHub v{VERSION}")
         logger.info(f"Working directory: {STD_DIR}")
         

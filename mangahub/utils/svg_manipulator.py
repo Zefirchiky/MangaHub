@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pathlib import Path
 
 import xml.etree.ElementTree as ET
@@ -8,7 +9,7 @@ class SVGManipulator:
     A class to manipulate SVG files - change colors, background, dimensions, etc.
     """
     
-    def __init__(self, svg_content: str = None, svg_file_path: Path = None):
+    def __init__(self, svg_file_path: Path | None = None, svg_content: str | None = None):
         """
         Initialize with either SVG content as string or a path to an SVG file.
         
@@ -36,18 +37,18 @@ class SVGManipulator:
         
         # Find elements with fill attribute (not "none")
         for elem in self.root.findall(".//*[@fill]", self.namespaces):
-            if elem.get('fill').lower() != 'none':
+            if elem.get('fill', 'none').lower() != 'none':
                 elements.append(elem)
                 
         # Find elements with stroke attribute (not "none")
         for elem in self.root.findall(".//*[@stroke]", self.namespaces):
-            if elem.get('stroke').lower() != 'none':
+            if elem.get('stroke', 'none').lower() != 'none':
                 elements.append(elem)
         
         return elements
     
     def change_color(
-        self, new_color: str, target_color: str = None,
+        self, new_color: str, target_color: str | None = None,
         fill: bool=True, fill_if_none: bool=False,
         stroke: bool=True, stroke_if_none: bool=False
         ) -> 'SVGManipulator':
@@ -94,7 +95,7 @@ class SVGManipulator:
         for rect in self.root.findall(".//svg:rect", self.namespaces):
             if (rect.get('x', '0') == '0' and rect.get('y', '0') == '0' and
                     (rect.get('width') == self.root.get('width') or
-                     rect.get('width') == self.root.get('viewBox').split()[2])):
+                     rect.get('width') == self.root.get('viewBox').split()[2])):    # type: ignore
                 background_rect = rect
                 break
         
@@ -123,9 +124,9 @@ class SVGManipulator:
             
         return self
     
-    def resize(self, width: str | int = 'SVGManipulator', 
-               height: str | int = None,
-               scale: float = None) -> None:
+    def resize(self, width: str | int | float = 'SVGManipulator', 
+               height: str | int | float | None=None,
+               scale: float | None=None) -> SVGManipulator:
         """
         Resize the SVG.
         
@@ -149,8 +150,10 @@ class SVGManipulator:
             new_width = view_width * scale
             new_height = view_height * scale
         else:
-            new_width = float(width.rstrip('px%')) if width is not None else view_width
-            new_height = float(height.rstrip('px%')) if height is not None else view_height
+            width = float(width.rstrip('px%')) if isinstance(width, str) else width
+            new_width = width if width is not None else view_width
+            height = float(height.rstrip('px%')) if isinstance(height, str) else height
+            new_height = height if height is not None else view_height
         
         # Update attributes
         if width is not None:
@@ -214,9 +217,7 @@ class SVGManipulator:
             return rough_string
     
     def simplify(self) -> 'SVGManipulator':
-        """
-        Simplify the SVG by removing unnecessary attributes and metadata.
-        """
+        """Simplify the SVG by removing unnecessary attributes and metadata."""
         # This method requires lxml to work fully with comments and metadata
         try:
             from lxml import etree

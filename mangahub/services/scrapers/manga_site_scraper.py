@@ -13,6 +13,8 @@ from utils import MM
 from utils import BatchWorker
 from utils.webp_dimensions import get_webp_dimensions
 
+# TODO: reimplement
+
 
 class MangaSiteScraper:
     def __init__(self, sites_manager):

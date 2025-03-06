@@ -9,12 +9,15 @@ from services.scrapers import MangaSiteScraper, MangaDexScraper
 from services.repositories import MangaRepository
 from models import URL
 from models.manga import Manga, MangaChapter, ChapterImage
-from directories import *
+from directories import MANGA_DIR
 import shutil
 import os
 
 if TYPE_CHECKING:
     from mangahub.main import App
+    
+    
+# TODO: reimplement
 
             
 class MangaManager:
@@ -25,7 +28,6 @@ class MangaManager:
         self.sites_manager: SitesManager = self.app.sites_manager
         self.dex_scraper = MangaDexScraper()
         self.sites_scraper = MangaSiteScraper(self.sites_manager)
-        self.manga_collection = []
         self.manga_collection = self.get_all_manga()
         
         logger.success('MangaManager initialized')
@@ -64,7 +66,11 @@ class MangaManager:
         
         if url:
             url = URL(url)
-            site = self.sites_manager.get_site(url=url).name
+            site = self.sites_manager.get_site(url=url)
+            if site:
+                site = site.name
+            else:
+                raise Exception('Site not found')
             
         id_ = name.lower().replace(' ', '-').replace(',', '').replace('.', '').replace('?', '').replace('!', '')
         id_dex = self.dex_scraper.get_manga_id(name)
@@ -92,10 +98,13 @@ class MangaManager:
         
         self.add_new_manga(manga)
         if site != 'MangaDex':
-            self.sites_manager.get_site(manga.site).add_manga(manga)
+            self.sites_manager.get_site(manga.site).add_manga(manga)    # type: ignore
         for site in manga.backup_sites:
             if site != 'MangaDex':
-                self.sites_manager.get_site(manga.site).add_manga(manga)
+                site_ = self.sites_manager.get_site(manga.site)
+                if site_:
+                    site_.add_manga(manga)
+                
         logger.success(f"Manga '{manga.name}' created")
         return manga
     
@@ -107,7 +116,11 @@ class MangaManager:
             shutil.rmtree(manga.folder)
             mg = self.manga_collection.pop(manga.name)
             site = self.sites_manager.get_site(manga.site)
-            site.remove_manga(manga)
+            if site: 
+                site.remove_manga(manga)
+            else: 
+                logger.warning(f"Site {manga.site} of manga '{manga.name}' not found while removing")
+                raise Exception(f"Site {manga.site} of manga '{manga.name}' not found while removing")
             logger.success(f"Manga '{manga.name}' successfully removed")
             MM.show_message('success', f"Manga '{manga.name}' successfully removed")
             return mg
