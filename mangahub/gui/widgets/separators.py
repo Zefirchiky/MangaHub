@@ -1,15 +1,17 @@
 from PySide6.QtWidgets import QFrame
 from PySide6.QtGui import QPainter, QColor
 from PySide6.QtCore import Qt
+from config import CM
 
 class Separator(QFrame):
-    def __init__(self, orientation=Qt.Orientation.Horizontal, color="gray", thickness=1, parent=None):
+    def __init__(self, orientation='h', thickness=2, padding=5, color=None, parent=None):
         super().__init__(parent)
         self.orientation = orientation
-        self.color = QColor(color)
         self.thickness = thickness
+        self.padding = padding
+        self.color = QColor(color or CM().icon)
         
-        if self.orientation == Qt.Orientation.Horizontal:
+        if self.orientation.lower() == 'h':
             self.setFixedHeight(self.thickness)
         else:
             self.setFixedWidth(self.thickness)
@@ -22,7 +24,7 @@ class Separator(QFrame):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.color)
         
-        if self.orientation == Qt.Orientation.Horizontal:
-            painter.drawRect(0, 0, self.width(), self.thickness)
+        if self.orientation == 'h':
+            painter.drawRect(self.padding, 0, self.width() - 2*self.padding, self.thickness)
         else:
-            painter.drawRect(0, 0, self.thickness, self.height())
+            painter.drawRect(0, self.padding, self.thickness, self.height() - 2*self.padding)

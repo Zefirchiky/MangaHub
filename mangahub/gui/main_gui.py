@@ -8,9 +8,10 @@ from PySide6.QtGui import QCursor, QIcon
 from loguru import logger
 
 from gui.multi_window import AddMangaWindow, SettingsWindow
-from gui.widgets.scroll_areas import MangaViewer, MangaDashboard, NovelViewer
+from gui.widgets.scroll_areas import MangaViewer, NovelViewer
+from gui.widgets.dashboard import Dashboard, MediaCard
 from gui.widgets.slide_menus import SideMenu
-from gui.widgets import SvgIcon, SelectionMenu, ImageWidget
+from gui.widgets import SvgIcon, SelectionMenu, ImageWidget, SVGIcon, IconRepo
 from utils import MM
 from controllers import SitesManager, MangaManager, AppController
 from app_status import AppStatus
@@ -30,6 +31,8 @@ class MainWindow(QMainWindow):
         ImageWidget.set_default_placeholder(width=200, height=300)
         ImageWidget.set_default_error_image(IMAGES_DIR / "placeholder.jpg")
         
+        IconRepo.init_default_icons()
+        
         self.settings_is_opened = False
         self.manga_cards = {}
         
@@ -39,15 +42,12 @@ class MainWindow(QMainWindow):
         root = QWidget()
         root.setLayout(self.root_layout)
         self.setCentralWidget(root)
-
-
+        
+        
         # side menu
-        book_svg_icon = QIcon(str(ICONS_DIR / "comic.png"))
-        novel_svg_icon = SvgIcon(ICONS_DIR / "novel.svg")
-
         self.side_menu = SideMenu(self)
-        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(0), book_svg_icon, "Manga", is_default=True)
-        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(2), novel_svg_icon, "Novel")
+        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(0), IconRepo.get_icon(IconRepo.Icons.MANGA), "Manga", is_default=True)
+        self.side_menu.add_button(lambda: self.root_layout.setCurrentIndex(2), IconRepo.get_icon(IconRepo.Icons.NOVEL), "Novel")
 
         self.side_menu.set_settings_function(self.open_settings)
 
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         self.selection_menu = SelectionMenu(self)
         self.settings_window = SettingsWindow()
         self.add_manga_window = AddMangaWindow(self.app_controller)
-        self.manga_dashboard = MangaDashboard()
+        self.manga_dashboard = Dashboard()
         self.manga_viewer = MangaViewer()
         self.novel_viewer = NovelViewer()
 
@@ -77,8 +77,10 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(2, self.novel_viewer)
         
         for manga in self.app_controller.manga_manager.get_all_manga().values():
-            mc = self.manga_dashboard.add_manga(manga)
-            mc.chapter_clicked.connect(self.app_controller.select_manga_chapter)
+            mc = MediaCard()
+            mc.set_cover(manga.folder + '/' + manga.cover).set_name(manga.name)
+            self.manga_dashboard.add_card(mc)
+            # mc.chapter_clicked.connect(self.app_controller.select_manga_chapter)
 
         self.init_connections()
         
@@ -98,7 +100,7 @@ class MainWindow(QMainWindow):
         self.manga_viewer.prev_button.clicked.connect(self.app_controller.select_prev_chapter)
         self.manga_viewer.next_button.clicked.connect(self.app_controller.select_next_chapter)
         
-        self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
+        # self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
         
         logger.success('MainWindow connections initialized')
         

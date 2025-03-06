@@ -9,7 +9,9 @@ from rich import print as rich_print
 __builtins__.print = rich_print # Use rich print as a default
 
 from gui import MainWindow
+from gui.widgets import IconRepo
 from utils import MM
+from config import CM
 from services.handlers import JsonHandler
 from services.parsers import SitesParser, UrlParser
 from services.repositories import MangaRepository, NovelsRepository
@@ -30,13 +32,15 @@ class App:
         myappid = f'mangahub.{VERSION}'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         
-        # Set defaults
-        NovelFormatter.global_replaces = JsonHandler(f"{NOVELS_CONF_DIR}/global_replace.json").load()
-        
         self.gui_app = QApplication(sys.argv)
         self.gui_app.setWindowIcon(QIcon(f"{RESOURCES_DIR}/app_icon.ico"))
         self.gui_window = MainWindow(self)
         self.message_manager = MM(self)
+        self.color_manager = CM(self)
+        self.icon_repository = IconRepo()
+        
+        # Set defaults
+        NovelFormatter.global_replaces = JsonHandler(f"{NOVELS_CONF_DIR}/global_replace.json").load()
 
 
         self.sites_json_parser = SitesParser(SITES_JSON)

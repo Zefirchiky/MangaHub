@@ -3,7 +3,6 @@ from pathlib import Path
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from PySide6.QtGui import QPixmap, QImage, QPainter, QPainterPath, QColor
 from PySide6.QtCore import Qt, QObject, Signal, Property
-from glm import vec2
 from loguru import logger
 
 
@@ -46,7 +45,7 @@ class ImageWidget(QLabel):
         self.error_image = self._default_error_image
         
         if width and height:
-            self.scale_to_fit(vec2(width, height))
+            self.scale_to_fit(width, height)
         elif width:
             self.scale_to_width(width)
         elif height:
@@ -89,7 +88,7 @@ class ImageWidget(QLabel):
         self.image = self._load_image(image_data)
         self.setPixmap(self.image)
         if self.save_original:
-            self.original_image = self.image
+            self._original_image = self.image
         if replace_default_size:
             self.set_placeholder(self.image.width(), self.image.height())
             self.setFixedSize(self.image.width(), self.image.height())

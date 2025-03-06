@@ -1,5 +1,4 @@
-from typing import Union
-
+from __future__ import annotations
 from ..tags.tag_model import TagModel
 from models.abstract import TextElement
 
@@ -30,7 +29,7 @@ class NovelParagraph(TagModel):
     def __str__(self) -> str:
         return self.text
     
-    def __add__(self, element: Union[TextElement, list[TextElement], 'NovelParagraph', str]) -> 'NovelParagraph':
+    def __add__(self, element: TextElement | list[TextElement] | NovelParagraph | str) -> 'NovelParagraph':
         if isinstance(element, NovelParagraph):
             self.elements.extend(element.elements)
             return self

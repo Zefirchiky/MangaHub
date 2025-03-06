@@ -1,4 +1,5 @@
-from enum import Enum, auto
+from __future__ import annotations
+from enum import auto
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -55,7 +56,7 @@ class ComplexLayout:
     def add_widget(self, widget: QWidget):
         self.main_layout.addWidget(widget)
         
-    def set_parent(self, parent: QWidget | 'ComplexLayout' | str):
+    def set_parent(self, parent: str | QWidget | ComplexLayout):
         if isinstance(parent, QWidget):
             self.main_layout.setParent(parent)
 

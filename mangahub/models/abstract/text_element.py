@@ -1,5 +1,4 @@
-from typing import Union
-
+from __future__ import annotations
 from pydantic import field_validator
 from models.tags.tag_model import TagModel
 
@@ -15,7 +14,7 @@ class TextElement(TagModel):
     def __str__(self) -> str:
         return self.text
     
-    def __add__(self, text: Union['TextElement', str]) -> 'TextElement':
+    def __add__(self, text: TextElement | str) -> 'TextElement':
         if isinstance(text, TextElement):
             text = text.text
         self.text += text

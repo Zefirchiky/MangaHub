@@ -25,9 +25,10 @@ class Message(QFrame):
         self.min_height = min_height
         
         self.label = QLabel(f"{message}")
+        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.label.setStyleSheet("border: none; background-color: transparent;")
         self.label.setFixedWidth(width - 20)
-        self.label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        self.label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setWordWrap(True)
         
@@ -86,7 +87,10 @@ class Message(QFrame):
         
 
 class MM:
+    """MessageManager class handles the gui messages.
+    Use MM.show_message() to show a message."""
     _instance = None
+    _initialized = False
     queue = []
     
     def __new__(cls, *args, **kwargs):
@@ -100,8 +104,8 @@ class MM:
     
     def __init__(self, app=None, width=400):
         # Only initialize if this is a new instance
-        if not hasattr(self, 'initialized'):
-            self.initialized = True
+        if not self._initialized:
+            self._initialized = True
             self.app = app
             self.window = app.gui_window
             

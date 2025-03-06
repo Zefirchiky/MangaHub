@@ -1,66 +1,38 @@
+from pathlib import Path
+
 from PySide6.QtWidgets import (
-    QVBoxLayout,
-    QPushButton, QLabel
+    QSizePolicy,
+    QHBoxLayout,
+    QPushButton
 )
-from PySide6.QtGui import QFont
-from PySide6.QtCore import Qt, Signal
-
-from gui.widgets.separators import Separator
-
-from models.abstract import AbstractChapter
+from PySide6.QtCore import Qt
+from ..svg_icon import SVGIcon, IconRepo
+from ..scroll_areas import LineLabel
+from ..separators import Separator
+from directories import ICONS_DIR
 
 
 class ChapterButton(QPushButton):
-    clicked_ = Signal(AbstractChapter)
-    
-    def __init__(self, chapter: AbstractChapter=None, parent=None):
+    def __init__(self, text: str='button', parent=None):
         super().__init__(parent)
-        self.setContentsMargins(0, 0, 0, 0)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setContentsMargins(5, 0, 5, 0)
+        self.setFixedHeight(24)
         
-        self.chapter = chapter
+        self._text = LineLabel(text).set_selectable(False)
         
-        self.language_label = None
+        self.root = QHBoxLayout()
+        self.root.setContentsMargins(0, 0, 0, 0)
+        self.root.addWidget(self._text)
+        self.root.addStretch()
+        self.setLayout(self.root)
         
-        self.chapter_label = QLabel()
-        self.chapter_label.setContentsMargins(0, 0, 0, 0)
-        self.chapter_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.is_eye = False
         
-        self.date_label = QLabel()   # f"{upload_date.split('T')[0] if upload_date else ''}"
-        self.date_label.setFont(QFont("Times", 8, 5))
-        self.date_label.setStyleSheet("color: gray;")
-        self.date_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        
-        self.root_layout = QVBoxLayout()
-        self.root_layout.setContentsMargins(5, 0, 5, 0)
-        self.root_layout.addWidget(self.chapter_label)
-        
-        self.setLayout(self.root_layout)
-        
-        if chapter:
-            self.set_chapter(chapter)
-        
-    def set_chapter(self, chapter: AbstractChapter) -> 'ChapterButton':
-        self.chapter = chapter
-        
-        if self.language_label and self.language_label.text() == '':
-            self.language_label.setText(chapter.language)
-        
-        text = f"Chapter {chapter.number}"
-        if chapter.name:
-            text += f": {chapter.name}"
-        self.chapter_label.setText(text)
-        
-        if chapter.upload_date:
-            upload_date = f"{chapter.upload_date.split('T')[0] if chapter.upload_date else ''}"
-            self.date_label.setText(upload_date)
-        
-        self.clicked.connect(lambda _: self.clicked_.emit(self.chapter))
-            
-        return self
-    
-    def add_language(self, language: str=None) -> 'ChapterButton':
-        if language:
-            self.language_label = QLabel(language)
-            self.root_layout.insertWidget(0, self.language_label)
-            self.root_layout.insertWidget(1, Separator())
+    def add_eye(self, is_on=True):
+        if not self.is_eye:
+            self.root.insertWidget(0, IconRepo.get_icon('eye'))
+            self.root.insertWidget(1, Separator('v', thickness=1))
+        self.is_eye = True
         return self

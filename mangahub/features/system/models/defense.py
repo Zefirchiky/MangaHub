@@ -1,4 +1,4 @@
-from typing import Union
+from __future__ import annotations
 from ..utils.enums import DefenseTypes, DamageTypes
 from system.config import Config
 
@@ -31,7 +31,7 @@ class Defense:
                 
         return damage
         
-    def __add__(self, other: Union[int, 'Defense', DefenseTypes]) -> 'Defense':
+    def __add__(self, other: int | Defense | DefenseTypes) -> 'Defense':
         if isinstance(other, int):
             self.defense += other
         elif isinstance(other, Defense):

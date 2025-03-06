@@ -1,17 +1,20 @@
 from pathlib import Path
 
-from PySide6.QtWidgets import QLabel, QSizePolicy
+from PySide6.QtWidgets import QWidget, QSizePolicy, QStackedLayout
 from PySide6.QtGui import QPixmap, QImage, QPainter, QPainterPath, QColor
 from PySide6.QtCore import Qt, Signal, Property
 from loguru import logger
 
 
 
-class ImageWidget(QLabel):
-    type image_types = Path | str | bytes | bytearray | QPixmap
+class ImageWidget(QWidget):
+    type image_type = Path | str | bytes | bytearray | QPixmap
     
-    _default_placeholder = None
-    _default_error_image = None
+    _default_placeholder: QPixmap | None = None
+    _default_error_image: QPixmap | None = None
+    
+    _default_placeholder_warned = False
+    _default_error_image_warned = False
     
     border_radius_changed = Signal(int)
     clicked_r = Signal()
@@ -20,22 +23,24 @@ class ImageWidget(QLabel):
     error = Signal(tuple)
     status = Signal(str)
     
-    def __init__(self, image_data=None, width=0, height=0, save_original=True, parent=None):
+    def __init__(self, image_data=None, width=0, height=0, save_original=False, parent=None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setCursor(Qt.CursorShape.ArrowCursor)
         
-        if not ImageWidget._default_placeholder:
+        if not ImageWidget._default_placeholder and not self._default_placeholder_warned:
             logger.warning("No default placeholder set, setting standard placeholder...")
+            self._default_placeholder_warned = True
             ImageWidget.set_default_placeholder(width=200, height=300)
-        if not ImageWidget._default_error_image:
+        if not ImageWidget._default_error_image and not self._default_error_image_warned:
             logger.warning("No default error image set, setting standard error image...")
+            self._default_error_image_warned = True
             ImageWidget.set_default_error_image()
 
         self.placeholder = self._default_placeholder
         if image_data:
             self.image = self._load_image(image_data)
-            self.setPixmap(self.image)
+            self.set_image(self.image)
         else:
             self.image = self.placeholder
 
@@ -53,6 +58,10 @@ class ImageWidget(QLabel):
         elif height:
             self.scale_to_height(height)
             
+        self.root = QStackedLayout()
+        self.root.setStackingMode(QStackedLayout.StackingMode.StackAll)
+        self.setLayout(self.root)
+            
         self._border_radius = 5
         self.clickable_left = False
         self.clickable_right = False
@@ -61,7 +70,7 @@ class ImageWidget(QLabel):
         self.update_size()
         
     @staticmethod
-    def _process_image(image_data: image_types) -> QPixmap:
+    def _process_image(image_data: image_type) -> QPixmap:
         if isinstance(image_data, QPixmap):
             return image_data
         elif isinstance(image_data, Path):
@@ -71,7 +80,7 @@ class ImageWidget(QLabel):
         else:
             return QPixmap().fromImage(QImage().fromData(image_data))
     
-    def _load_image(self, image_data: image_types) -> QPixmap:
+    def _load_image(self, image_data: image_type) -> QPixmap:
         try:
             return self._process_image(image_data)
         except Exception as e:
@@ -85,28 +94,27 @@ class ImageWidget(QLabel):
         self.fit(self.width(), self.height())
         return self.image
         
-    def set_image(self, image_data: image_types, replace_default_size=False):
+    def set_image(self, image_data: image_type, replace_default_size=False):
         self.image = self._load_image(image_data)
-        self.setPixmap(self.image)
         if self.save_original:
             self.original_image = self.image
             
         if replace_default_size:
-            self.set_placeholder(self.image.width(), self.image.height())
+            self.set_placeholder(width=self.image.width(), height=self.image.height())
             self.setFixedSize(self.image.width(), self.image.height())
         else:
             self.fit(self.width(), self.height())
             
         return self
         
-    def set_placeholder(self, placeholder: image_types=None, width: int=0, height: int=0, color=(200, 200, 200, 50)):
+    def set_placeholder(self, placeholder: image_type | None=None, width: int=0, height: int=0, color=(200, 200, 200, 50)):
         if placeholder:
             self.placeholder = self._process_image(placeholder)
             
         elif width and height:
             if not self._default_placeholder:
                 self.placeholder = QPixmap(width, height)
-                self.placeholder = self.placeholder.fill(QColor(*color))
+                self.placeholder.fill(QColor(*color))
             else:
                 placeholder = self._default_placeholder.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
                 x = placeholder.width()//2 - width//2 if placeholder.width() > width else 0
@@ -120,7 +128,7 @@ class ImageWidget(QLabel):
         self.update()
         return self.image
         
-    def set_error_image(self, error_image: image_types):
+    def set_error_image(self, error_image: image_type):
         if isinstance(error_image, Path):
             error_image = str(error_image)
         self.error_image = error_image
@@ -152,7 +160,6 @@ class ImageWidget(QLabel):
             y = self.placeholder.height() - height + y
             
         self.image = self.image.copy(x, y, width, height)
-        self.setPixmap(self.image)
         self.update_size()
         return self
     
@@ -160,7 +167,6 @@ class ImageWidget(QLabel):
         if self.original_image:
             self.image = self.original_image
         self.image = self.image.scaled(width, height, aspect_ratio_mode, Qt.TransformationMode.SmoothTransformation)
-        self.setPixmap(self.image)
         self.update_size()
         return self
         
@@ -168,7 +174,6 @@ class ImageWidget(QLabel):
         if self.original_image:
             self.image = self.original_image
         self.image = self.image.scaledToWidth(width, Qt.TransformationMode.SmoothTransformation)
-        self.setPixmap(self.image)
         self.update_size()
         return self
     
@@ -176,7 +181,6 @@ class ImageWidget(QLabel):
         if self.original_image:
             self.image = self.original_image
         self.image = self.image.scaledToHeight(height, Qt.TransformationMode.SmoothTransformation)
-        self.setPixmap(self.image)
         self.update_size()
         return self
     
@@ -185,7 +189,7 @@ class ImageWidget(QLabel):
         return self
         
     @classmethod
-    def set_default_placeholder(cls, placeholder_data: image_types=None, width=0, height=0, color=(200, 200, 200, 50)):
+    def set_default_placeholder(cls, placeholder_data: image_type | None=None, width=0, height=0, color=(200, 200, 200, 50)):
         if not placeholder_data:
             placeholder = QPixmap(width, height)
             placeholder.fill(QColor(*color))
@@ -201,7 +205,7 @@ class ImageWidget(QLabel):
         return cls._default_placeholder
         
     @classmethod
-    def set_default_error_image(cls, error_image: image_types=None):
+    def set_default_error_image(cls, error_image: image_type | None=None):
         if not error_image:
             if cls._default_placeholder:
                 error_image = cls._default_placeholder
@@ -215,16 +219,20 @@ class ImageWidget(QLabel):
         return cls._default_error_image
     
     @property
-    def original_image(self) -> QPixmap:
+    def original_image(self) -> QPixmap | None:
         if self._original_image:
             return self._original_image
         return None
+    
+    @original_image.setter
+    def original_image(self, image: image_type) -> None:
+        self._original_image = self._process_image(image)
     
     @Property(int)
     def border_radius(self):
         return self._border_radius
     
-    @border_radius.setter
+    @border_radius.setter   # type: ignore
     def border_radius(self, val):
         min_ = min(self.width()//2, self.height()//2)
         if val > min_:

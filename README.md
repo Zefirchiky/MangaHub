@@ -1,20 +1,22 @@
 # TODO
 - FIX THE FUCKING INTERFACE:
-    - Manga Dashboard (temp forget about scaling)
-    - Abstract Dashboard for future Novel and Anime boards
-    - Learn fucking Figma
+    - Dashboard (temp forget about scaling)
+    - Fine-tune the Dashboard
+    - MediaCard/FullMediaCard
     - Create cool design for Dashboards in fucking Figma
+    - Centralized colors system
 - ASYNC
 - Custom chapters naming
-- Chapter cards
 - Event history
 - Redo UrlParser
 - Manga search
+- Build-in notes/to-do
 
 # LONG-TERM TODO
-- Notifications
+- ASYNC
 - System/Cultivation calculation and display
 - Map
 - Plugins
-- ZIP
+- Saving media (ZIP)
 - Music
+- Easy color themes saving and loading

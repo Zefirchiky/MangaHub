@@ -9,6 +9,7 @@ dependencies = [
     "bs4>=0.0.2",
     "icecream>=2.1.3",
     "loguru>=0.7.3",
+    "lxml>=5.3.1",
     "pillow>=11.0.0",
     "pyan3>=1.2.0",
     "pydantic>=2.10.4",
@@ -18,3 +19,6 @@ dependencies = [
     "rich>=13.9.4",
     "ruff>=0.8.4",
 ]
+
+[tool.mypy]
+ignore_missing_imports = true

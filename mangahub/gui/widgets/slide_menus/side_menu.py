@@ -8,7 +8,7 @@ from PySide6.QtGui import QFont, QCursor, QIcon
 from PySide6.QtCore import Qt, QSize, QRect, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve
 
 from ..separators import Separator
-from ..svg import SvgIcon
+from ..svg_icon import SVGIcon, IconRepo
 from directories import ICONS_DIR
 
 
@@ -48,20 +48,21 @@ class SideMenu(QFrame):
                                 ''')
         menu_button.setFixedHeight(56)
         menu_button.setIconSize(QSize(40, 40))
-        menu_button.setIcon(SvgIcon(ICONS_DIR / "menu.svg").get_icon('white', fill='white'))
+        icon = IconRepo.get_icon(IconRepo.Icons.MENU)
+        icon.pressed.connect(print)
+        menu_button.setIcon(icon.get_pixmap(40, 40))
         menu_button.clicked.connect(lambda: self.handle_full_menu())
 
         # Buttons
         self.buttons_layout = QVBoxLayout()
 
         # Settings
-        self.settings_svg_icon = SvgIcon(ICONS_DIR / "settings.svg")
         self.settings_button = QPushButton()
         self.settings_button.setCheckable(True)
         self.settings_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.settings_button.setFixedHeight(56)
         self.settings_button.setIconSize(QSize(32, 32))
-        self.settings_button.setIcon(self.settings_svg_icon.get_icon('white'))
+        self.settings_button.setIcon(IconRepo.get_icon(IconRepo.Icons.SETTINGS).get_pixmap(32, 32))
         self.settings_button.clicked.connect(self.change_settings_icon)
 
         # root layout
@@ -78,7 +79,6 @@ class SideMenu(QFrame):
 
         self.setLayout(root_layout)
 
-
         # animations
         self.open_close_animation = QPropertyAnimation(self, b"geometry")
         self.open_close_animation.setDuration(300)
@@ -88,14 +88,12 @@ class SideMenu(QFrame):
         self.full_open_close_animation.setDuration(300)
         self.full_open_close_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
-    def add_button(self, fn, svg_icon: SvgIcon | QIcon=None, text=None, is_default=False):
+    def add_button(self, fn, svg_icon: SVGIcon=None, text=None, is_default=False):
         button_index = len(self.buttons)
 
         layout = QHBoxLayout()
 
-        icon = QLabel()
-        icon.setFixedSize(32, 32)
-        icon.setPixmap(svg_icon.get_pixmap('white', 32, 32) if isinstance(svg_icon, SvgIcon) else svg_icon.pixmap(32, 32))
+        icon = svg_icon
 
         opacity_effect = QGraphicsOpacityEffect()
         opacity_effect.setOpacity(0)

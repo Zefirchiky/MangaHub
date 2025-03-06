@@ -1,4 +1,4 @@
-from typing import Union
+from __future__ import annotations
 from .defense import Defense
 from ..utils.enums import DamageTypes, CustomDamageType
 
@@ -25,7 +25,7 @@ class Damage:
             damage_dealt = def_.get_damage(damage_dealt, self.type)
         return damage_dealt
         
-    def __add__(self, other: Union[int, float, 'Damage', DamageTypes]) -> 'Damage':
+    def __add__(self, other: int | float | Damage | DamageTypes) -> 'Damage':
         if isinstance(other, int) or isinstance(other, float):
             self.damage += other
         elif isinstance(other, Damage):

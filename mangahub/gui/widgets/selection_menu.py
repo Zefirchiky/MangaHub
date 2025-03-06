@@ -17,7 +17,7 @@ class AddElement(QPushButton):
         
         self.setFixedSize(80, 20)
         self.setIconSize(QSize(16, 16))
-        self.setIcon(SvgIcon(ICONS_DIR / "plus.svg").get_icon('white'))
+        self.setIcon(SvgIcon(ICONS_DIR / "add.svg").get_icon('white'))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         
         self.setStyleSheet('''
@@ -33,7 +33,7 @@ class AddElementList(QComboBox):
 
         self.setFixedSize(80, 20)
         self.setIconSize(QSize(16, 16))
-        self.setIcon(SvgIcon(ICONS_DIR / "plus.svg").get_icon('white'))
+        self.setIcon(SvgIcon(ICONS_DIR / "add.svg").get_icon('white'))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         
         self.setStyleSheet('''
