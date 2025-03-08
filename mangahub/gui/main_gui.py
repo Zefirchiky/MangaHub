@@ -12,7 +12,7 @@ from gui.widgets.scroll_areas import MangaViewer, NovelViewer
 from gui.widgets.dashboard import Dashboard, MediaCard
 from gui.widgets.slide_menus import SideMenu
 from gui.widgets import SelectionMenu, ImageWidget, IconRepo
-from utils import MM
+from utils import MM    # TODO
 from app_status import AppStatus
 from directories import RESOURCES_DIR, IMAGES_DIR
 
@@ -20,9 +20,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import App
 
-
+    
 class MainWindow(QMainWindow):
-    def __init__(self, app: App):
+    def __init__(self, app: 'App'):
         super().__init__()
         self.app = app
 
@@ -65,7 +65,7 @@ class MainWindow(QMainWindow):
         self.manga_manager = self.app.manga_manager
         self.sites_manager = self.app.sites_manager
         self.app_controller = self.app.app_controller
-        
+                
         self.selection_menu = SelectionMenu(self)
         self.settings_window = SettingsWindow()
         self.add_manga_window = AddMangaWindow(self.app_controller)

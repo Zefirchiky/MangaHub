@@ -28,6 +28,7 @@ class MangaManager:
         self.sites_manager: SitesManager = self.app.sites_manager
         self.dex_scraper = MangaDexScraper()
         self.sites_scraper = MangaSiteScraper(self.sites_manager)
+        self.manga_collection: dict[str, Manga] = {}
         self.manga_collection = self.get_all_manga()
         
         logger.success('MangaManager initialized')

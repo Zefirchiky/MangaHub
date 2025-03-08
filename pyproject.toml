@@ -9,11 +9,12 @@ dependencies = [
     "bs4>=0.0.2",
     "loguru>=0.7.3",
     "lxml>=5.3.1",
+    "peek-python>=25.0.10",
     "pillow>=11.0.0",
     "pyan3>=1.2.0",
     "pydantic>=2.10.4",
     "pyinstaller>=6.11.1",
-    "pyside6>=6.8.1,!=6.8.1.1",
+    "pyside6>=6.8.1",
     "requests>=2.32.3",
     "ruff>=0.8.4",
 ]
