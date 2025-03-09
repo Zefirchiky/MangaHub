@@ -1,14 +1,14 @@
 from __future__ import annotations
+from typing import Union
 
 from loguru import logger
-from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QColor
 
-type color_type = str | QColor | Color
+ColorType = Union[str, QColor]
 
 class Color(QColor):
-    color_type = color_type
+    color_type = ColorType
     
     def __init__(self, color: str | QColor, 
                  hover_color: str | QColor | None=None,
@@ -34,7 +34,7 @@ class CM(QObject):
     
     transparent = QColor(Qt.GlobalColor.transparent)
     
-    color_type = color_type
+    color_type = ColorType
     
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -48,7 +48,6 @@ class CM(QObject):
             self._initialized = True
             
             self.app = app
-            qApp: QApplication = qApp
             qApp.paletteChanged.connect(self.sys_color_changed.emit)
             self.sys_color_changed.connect(self._update_highlight)
             
@@ -67,7 +66,7 @@ class CM(QObject):
     
     def _update_highlight(self):
         if self.theme['highlight']['color'] is None:
-            self.highlight = qApp.palette().highlight().color().name()
+            self.highlight = qApp.palette().highlight().color().name()  # noqa: F821
         return self
     
     def set_theme(self, theme=None): # WIP

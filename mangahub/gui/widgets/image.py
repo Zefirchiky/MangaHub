@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Union
 
 from loguru import logger
 from PySide6.QtCore import Property, Qt, Signal
@@ -7,7 +8,7 @@ from PySide6.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 
 class ImageWidget(QWidget):
-    type image_type = Path | str | bytes | bytearray | QPixmap
+    ImageType = Union[Path, str, bytes, bytearray, QPixmap]
     
     _default_placeholder: QPixmap | None = None
     _default_error_image: QPixmap | None = None
@@ -69,7 +70,7 @@ class ImageWidget(QWidget):
         self.update_size()
         
     @staticmethod
-    def _process_image(image_data: image_type) -> QPixmap:
+    def _process_image(image_data: ImageType) -> QPixmap:
         if isinstance(image_data, QPixmap):
             return image_data
         elif isinstance(image_data, Path):
@@ -79,7 +80,7 @@ class ImageWidget(QWidget):
         else:
             return QPixmap().fromImage(QImage().fromData(image_data))
     
-    def _load_image(self, image_data: image_type) -> QPixmap:
+    def _load_image(self, image_data: ImageType) -> QPixmap:
         try:
             return self._process_image(image_data)
         except Exception as e:
@@ -93,7 +94,7 @@ class ImageWidget(QWidget):
         self.fit(self.width(), self.height())
         return self.image
         
-    def set_image(self, image_data: image_type, replace_default_size=False):
+    def set_image(self, image_data: ImageType, replace_default_size=False):
         self.image = self._load_image(image_data)
         if self.save_original:
             self.original_image = self.image
@@ -106,7 +107,7 @@ class ImageWidget(QWidget):
             
         return self
         
-    def set_placeholder(self, placeholder: image_type | None=None, width: int=0, height: int=0, color=(200, 200, 200, 50)):
+    def set_placeholder(self, placeholder: ImageType | None=None, width: int=0, height: int=0, color=(200, 200, 200, 50)):
         if placeholder:
             self.placeholder = self._process_image(placeholder)
             
@@ -127,7 +128,7 @@ class ImageWidget(QWidget):
         self.update()
         return self.image
         
-    def set_error_image(self, error_image: image_type):
+    def set_error_image(self, error_image: ImageType):
         if isinstance(error_image, Path):
             error_image = str(error_image)
         self.error_image = error_image
@@ -188,7 +189,7 @@ class ImageWidget(QWidget):
         return self
         
     @classmethod
-    def set_default_placeholder(cls, placeholder_data: image_type | None=None, width=0, height=0, color=(200, 200, 200, 50)):
+    def set_default_placeholder(cls, placeholder_data: ImageType | None=None, width=0, height=0, color=(200, 200, 200, 50)):
         if not placeholder_data:
             placeholder = QPixmap(width, height)
             placeholder.fill(QColor(*color))
@@ -204,7 +205,7 @@ class ImageWidget(QWidget):
         return cls._default_placeholder
         
     @classmethod
-    def set_default_error_image(cls, error_image: image_type | None=None):
+    def set_default_error_image(cls, error_image: ImageType | None=None):
         if not error_image:
             if cls._default_placeholder:
                 error_image = cls._default_placeholder
@@ -224,7 +225,7 @@ class ImageWidget(QWidget):
         return None
     
     @original_image.setter
-    def original_image(self, image: image_type) -> None:
+    def original_image(self, image: ImageType) -> None:
         self._original_image = self._process_image(image)
     
     @Property(int)

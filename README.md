@@ -20,3 +20,6 @@
 - Saving media (ZIP)
 - Music
 - Easy color themes saving and loading
+
+# LONG-LONG-TERM TODO
+- Multi-platforming

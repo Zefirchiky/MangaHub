@@ -1,9 +1,17 @@
 import os
+import sys
 from pathlib import Path
 
+
 '''=== WORKING DIRECTORY ==='''
-STD_DIR = Path(__file__).parent
+if getattr(sys, 'frozen', False):   # we are running in executable mode
+    STD_DIR = Path(sys.argv[0]).parent
+    print(f'Exe detected, working directory: {STD_DIR}')
+else:   # we are running in a normal Python environment
+    STD_DIR = Path(__file__).parent
+    
 os.chdir(STD_DIR)
+            
 
 '''=== CONFIGS ==='''
 CONF_DIR = STD_DIR / 'config'

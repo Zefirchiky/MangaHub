@@ -40,7 +40,7 @@ class MediaCard(QFrame):
         
         self.name = ''
         
-    def set_cover(self, img: ImageWidget.image_type):
+    def set_cover(self, img: ImageWidget.ImageType):
         self.cover.set_image(img)
         return self
     
@@ -51,3 +51,4 @@ class MediaCard(QFrame):
         
     def set_date(self, date: str):
         pass
+    

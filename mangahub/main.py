@@ -1,16 +1,16 @@
 import ctypes
 import sys
 
+from directories import (LOG_DIR, MANGA_JSON, NOVELS_CONF_DIR, NOVELS_JSON,
+                         RESOURCES_DIR, SITES_JSON, STD_DIR)
 from config import CM
 from controllers import (AppController, MangaManager, NovelsManager,
                          SitesManager)
-from directories import (LOG_DIR, MANGA_JSON, NOVELS_CONF_DIR, NOVELS_JSON,
-                         RESOURCES_DIR, SITES_JSON, STD_DIR)
 from gui import MainWindow
 from gui.widgets import IconRepo
 from loguru import logger
 from models.novels import NovelFormatter
-from peek import peek as ic
+import icecream
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from services.handlers import JsonHandler
@@ -18,18 +18,19 @@ from services.parsers import SitesParser, UrlParser
 from services.repositories import MangaRepository, NovelsRepository
 from utils import MM
 
+icecream.install()
 logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", level="DEBUG", retention=10)
 
 VERSION = '0.1.0'
+ic(f"MangaHub v{VERSION}")
+logger.info(f"Working directory: {STD_DIR}")
 
 
 class App:
     def __init__(self):
         ic.values_only_for_fstrings = True
-        ic(f"MangaHub v{VERSION}")
         logger.debug(f"MangaHub v{VERSION}")
         logger.info(f"Starting MangaHub v{VERSION}")
-        logger.info(f"Working directory: {STD_DIR}")
         
         myappid = f'mangahub.{VERSION}'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
@@ -90,3 +91,4 @@ class App:
 if __name__ == "__main__":
     app = App()
     app.run()
+    

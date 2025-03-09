@@ -1,8 +1,18 @@
 mangahub/data/
+logs/
+
 .mypy_cache/
 .dmypy.json
 dmypy.json
 !stubs/
+.ruff_cache/
+
+# Pyinstaller files
+main.dist/
+main.build/
+dist/
+build/
+
 
 # VS
 .vscode*/

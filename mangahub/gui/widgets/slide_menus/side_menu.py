@@ -1,5 +1,5 @@
 from PySide6.QtCore import (QEasingCurve, QParallelAnimationGroup,
-                            QPropertyAnimation, QRect, QSize, Qt)
+                            QPropertyAnimation, QRect, QSize, Qt, Slot)
 from PySide6.QtGui import QCursor, QFont
 from PySide6.QtWidgets import (QFrame, QGraphicsOpacityEffect, QHBoxLayout,
                                QLabel, QPushButton, QSizePolicy, QVBoxLayout)
@@ -171,7 +171,8 @@ class SideMenu(QFrame):
             self.anim_group.addAnimation(fade_animation)
 
         self.anim_group.start()
-
+        
+    @Slot(int)
     def change_checked_button(self, button_index):
         self.checked_button = button_index
         is_checked = None
@@ -180,6 +181,7 @@ class SideMenu(QFrame):
             is_checked = i == button_index
             self.buttons[i]["button"].setChecked(is_checked)
 
+    @Slot()
     def change_settings_icon(self):
         if self.settings_button.isChecked():
             self.settings_button.setIcon(IconRepo.get_icon(IconRepo.Icons.SETTINGS).set_color(CM().highlight).get_pixmap(32, 32))
