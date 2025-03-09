@@ -1,22 +1,18 @@
-from PySide6.QtWidgets import (
-    QMainWindow,
-    QStackedLayout, 
-    QWidget
-)
-from PySide6.QtCore import Qt, QTimer, QPoint
-from PySide6.QtGui import QCursor, QIcon
-from loguru import logger
-
-from gui.multi_window import AddMangaWindow, SettingsWindow
-from gui.widgets.scroll_areas import MangaViewer, NovelViewer
-from gui.widgets.dashboard import Dashboard, MediaCard
-from gui.widgets.slide_menus import SideMenu
-from gui.widgets import SelectionMenu, ImageWidget, IconRepo
-from utils import MM    # TODO
-from app_status import AppStatus
-from directories import RESOURCES_DIR, IMAGES_DIR
-
 from typing import TYPE_CHECKING
+
+from app_status import AppStatus
+from directories import IMAGES_DIR, RESOURCES_DIR
+from gui.multi_window import AddMangaWindow, SettingsWindow
+from gui.widgets import IconRepo, ImageWidget, SelectionMenu
+from gui.widgets.dashboard import Dashboard, MediaCard
+from gui.widgets.scroll_areas import MangaViewer, NovelViewer
+from gui.widgets.slide_menus import SideMenu
+from loguru import logger
+from PySide6.QtCore import QPoint, Qt, QTimer
+from PySide6.QtGui import QCursor, QIcon
+from PySide6.QtWidgets import QMainWindow, QStackedLayout, QWidget
+from utils import MM  # TODO
+
 if TYPE_CHECKING:
     from main import App
 

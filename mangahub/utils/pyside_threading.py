@@ -1,8 +1,9 @@
-from typing import Callable, Optional, List, Any, Tuple
 import traceback
+from typing import Any, Callable, List, Optional, Tuple
 
-from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool, QEventLoop
 from loguru import logger
+from PySide6.QtCore import (QEventLoop, QObject, QRunnable, QThreadPool,
+                            Signal, Slot)
 
 
 class WorkerSignals(QObject):

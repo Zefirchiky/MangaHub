@@ -1,6 +1,8 @@
 from __future__ import annotations
-from ..utils.enums import DefenseTypes, DamageTypes
+
 from system.config import Config
+
+from ..utils.enums import DamageTypes, DefenseTypes
 
 
 class Defense:

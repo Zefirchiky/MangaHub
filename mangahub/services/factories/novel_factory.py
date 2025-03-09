@@ -1,6 +1,6 @@
 from controllers import SitesManager
-from models.novels import Novel
 from models import URL
+from models.novels import Novel
 from services.parsers import UrlParser
 
 

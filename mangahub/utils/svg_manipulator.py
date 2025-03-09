@@ -1,8 +1,9 @@
 from __future__ import annotations
-from pathlib import Path
 
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from xml.dom import minidom
+
 
 class SVGManipulator:
     """
@@ -221,7 +222,7 @@ class SVGManipulator:
         # This method requires lxml to work fully with comments and metadata
         try:
             from lxml import etree
-            
+
             # Convert ElementTree to lxml tree for better handling
             xml_string = ET.tostring(self.root)
             lxml_tree = etree.fromstring(xml_string)

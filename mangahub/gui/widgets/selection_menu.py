@@ -1,14 +1,10 @@
-from PySide6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QGraphicsOpacityEffect,
-    QWidget, QComboBox, QPushButton
-)
-from PySide6.QtCore import Qt, QSize, QRect, QPropertyAnimation, QEasingCurve
-
-from .svg import SvgIcon
-from .scroll_areas import SmoothScrollArea
 from directories import ICONS_DIR
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, QSize, Qt
+from PySide6.QtWidgets import (QComboBox, QFrame, QGraphicsOpacityEffect,
+                               QHBoxLayout, QPushButton, QWidget)
+
+from .scroll_areas import SmoothScrollArea
+from .svg import SvgIcon
 
 
 class AddElement(QPushButton):

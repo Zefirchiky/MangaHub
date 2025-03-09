@@ -1,15 +1,12 @@
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import (
-    QMainWindow,
-    QVBoxLayout, QFormLayout,
-    QWidget, QPushButton, QLabel, QLineEdit, QComboBox
-)
-from PySide6.QtCore import QSize
-from gui.widgets import SvgIcon
-from services.parsers import UrlParser
-from models import URL
 from directories import ICONS_DIR
+from gui.widgets import SvgIcon
+from models import URL
+from PySide6.QtCore import QSize
+from PySide6.QtWidgets import (QComboBox, QFormLayout, QLabel, QLineEdit,
+                               QMainWindow, QPushButton, QVBoxLayout, QWidget)
+from services.parsers import UrlParser
 
 if TYPE_CHECKING:
     from controllers import AppController

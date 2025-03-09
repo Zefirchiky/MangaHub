@@ -1,5 +1,7 @@
-from PySide6.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QWidgetItem, QLayout
-from PySide6.QtCore import Qt, QSize, QRect, QPoint
+from PySide6.QtCore import QPoint, QRect, QSize, Qt
+from PySide6.QtWidgets import (QHBoxLayout, QLabel, QLayout, QScrollArea,
+                               QSizePolicy, QVBoxLayout, QWidget, QWidgetItem)
+
 
 class MediaCard(QWidget):
     def __init__(self, title, parent=None):
@@ -130,8 +132,10 @@ class Dashboard(QScrollArea):
         card.setParent(self.widget())
         
         
-from PySide6.QtWidgets import QApplication, QMainWindow
 import sys
+
+from PySide6.QtWidgets import QApplication, QMainWindow
+
 
 class MainWindow(QMainWindow):
     def __init__(self):

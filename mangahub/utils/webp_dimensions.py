@@ -1,5 +1,6 @@
 import struct
 
+
 def get_webp_dimensions(data):
     # Check for RIFF header and WEBP signature
     if data[:4] != b'RIFF' or data[8:12] != b'WEBP':

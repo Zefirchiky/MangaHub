@@ -1,7 +1,7 @@
-from system.models.damage import Damage
 from system.models.attack import Attack
-from system.models.skill import Skill
+from system.models.damage import Damage
 from system.models.defense import Defense
+from system.models.skill import Skill
 from system.utils.enums import EntityStatus
 
 

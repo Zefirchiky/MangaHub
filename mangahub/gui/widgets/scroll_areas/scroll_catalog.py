@@ -1,8 +1,4 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QHBoxLayout, QVBoxLayout,
-    QScrollArea
-    )
+from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 
 
 class ScrollCatalog(QScrollArea):

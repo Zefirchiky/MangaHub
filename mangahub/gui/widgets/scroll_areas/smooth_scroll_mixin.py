@@ -1,4 +1,4 @@
-from PySide6.QtCore import QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation
 
 
 class SmoothScrollMixin:   

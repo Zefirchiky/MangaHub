@@ -1,9 +1,8 @@
-import requests
 import io
 
-from PIL import Image
+import requests
 from loguru import logger
-
+from PIL import Image
 # from utils import MM
 from utils import BatchWorker
 from utils.image_conversion import convert_to_format

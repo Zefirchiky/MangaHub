@@ -1,10 +1,8 @@
-from PySide6.QtWidgets import (
-    QWidget
-)
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget
 
-from ..scroll_areas import SmoothScrollArea
 from ..flow_layout import FlowLayout
+from ..scroll_areas import SmoothScrollArea
 from .media_card import MediaCard
 
 

@@ -1,6 +1,7 @@
-from .model_json_parser import ModelJsonParser
-from models.manga import MangaState
 from directories import STATE_DIR
+from models.manga import MangaState
+
+from .model_json_parser import ModelJsonParser
 
 
 class StateParser(ModelJsonParser):

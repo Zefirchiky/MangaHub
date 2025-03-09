@@ -1,16 +1,10 @@
-from PySide6.QtWidgets import (
-    QFrame,
-    QBoxLayout,
-    QPushButton
-)
-from PySide6.QtCore import (
-    Qt, QRect, QSize,
-    QPropertyAnimation, QEasingCurve)
+from directories import ICONS_DIR
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, QSize, Qt
 from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QBoxLayout, QFrame, QPushButton
 
 from ..separators import Separator
 from ..svg import SvgIcon
-from directories import ICONS_DIR
 
 
 class SlideMenu(QFrame):

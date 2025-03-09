@@ -1,6 +1,7 @@
 from __future__ import annotations
-from pydantic import field_validator
+
 from models.tags.tag_model import TagModel
+from pydantic import field_validator
 
 
 class TextElement(TagModel):

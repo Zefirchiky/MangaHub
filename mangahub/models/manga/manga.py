@@ -1,6 +1,7 @@
 from pydantic import PrivateAttr
-from .manga_chapter import MangaChapter
+
 from ..abstract.abstract_media import AbstractMedia
+from .manga_chapter import MangaChapter
 
 
 class Manga(AbstractMedia):

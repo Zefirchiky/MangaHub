@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
+from directories import *
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter, QPixmap
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView
+
 from .smooth_scroll_mixin import SmoothScrollMixin
-from directories import *
 
 
 class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):

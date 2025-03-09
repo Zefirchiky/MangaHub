@@ -1,5 +1,5 @@
-from system import System, Skill, Attack, Damage, Defense
-from system.entities import MC, FML, Antagonist, Entity, NPC
+from system import Attack, Damage, Defense, Skill, System
+from system.entities import FML, MC, NPC, Antagonist, Entity
 from system.utils.enums import DamageTypes
 
 Entity.base_hp = 200

@@ -1,11 +1,11 @@
-import aiohttp
 import asyncio
+from typing import TYPE_CHECKING
 
-from models.sites import Site
+import aiohttp
 from models.novels import Novel
+from models.sites import Site
 from services.parsers import UrlParser
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from controllers import SitesManager
 

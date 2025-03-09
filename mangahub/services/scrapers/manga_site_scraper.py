@@ -1,16 +1,14 @@
-import requests
 import io
 import re
 
+import requests
 from bs4 import BeautifulSoup
-from PIL import Image
 from loguru import logger
-
-from services.parsers import UrlParser
 from models.manga import Manga
 from models.sites import Site
-from utils import MM
-from utils import BatchWorker
+from PIL import Image
+from services.parsers import UrlParser
+from utils import MM, BatchWorker
 from utils.webp_dimensions import get_webp_dimensions
 
 # TODO: reimplement

@@ -2,7 +2,7 @@ from .chapter_image import ChapterImage
 from .image_parsing_method import ImageParsingMethod
 from .manga import Manga
 from .manga_chapter import MangaChapter
-from .manga_state import MangaStateSignals, MangaState
+from .manga_state import MangaState, MangaStateSignals
 
 __all__ = [
     'ChapterImage', 

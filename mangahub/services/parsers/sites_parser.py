@@ -1,5 +1,6 @@
-from .models_json_parser import ModelsJsonParser
 from models.sites import Site
+
+from .models_json_parser import ModelsJsonParser
 
 
 class SitesParser(ModelsJsonParser):

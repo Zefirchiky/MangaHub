@@ -1,5 +1,6 @@
-from .message_manager import Message, MM
-from .pyside_threading import WorkerSignals, BatchWorkerSignals, Worker, BatchWorker
+from .message_manager import MM, Message
+from .pyside_threading import (BatchWorker, BatchWorkerSignals, Worker,
+                               WorkerSignals)
 from .svg_manipulator import SVGManipulator
 
 __all__ = [

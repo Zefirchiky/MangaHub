@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+
 class FileHandler(ABC):
     def __init__(self, file: Path):
         self.file = file

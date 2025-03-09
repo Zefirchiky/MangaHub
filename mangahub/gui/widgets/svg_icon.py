@@ -1,16 +1,16 @@
 from __future__ import annotations
+
 from pathlib import Path
 
-from PySide6.QtWidgets import QLabel, QSizePolicy
-from PySide6.QtGui import QPixmap, QPainter, QColor, QIcon
-from PySide6.QtCore import Signal, QByteArray
-from PySide6.QtSvg import QSvgRenderer
-from loguru import logger
-
-from utils import SVGManipulator
-from resources.enums import IconsEnum
 from config import CM
 from directories import ICONS_DIR
+from loguru import logger
+from PySide6.QtCore import QByteArray, Signal
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtWidgets import QLabel, QSizePolicy
+from resources.enums import IconsEnum
+from utils import SVGManipulator
 
 
 class SVGIcon(QLabel):
@@ -62,9 +62,18 @@ class SVGIcon(QLabel):
         self.setFixedSize(w, h)
         return self
         
-    def set_color(self, color: CM.color_type | None=None, update=True) -> 'SVGIcon':
+    def set_color(
+        self, color: CM.color_type | None=None, target_color: CM.color_type | None = None,
+        fill: bool=True, fill_if_none: bool=False,
+        stroke: bool=True, stroke_if_none: bool=False,
+        update=True) -> 'SVGIcon':
         self.color = QColor(color or self.color)
-        self.svg.change_color(self.color.name())
+        if target_color:
+            target_color = QColor(target_color)
+        self.svg.change_color(
+            self.color.name(), target_color.name() if target_color else None, 
+            fill, fill_if_none, stroke, stroke_if_none
+            )
         if update:
             self.setPixmap(self.get_pixmap())
         return self

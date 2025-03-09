@@ -1,9 +1,10 @@
 import re
+
 from loguru import logger
-from services.parsers import SitesParser
 from models import URL
-from models.sites import Site
 from models.manga import Manga
+from models.sites import Site
+from services.parsers import SitesParser
 from utils import MM
 
 

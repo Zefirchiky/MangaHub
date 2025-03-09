@@ -1,5 +1,7 @@
 import io
+
 from PIL import Image
+
 
 def convert_to_format(image_data, target_format="WEBP") -> bytes:
     with Image.open(io.BytesIO(image_data)) as img:

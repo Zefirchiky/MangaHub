@@ -1,4 +1,4 @@
-from ..utils.enums import DamageTypes, CustomDamageType
+from ..utils.enums import CustomDamageType, DamageTypes
 from .damage import Damage
 from .defense import Defense
 

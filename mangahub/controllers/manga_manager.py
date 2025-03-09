@@ -1,17 +1,17 @@
+import os
+import shutil
 from typing import TYPE_CHECKING
 
-from loguru import logger
-
-from utils import MM
-from .sites_manager import SitesManager
-from services.parsers import MangaChaptersParser, UrlParser
-from services.scrapers import MangaSiteScraper, MangaDexScraper
-from services.repositories import MangaRepository
-from models import URL
-from models.manga import Manga, MangaChapter, ChapterImage
 from directories import MANGA_DIR
-import shutil
-import os
+from loguru import logger
+from models import URL
+from models.manga import ChapterImage, Manga, MangaChapter
+from services.parsers import MangaChaptersParser, UrlParser
+from services.repositories import MangaRepository
+from services.scrapers import MangaDexScraper, MangaSiteScraper
+from utils import MM
+
+from .sites_manager import SitesManager
 
 if TYPE_CHECKING:
     from mangahub.main import App

@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QScrollArea
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QScrollArea
+
 from .smooth_scroll_mixin import SmoothScrollMixin
 
 

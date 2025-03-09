@@ -1,15 +1,12 @@
-from PySide6.QtWidgets import (
-    QFrame,
-    QVBoxLayout, QHBoxLayout,
-    QGraphicsOpacityEffect, QSizePolicy,
-    QPushButton, QLabel
-)
-from PySide6.QtGui import QFont, QCursor, QIcon
-from PySide6.QtCore import Qt, QSize, QRect, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve
+from PySide6.QtCore import (QEasingCurve, QParallelAnimationGroup,
+                            QPropertyAnimation, QRect, QSize, Qt)
+from PySide6.QtGui import QCursor, QFont
+from PySide6.QtWidgets import (QFrame, QGraphicsOpacityEffect, QHBoxLayout,
+                               QLabel, QPushButton, QSizePolicy, QVBoxLayout)
 
 from ..separators import Separator
-from ..svg_icon import SVGIcon, IconRepo
-from directories import ICONS_DIR
+from ..svg_icon import IconRepo, SVGIcon
+from config import CM
 
 
 class SideMenu(QFrame):
@@ -88,12 +85,10 @@ class SideMenu(QFrame):
         self.full_open_close_animation.setDuration(300)
         self.full_open_close_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
-    def add_button(self, fn, svg_icon: SVGIcon=None, text=None, is_default=False):
+    def add_button(self, fn, svg_icon: SVGIcon | None=None, text=None, is_default=False):
         button_index = len(self.buttons)
 
         layout = QHBoxLayout()
-
-        icon = svg_icon
 
         opacity_effect = QGraphicsOpacityEffect()
         opacity_effect.setOpacity(0)
@@ -104,7 +99,8 @@ class SideMenu(QFrame):
         text.setFont(QFont("Times", 12, 2))
         text.setGraphicsEffect(opacity_effect)
         
-        layout.addWidget(icon)
+        if svg_icon:
+            layout.addWidget(svg_icon)
         layout.addWidget(text)
 
         button = QPushButton()
@@ -186,9 +182,9 @@ class SideMenu(QFrame):
 
     def change_settings_icon(self):
         if self.settings_button.isChecked():
-            self.settings_button.setIcon(self.settings_svg_icon.get_icon('white', fill='white'))
+            self.settings_button.setIcon(IconRepo.get_icon(IconRepo.Icons.SETTINGS).set_color(CM().highlight).get_pixmap(32, 32))
         else:
-            self.settings_button.setIcon(self.settings_svg_icon.get_icon('white'))
+            self.settings_button.setIcon(IconRepo.get_icon(IconRepo.Icons.SETTINGS).get_pixmap(32, 32))
 
     def set_settings_function(self, fn):
         self.settings_button.clicked.connect(fn)

@@ -1,6 +1,7 @@
 from __future__ import annotations
+
+from ..utils.enums import CustomDamageType, DamageTypes
 from .defense import Defense
-from ..utils.enums import DamageTypes, CustomDamageType
 
 
 class Damage:

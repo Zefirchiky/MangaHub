@@ -1,4 +1,8 @@
 mangahub/data/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+!stubs/
 
 # VS
 .vscode*/

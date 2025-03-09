@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import QTextBrowser
-from PySide6.QtCore import Qt
-from .smooth_scroll_area import SmoothScrollArea
-from models.novels import Novel
 from directories import BACKGROUNDS_DIR
+from models.novels import Novel
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTextBrowser
+
+from .smooth_scroll_area import SmoothScrollArea
 
 
 class NovelViewer(SmoothScrollArea):

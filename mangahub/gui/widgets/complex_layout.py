@@ -1,12 +1,11 @@
 from __future__ import annotations
+
 from enum import auto
 
-from PySide6.QtWidgets import (
-    QWidget,
-    QLayout, QStackedLayout, QVBoxLayout, QHBoxLayout
-    )
+from PySide6.QtWidgets import (QHBoxLayout, QLayout, QStackedLayout,
+                               QVBoxLayout, QWidget)
 
-    
+
 class LayoutType:
     HORIZONTAL = auto()
     VERTICAL = auto()

@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from PySide6.QtWidgets import QWidget, QSizePolicy, QStackedLayout
-from PySide6.QtGui import QPixmap, QImage, QPainter, QPainterPath, QColor
-from PySide6.QtCore import Qt, Signal, Property
 from loguru import logger
-
+from PySide6.QtCore import Property, Qt, Signal
+from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPixmap
+from PySide6.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 
 class ImageWidget(QWidget):

@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QLabel
-from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QLabel
+
 from .smooth_scroll_area import SmoothScrollArea
 
 

@@ -1,7 +1,8 @@
-from PySide6.QtWidgets import QFrame
-from PySide6.QtGui import QPainter, QColor
-from PySide6.QtCore import Qt
 from config import CM
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPainter
+from PySide6.QtWidgets import QFrame
+
 
 class Separator(QFrame):
     def __init__(self, orientation='h', thickness=2, padding=5, color=None, parent=None):

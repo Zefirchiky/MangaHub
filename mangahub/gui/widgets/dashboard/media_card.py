@@ -1,12 +1,9 @@
-from PySide6.QtWidgets import (
-    QSizePolicy,
-    QFrame,
-    QVBoxLayout
-)
 from PySide6.QtGui import Qt
+from PySide6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
+
+from ..buttons import ChapterButton
 from ..image import ImageWidget
 from ..scroll_areas import LineLabel
-from ..buttons import ChapterButton
 
 
 class MediaCard(QFrame):

@@ -1,6 +1,8 @@
 from abc import ABC
 from datetime import datetime
+
 from pydantic import Field, PrivateAttr
+
 from ..tags.tag_model import TagModel
 from .abstract_chapter import AbstractChapter
 

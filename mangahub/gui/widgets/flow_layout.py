@@ -1,5 +1,5 @@
+from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtWidgets import QLayout
-from PySide6.QtCore import Qt, QSize, QRect, QPoint
 
 
 class FlowLayout(QLayout):

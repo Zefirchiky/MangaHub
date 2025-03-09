@@ -1,9 +1,9 @@
 from loguru import logger
-
-from .manga_manager import MangaManager, SitesManager
-from services.parsers import StateParser
 from models import URL
 from models.manga import Manga, MangaState
+from services.parsers import StateParser
+
+from .manga_manager import MangaManager, SitesManager
 
 
 class AppController:

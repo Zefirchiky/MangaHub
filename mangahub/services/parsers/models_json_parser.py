@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from loguru import logger
+from pydantic import BaseModel
 from services.handlers import JsonHandler
 from utils import MM
 

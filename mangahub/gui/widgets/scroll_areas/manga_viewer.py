@@ -1,10 +1,12 @@
-from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem, QPushButton, QComboBox
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QPixmap, QColor
-from .smooth_graphics_view import SmoothGraphicsView
-from models.manga import Manga, MangaChapter
-from gui.widgets.svg import SvgIcon
 from directories import *
+from gui.widgets.svg import SvgIcon
+from models.manga import Manga, MangaChapter
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QColor, QPixmap
+from PySide6.QtWidgets import (QComboBox, QGraphicsPixmapItem,
+                               QGraphicsRectItem, QPushButton)
+
+from .smooth_graphics_view import SmoothGraphicsView
 
 
 class MangaViewer(SmoothGraphicsView):

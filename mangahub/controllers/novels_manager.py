@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING
 
 from loguru import logger
-
+from models.novels import Novel, NovelChapter
 from services.repositories import NovelsRepository
 from services.scrapers import NovelsSiteScraper
-from models.novels import Novel, NovelChapter
 from utils import MM
 
 if TYPE_CHECKING:

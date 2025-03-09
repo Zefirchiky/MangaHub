@@ -1,9 +1,8 @@
 from loguru import logger
-
-from services.parsers import SitesParser
 from models import URL
-from models.sites import Site, SiteChapterPage
 from models.manga import ImageParsingMethod
+from models.sites import Site, SiteChapterPage
+from services.parsers import SitesParser
 
 
 class SitesManager:

@@ -1,7 +1,8 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 from .file_handler import FileHandler
+
 
 class JsonHandler(FileHandler):
     def __init__(self, file: Path | str):

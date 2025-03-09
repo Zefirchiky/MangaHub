@@ -1,15 +1,12 @@
 from pathlib import Path
 
-from PySide6.QtWidgets import (
-    QSizePolicy,
-    QHBoxLayout,
-    QPushButton
-)
+from directories import ICONS_DIR
 from PySide6.QtCore import Qt
-from ..svg_icon import SVGIcon, IconRepo
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy
+
 from ..scroll_areas import LineLabel
 from ..separators import Separator
-from directories import ICONS_DIR
+from ..svg_icon import IconRepo, SVGIcon
 
 
 class ChapterButton(QPushButton):

@@ -1,5 +1,6 @@
-from .entity import Entity
 from system import System
+
+from .entity import Entity
 
 
 class MC(Entity):

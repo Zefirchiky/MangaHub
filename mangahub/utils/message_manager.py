@@ -1,17 +1,10 @@
 from __future__ import annotations
-from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QFrame,
-    QSizePolicy,
-    QLabel
-)
-from PySide6.QtCore import (
-    Qt, QRect, QTimer, Signal,
-    QPropertyAnimation, QEasingCurve
-)
-from loguru import logger
 
 from app_status import AppStatus
+from loguru import logger
+from PySide6.QtCore import (QEasingCurve, QPropertyAnimation, QRect, Qt,
+                            QTimer, Signal)
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy
 
 
 class Message(QFrame):

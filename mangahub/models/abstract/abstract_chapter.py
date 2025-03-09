@@ -1,4 +1,5 @@
 from abc import ABC
+
 from ..tags.tag_model import TagModel
 
 

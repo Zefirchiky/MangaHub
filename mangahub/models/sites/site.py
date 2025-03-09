@@ -1,11 +1,12 @@
 from pydantic import field_validator
-from ..tags.tag_model import TagModel
+
 from ..manga.image_parsing_method import ImageParsingMethod
 from ..manga.manga import Manga
+from ..tags.tag_model import TagModel
+from ..url import URL
+from .last_chapter_parsing_method import LastChapterParsingMethod
 from .site_chapter_page import SiteChapterPage
 from .site_title_page import SiteTitlePage
-from .last_chapter_parsing_method import LastChapterParsingMethod
-from ..url import URL
 
 
 class Site(TagModel):

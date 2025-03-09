@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
+from system.models.damage import Damage
 from system.models.skill import Skill
 from system.models.weapon import Weapon
-from system.models.damage import Damage
 
 if TYPE_CHECKING:
     from system.entities import Entity

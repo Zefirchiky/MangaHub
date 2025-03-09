@@ -1,6 +1,8 @@
 from __future__ import annotations
-from ..tags.tag_model import TagModel
+
 from models.abstract import TextElement
+
+from ..tags.tag_model import TagModel
 
 
 class NovelParagraph(TagModel):

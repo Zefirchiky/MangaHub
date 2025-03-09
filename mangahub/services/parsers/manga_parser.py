@@ -1,8 +1,8 @@
 from loguru import logger
-
-from .models_json_parser import ModelsJsonParser
-from .manga_chapters_parser import MangaChaptersParser
 from models.manga import Manga
+
+from .manga_chapters_parser import MangaChaptersParser
+from .models_json_parser import ModelsJsonParser
 
 
 class MangaParser(ModelsJsonParser):

@@ -1,14 +1,14 @@
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
 
-from PySide6.QtWidgets import QPushButton
-from PySide6.QtGui import QCursor
-from PySide6.QtCore import Qt, QSize
-
-from utils import SVGManipulator
 from config import CM
-from ..svg_icon import SVGIcon
 from directories import ICONS_DIR
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QPushButton
+from utils import SVGManipulator
+
+from ..svg_icon import SVGIcon
 
 
 class IconTypes(Enum):

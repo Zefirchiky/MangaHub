@@ -1,4 +1,5 @@
 from pydantic import PrivateAttr
+
 from ..abstract.abstract_media import AbstractMedia
 from .novel_chapter import NovelChapter
 

@@ -1,26 +1,22 @@
 import ctypes
 import sys
 
-from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QIcon
-from peek import peek as ic
-
+from config import CM
+from controllers import (AppController, MangaManager, NovelsManager,
+                         SitesManager)
+from directories import (LOG_DIR, MANGA_JSON, NOVELS_CONF_DIR, NOVELS_JSON,
+                         RESOURCES_DIR, SITES_JSON, STD_DIR)
 from gui import MainWindow
 from gui.widgets import IconRepo
-from utils import MM
-from config import CM
+from loguru import logger
+from models.novels import NovelFormatter
+from peek import peek as ic
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication
 from services.handlers import JsonHandler
 from services.parsers import SitesParser, UrlParser
 from services.repositories import MangaRepository, NovelsRepository
-from controllers import SitesManager, MangaManager, NovelsManager, AppController
-from models.novels import NovelFormatter
-from directories import (
-    STD_DIR, LOG_DIR,
-    RESOURCES_DIR, 
-    NOVELS_CONF_DIR, SITES_JSON, MANGA_JSON, NOVELS_JSON
-)
-
-from loguru import logger
+from utils import MM
 
 logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", level="DEBUG", retention=10)
 

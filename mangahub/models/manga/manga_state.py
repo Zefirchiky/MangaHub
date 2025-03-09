@@ -1,6 +1,6 @@
+from models.manga import Manga, MangaChapter
 from pydantic import BaseModel, PrivateAttr
 from PySide6.QtCore import QObject, Signal
-from models.manga import Manga, MangaChapter
 from utils import BatchWorker
 
 
