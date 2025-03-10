@@ -3,6 +3,7 @@ MangaHub is an open source app that was created to unify all work with web-novel
 
 > [!IMPORTANT]
 > Very early beta
+
 ## FAQ
 
 #### Why?
