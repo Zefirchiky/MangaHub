@@ -1,4 +1,26 @@
-# TODO
+
+MangaHub is an open source app that was created to unify all work with web-novels and manga. It functions as a central hub to read, modify and contribute different media.
+
+> [!IMPORTANT]
+> Very early beta
+## FAQ
+
+#### Why?
+
+Author was frustrated with a need to check for updates on different sites and remembering about different novels/mangas.
+
+#### How is it different from others?
+
+It's not just a program to read. It also serves as a personal library and wiki.
+
+#### Huh?
+
+Huh?
+
+
+## Roadmap
+
+### TODO
 - FIX THE FUCKING INTERFACE:
     - Dashboard (temp forget about scaling)
     - Fine-tune the Dashboard
@@ -12,7 +34,7 @@
 - Manga search
 - Build-in notes/to-do
 
-# LONG-TERM TODO
+### LONG-TERM TODO
 - ASYNC
 - System/Cultivation calculation and display
 - Map
@@ -21,5 +43,8 @@
 - Music
 - Easy color themes saving and loading
 
-# LONG-LONG-TERM TODO
+### LONG-LONG-TERM TODO
 - Multi-platforming
+- Servers
+
+BOO
