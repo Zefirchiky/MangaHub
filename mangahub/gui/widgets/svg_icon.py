@@ -67,6 +67,7 @@ class SVGIcon(QLabel):
         fill: bool=True, fill_if_none: bool=False,
         stroke: bool=True, stroke_if_none: bool=False,
         update=True) -> 'SVGIcon':
+        
         self.color = QColor(color or self.color)
         if target_color:
             target_color = QColor(target_color)
@@ -155,15 +156,34 @@ class SVGIcon(QLabel):
         self.pressed.emit()
         return super().mousePressEvent(ev)
     
-    def get_pixmap(self, w: int=0, h: int=0) -> QPixmap:
-        """Creates a pixmap from the svg content"""
+    def get_pixmap(self, w: int=0, h: int=0, icon_n: int=-1) -> QPixmap:
+        """Creates a pixmap from the svg content
+
+        Args:
+            w (int, optional): Width of the pixmap. If 0 will use the default width. Defaults to 0.
+            h (int, optional): Height of the pixmap. If 0 will use the default height. Defaults to 0.
+            icon_n (int, optional): Pixmap of which icon to give. If -1 will use the current icon, 0 will use the first icon, 1 will use the second icon. Defaults to -1.
+
+        Returns:
+            QPixmap: _description_
+        """
         base_w, base_h = self.width(), self.height()
         if self._is_hovered and self._hover_effect:
             size = (int(base_w * self._hover_size_factor), int(base_h * self._hover_size_factor))
         else:
             size = (w or base_w, h or base_h)
             
-        svg_content = self.svg.get_svg_string(pretty=False) if not self._is_second_icon or not self.second_icon else self.second_icon.get_svg_string(pretty=False)
+        if icon_n == -1:
+            svg_content = self.svg.get_svg_string(pretty=False) if not self._is_second_icon or not self.second_icon else self.second_icon.get_svg_string(pretty=False)
+        elif icon_n == 0:
+            svg_content = self.svg.get_svg_string(pretty=False)
+        elif icon_n == 1 and self.second_icon:
+            svg_content = self.second_icon.get_svg_string(pretty=False)
+        elif icon_n == 1 and not self.second_icon:
+            raise ValueError('No second icon set')
+        else:
+            raise ValueError('Invalid icon_n')
+        
         cache_key = f"{hash(svg_content)}_{size[0]}_{size[1]}_{self.color.name()}"
         
         if cache_key not in self._pixmap_cache.keys():
@@ -181,7 +201,10 @@ class SVGIcon(QLabel):
         return self._pixmap_cache[cache_key]
     
     def get_qicon(self) -> QIcon:
-        return QIcon(self.get_pixmap())
+        icon = QIcon(self.get_pixmap(icon_n=0))
+        if self.second_icon:
+            icon.addPixmap(self.get_pixmap(icon_n=1))
+        return icon
     
     def reset(self) -> 'SVGIcon':
         """Reset icon to its original state"""

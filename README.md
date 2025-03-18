@@ -27,19 +27,17 @@ Huh?
     - Fine-tune the Dashboard
     - MediaCard/FullMediaCard
     - Create cool design for Dashboards in fucking Figma
-    - Centralized colors system
 - ASYNC
 - Custom chapters naming
 - Event history
-- Redo UrlParser
+- Redo UrlParser (apparently, PySide6 has an amazing QUrl, so use it)
 - Manga search
-- Build-in notes/to-do
 
 ### LONG-TERM TODO
 - ASYNC
 - System/Cultivation calculation and display
+- Build-in notes/to-do
 - Map
-- Plugins
 - Saving media (ZIP)
 - Music
 - Easy color themes saving and loading
@@ -47,5 +45,6 @@ Huh?
 ### LONG-LONG-TERM TODO
 - Multi-platforming
 - Servers
+- Plugins
 
 BOO

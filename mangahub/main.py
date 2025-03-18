@@ -9,30 +9,28 @@ from controllers import (AppController, MangaManager, NovelsManager,
 from gui import MainWindow
 from gui.widgets import IconRepo
 from loguru import logger
+from icecream import ic
 from models.novels import NovelFormatter
-import icecream
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from services.handlers import JsonHandler
 from services.parsers import SitesParser, UrlParser
 from services.repositories import MangaRepository, NovelsRepository
 from utils import MM
+from version import __version__
 
-icecream.install()
 logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", level="DEBUG", retention=10)
 
-VERSION = '0.1.0'
-ic(f"MangaHub v{VERSION}")
+ic(f"MangaHub v{__version__}")
 logger.info(f"Working directory: {STD_DIR}")
 
 
 class App:
     def __init__(self):
-        ic.values_only_for_fstrings = True
-        logger.debug(f"MangaHub v{VERSION}")
-        logger.info(f"Starting MangaHub v{VERSION}")
+        logger.debug(f"MangaHub v{__version__}")
+        logger.info(f"Starting MangaHub v{__version__}")
         
-        myappid = f'mangahub.{VERSION}'
+        myappid = f'mangahub.{__version__}'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         
         self.gui_app = QApplication(sys.argv)
@@ -83,9 +81,9 @@ class App:
         
         MM.show_message('info', f"Working directory: \n{STD_DIR}", 7000)
         
-        logger.success(f"MangaHub v{VERSION} initialized")
+        logger.success(f"MangaHub v{__version__} initialized")
         self.gui_app.exec()
-        logger.info(f"MangaHub v{VERSION} finished")
+        logger.info(f"MangaHub v{__version__} finished")
 
 
 if __name__ == "__main__":

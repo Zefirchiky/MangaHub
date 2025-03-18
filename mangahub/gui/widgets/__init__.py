@@ -1,11 +1,10 @@
-from .complex_layout import ComplexLayout, LayoutType
+from .complex_layout import LayoutType, ComplexLayout
 from .flow_layout import FlowLayout
 from .image import ImageWidget
-from .selection_menu import (AddElement, AddElementList, SelectionElement,
-                             SelectionMenu)
+from .selection_menu import AddElement, AddElementList, SelectionElement, SelectionMenu
 from .separators import Separator
 from .svg import SvgIcon
-from .svg_icon import IconRepo, SVGIcon
+from .svg_icon import SVGIcon, IconRepo
 
 __all__ = [
     'LayoutType', 

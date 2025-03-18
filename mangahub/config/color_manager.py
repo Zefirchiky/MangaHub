@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Union
 
 from loguru import logger
+from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QColor
 
@@ -48,25 +49,25 @@ class CM(QObject):
             self._initialized = True
             
             self.app = app
-            qApp.paletteChanged.connect(self.sys_color_changed.emit)
+            QApplication.instance().paletteChanged.connect(self.sys_color_changed.emit)
             self.sys_color_changed.connect(self._update_highlight)
             
             self.theme = None
             self.set_theme()
-            self.highlight = QColor(self.theme['highlight']['color'] or qApp.palette().highlight().color())
-            self.bg = QColor(self.theme['background']['color'] or qApp.palette().highlight().color())
-            self.widget_bg = QColor(self.theme['widget_bg']['color'] or qApp.palette().base().color())
-            self.widget_border = QColor(self.theme['widget_border']['color'] or qApp.palette().highlight().color())
-            self.widget_bg_alt = QColor(self.theme['widget_bg_alt']['color'] or qApp.palette().alternateBase().color())
-            self.widget_border_alt = QColor(self.theme['widget_border_alt']['color'] or qApp.palette().highlight().color())
-            self.icon = QColor(self.theme['icon_color']['color'] or qApp.palette().text().color())
-            self.text = QColor(self.theme['text_color']['color'] or qApp.palette().text().color())
+            self.highlight = QColor(self.theme['highlight']['color'] or QApplication.palette().highlight().color())
+            self.bg = QColor(self.theme['background']['color'] or QApplication.palette().highlight().color())
+            self.widget_bg = QColor(self.theme['widget_bg']['color'] or QApplication.palette().base().color())
+            self.widget_border = QColor(self.theme['widget_border']['color'] or self.widget_bg.darker().darker())
+            self.widget_bg_alt = QColor(self.theme['widget_bg_alt']['color'] or self.widget_bg.darker())
+            self.widget_border_alt = QColor(self.theme['widget_border_alt']['color'] or self.widget_bg_alt.darker().darker())
+            self.icon = QColor(self.theme['icon_color']['color'] or QApplication.palette().text().color())
+            self.text = QColor(self.theme['text_color']['color'] or QApplication.palette().text().color())
             
             logger.success("Color Manager initialized")
     
     def _update_highlight(self):
         if self.theme['highlight']['color'] is None:
-            self.highlight = qApp.palette().highlight().color().name()  # noqa: F821
+            self.highlight = QApplication.palette().highlight().color().name()  # noqa: F821
         return self
     
     def set_theme(self, theme=None): # WIP
@@ -77,17 +78,17 @@ class CM(QObject):
                 'pressed': None
             },
             'background': {
-                'color': None,
+                'color': '#333333',
                 'hover': None,
                 'pressed': None
             },
             'widget_bg': {
-                'color': None,
+                'color': '#222222',
                 'hover': None,
                 'pressed': None
             },
             'widget_border': {
-                'color': None,
+                'color': '#121212',
                 'hover': None,
                 'pressed': None
             },
@@ -107,7 +108,7 @@ class CM(QObject):
                 'pressed': None
             },
             'text_color': {
-                'color': None,
+                'color': 'white',
                 'hover': None,
                 'pressed': None
             }

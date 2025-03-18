@@ -5,17 +5,20 @@ from ..buttons import ChapterButton
 from ..image import ImageWidget
 from ..scroll_areas import LineLabel
 
+from models.abstract import AbstractMedia
+from config import CM
+
 
 class MediaCard(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setObjectName("MediaCard")
-        self.setStyleSheet('''#MediaCard {
-            background-color: #222222; 
+        self.setStyleSheet(f'''#MediaCard {{
+            background-color: {CM().widget_bg.name()}; 
             border-radius: 10px;
-            border: 1px solid #444444;
-            }''')        
+            border: 1px solid {CM().widget_border.name()};
+            }}''')        
         
         self.cover = ImageWidget()
         self.cover.set_placeholder(width=256, height=384)
@@ -39,6 +42,7 @@ class MediaCard(QFrame):
         self.setLayout(self.root)
         
         self.name = ''
+        self.media: AbstractMedia = None
         
     def set_cover(self, img: ImageWidget.ImageType):
         self.cover.set_image(img)
@@ -52,3 +56,11 @@ class MediaCard(QFrame):
     def set_date(self, date: str):
         pass
     
+    def set_media(self, media: AbstractMedia):
+        self.media = media
+        self.set_cover(media.folder + '/' + media.cover)
+        self.set_name(media.name)
+        self.top_button.set_chapter(media.get_chapter(media.first_chapter))
+        self.mid_button.set_chapter(media.get_chapter(media.current_chapter))
+        self.btm_button.set_chapter(media.get_chapter(media.last_chapter))
+        return self

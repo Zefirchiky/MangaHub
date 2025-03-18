@@ -6,6 +6,7 @@ from directories import MANGA_DIR
 from loguru import logger
 from models import URL
 from models.manga import ChapterImage, Manga, MangaChapter
+from models.abstract import ChapterNotFoundError
 from services.parsers import MangaChaptersParser, UrlParser
 from services.repositories import MangaRepository
 from services.scrapers import MangaDexScraper, MangaSiteScraper
@@ -28,8 +29,6 @@ class MangaManager:
         self.sites_manager: SitesManager = self.app.sites_manager
         self.dex_scraper = MangaDexScraper()
         self.sites_scraper = MangaSiteScraper(self.sites_manager)
-        self.manga_collection: dict[str, Manga] = {}
-        self.manga_collection = self.get_all_manga()
         
         logger.success('MangaManager initialized')
         
@@ -41,23 +40,21 @@ class MangaManager:
         return manga
     
     def get_all_manga(self) -> dict[str, Manga]:
-        if self.manga_collection:
-            return self.manga_collection
-        
-        self.manga_collection = self.repository.get_all()
-        for manga in self.manga_collection.values():
+        for manga in self.repository.get_all().values():
             if not manga._chapters_data.get(1):
                 manga.add_chapter(self.get_chapter(manga, 1))
+                manga.current_chapter = 1
+                manga.first_chapter = 1
             if not manga._chapters_data.get(manga.last_chapter):
                 manga.add_chapter(self.get_chapter(manga, manga.last_chapter))
             if manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter and \
                 manga.current_chapter and not manga._chapters_data.get(manga.current_chapter):
                 manga.add_chapter(self.get_chapter(manga, manga.current_chapter))
-                
-        return self.manga_collection
+        
+        return self.repository.get_all()
     
     def add_new_manga(self, manga: Manga):
-        self.manga_collection[manga.name] = manga
+        self.repository.add(manga)
         
     def create_manga(self, name: str, url: str | URL='', site='MangaDex', backup_sites=[], **kwargs):
         if self.get_manga(name):
@@ -130,11 +127,10 @@ class MangaManager:
         return
         
     def get_chapter(self, manga: Manga, num: float):
-        chapter = manga._chapters_data.get(num)
-        if chapter:
-            return chapter
+        chapter = manga.get_chapter(num)
+        if isinstance(chapter, ChapterNotFoundError):
+            chapter = MangaChaptersParser(manga).get_chapter(num)
         
-        chapter = MangaChaptersParser(manga).get_chapter(num)
         if chapter:
             return chapter
         
@@ -266,4 +262,4 @@ class MangaManager:
         manga.add_chapter(chapter)
         
     def save(self):
-        self.repository.save(self.manga_collection)
+        self.repository.save()

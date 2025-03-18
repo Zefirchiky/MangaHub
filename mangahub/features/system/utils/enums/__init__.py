@@ -1,5 +1,5 @@
-from .damage_types import CustomDamageType, DamageTypes
-from .defense_types import CustomDefenseType, DefenseTypes
+from .damage_types import DamageTypes, CustomDamageType
+from .defense_types import DefenseTypes, CustomDefenseType
 from .entity_status import EntityStatus
 from .gender import Gender, Orientation
 

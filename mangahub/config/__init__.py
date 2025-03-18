@@ -1,5 +1,5 @@
 from .app_config import AppConfig
-from .color_manager import CM, Color
+from .color_manager import Color, CM
 
 __all__ = [
     'AppConfig', 

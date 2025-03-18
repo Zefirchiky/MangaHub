@@ -1,15 +1,10 @@
-from ..tags.tag_model import TagModel
 from .chapter_image import ChapterImage
+from ..abstract.abstract_chapter import AbstractChapter
 
 
-class MangaChapter(TagModel):
-    number: int | float
-    name: str = ''
+class MangaChapter(AbstractChapter):
     id_dex: str = ''
     url: str = ''
-    upload_date: str = ''
-    translator: str = ''
-    language: str = 'en'
     _images: dict[int, ChapterImage] = {}
     
     def add_image(self, image: ChapterImage) -> None:

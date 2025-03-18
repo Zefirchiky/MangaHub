@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pydantic import PrivateAttr
 
 from ..abstract.abstract_media import AbstractMedia
@@ -9,5 +11,6 @@ class Manga(AbstractMedia):
     artist: str = ''
     _chapters_data: dict[int | float, MangaChapter] = PrivateAttr(default_factory=dict)
 
-    def add_chapter(self, chapter: MangaChapter) -> None:
+    def add_chapter(self, chapter: MangaChapter) -> Manga:
         super().add_chapter(chapter)
+        return self

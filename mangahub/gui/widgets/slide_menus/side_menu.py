@@ -9,6 +9,7 @@ from ..svg_icon import IconRepo, SVGIcon
 from config import CM
 
 
+# TODO: Redo this whole fucking thing, better integration with main window is required smh
 class SideMenu(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -172,8 +173,8 @@ class SideMenu(QFrame):
 
         self.anim_group.start()
         
-    @Slot(int)
-    def change_checked_button(self, button_index):
+    @Slot(int)  # type: ignore
+    def change_checked_button(self, button_index: int):
         self.checked_button = button_index
         is_checked = None
 

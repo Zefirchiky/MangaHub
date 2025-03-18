@@ -1,5 +1,8 @@
 from models.manga import Manga
 from services.parsers.models_json_parser import ModelsJsonParser
+from services.parsers.manga_chapters_parser import MangaChaptersParser
+
+from loguru import logger
 
 
 class MangaRepository(ModelsJsonParser):
@@ -8,13 +11,21 @@ class MangaRepository(ModelsJsonParser):
 
     def add(self, manga: Manga) -> dict[str, Manga]:
         self._models_collection[manga.name] = manga
-        return self._models_collection
+        return self.models_collection
 
     def get(self, name) -> Manga:
         return super().get_model(name)
 
     def get_all(self) -> dict[str, Manga]:
-        return self._models_collection
+        return self.models_collection
     
     def load(self) -> dict[str, Manga]:
         return super().get_all_models()
+    
+    def save(self) -> None:
+        for manga in self.models_collection.values():
+            chapters_parser = MangaChaptersParser(manga)
+            chapters_parser.save(manga._chapters_data)
+        super().save(self.models_collection)
+        
+        logger.success("All manga saved successfully")

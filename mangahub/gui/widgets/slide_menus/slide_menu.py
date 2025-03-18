@@ -6,6 +6,8 @@ from PySide6.QtWidgets import QBoxLayout, QFrame, QPushButton
 from ..separators import Separator
 from ..svg import SvgIcon
 
+from loguru import logger
+
 
 class SlideMenu(QFrame):
     def __init__(self, parent=None, is_vertical=True, menu_expand_button_pos=0):
@@ -68,6 +70,6 @@ class SlideMenu(QFrame):
                 width = parent_geometry.width()
         
         else:
-            print("Error: parent not found.")
+            logger.error("Can't get parent geometry")
 
         return QRect(x, y, width, height)

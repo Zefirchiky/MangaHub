@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
         
         for manga in self.app_controller.manga_manager.get_all_manga().values():
             mc = MediaCard()
-            mc.set_cover(manga.folder + '/' + manga.cover).set_name(manga.name)
+            mc.set_media(manga)
             self.manga_dashboard.add_card(mc)
             # mc.chapter_clicked.connect(self.app_controller.select_manga_chapter)
 
@@ -141,13 +141,13 @@ class MainWindow(QMainWindow):
     def check_mouse_position(self):
         cursor_pos = QCursor.pos()
         window_pos = self.mapToGlobal(QPoint(0, 0))
-        if 0 <= cursor_pos.x() - window_pos.x() <= self.side_menu._width + 40:
+        if 0 <= cursor_pos.x() - window_pos.x() <= self.side_menu.x() + self.side_menu._width:
             if self.root_layout.currentIndex() != 2:
                 self.side_menu.show_menu()
             else:
                 if cursor_pos.x() - window_pos.x() <= self.side_menu._width - 20:
                     self.side_menu.show_menu()
-        elif self.side_menu._width + 40 < cursor_pos.x() - window_pos.x() <= self.side_menu._width + 400:
+        elif self.side_menu.x() + self.side_menu._width < cursor_pos.x() - window_pos.x() <= self.side_menu._width + 400:
             self.side_menu.show_half_menu()
         else:
             self.side_menu.hide_menu()
