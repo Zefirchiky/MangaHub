@@ -13,8 +13,12 @@ class MangaRepository(ModelsJsonParser):
         self._models_collection[manga.name] = manga
         return self.models_collection
 
-    def get(self, name) -> Manga:
-        return super().get_model(name)
+    def get(self, name) -> Manga | None:
+        try:
+            return super().get_model(name)
+        except Exception as e:
+            logger.warning(f"Manga {name} not found with error: {e}. Returning None")
+            return None
 
     def get_all(self) -> dict[str, Manga]:
         return self.models_collection

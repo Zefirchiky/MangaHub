@@ -1,3 +1,5 @@
+from loguru import logger
+
 from models.manga import Manga, MangaChapter
 
 from .chapter_images_parser import ChapterImagesParser
@@ -12,11 +14,14 @@ class MangaChaptersParser(ModelsJsonParser):
 
     def get_chapter(self, num: int | float) -> MangaChapter | None:
         images_parser = ChapterImagesParser(f"{self.manga.folder}/chapter{num}/images.json")
-        chapter = super().get_model(num)
-        if chapter:
-            chapter._images = images_parser.get_all_images()
-            return chapter
-        return 
+        try:
+            chapter = super().get_model(num)
+        except Exception as e:
+            logger.warning(f"Chapter {num} not found with error: {e}. Returning None")
+            return None
+        
+        chapter._images = images_parser.get_all_images()
+        return chapter
     
     def get_model(self, name) -> MangaChapter | None:
         return self.get_chapter(name)   # so get_all_chapters() uses custom get_chapter()

@@ -57,6 +57,8 @@ class App:
         self.app_controller = AppController(self)
         
         
+        # from models.sites import SiteChapterPage, SiteTitlePage, LastChapterParsingMethod
+        # from models.manga import ImageParsingMethod
         # self.sites_manager.create_site("AsuraScans", "https://asuracomic.net",
         #                                    SiteChapterPage(url_format="series/$manga_id$-$num_identifier$/chapter/$chapter_num$"), 
         #                                    ImageParsingMethod().set_regex_from_html('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp'),
