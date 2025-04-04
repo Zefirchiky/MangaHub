@@ -28,6 +28,7 @@ Huh?
     - MediaCard/FullMediaCard
     - Create cool design for Dashboards in fucking Figma
 - ASYNC
+- Keywords to remember the read
 - Custom chapters naming
 - Event history
 - Redo UrlParser (apparently, PySide6 has an amazing QUrl, so use it)
