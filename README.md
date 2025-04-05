@@ -21,9 +21,12 @@ Huh?
 
 ## Roadmap
 
+### TOP-PRIORITY
+- Connect dashboard to managers
+- ASYNC with Qt, probably
+
 ### TODO
 - FIX THE FUCKING INTERFACE:
-    - Dashboard (temp forget about scaling)
     - Fine-tune the Dashboard
     - MediaCard/FullMediaCard
     - Create cool design for Dashboards in fucking Figma
