@@ -25,7 +25,7 @@ class MangaState(BaseModel):
         
     def set_chapter(self, chapter: MangaChapter):
         self._chapter = chapter
-        self.chapter_num
+        self.chapter_num = chapter.number
         self._signals.chapter_changed.emit(chapter)
         
     def set_chapter_num(self, chapter_num: int | float):

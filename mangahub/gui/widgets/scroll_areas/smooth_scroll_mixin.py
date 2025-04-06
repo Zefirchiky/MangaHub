@@ -1,4 +1,4 @@
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation
+from PySide6.QtCore import Qt, QEasingCurve, QPropertyAnimation
 
 
 class SmoothScrollMixin:   
@@ -14,16 +14,26 @@ class SmoothScrollMixin:
         
         # Configurable parameters
         self.scale_multiplier = 1.0
-        self.step_size = 100
+        self.step_size = 150
         self.scroll_duration = 200
+        self.alt_multiplier = 8
         
         self.animation = QPropertyAnimation(self.scroll_bar, b"value")
         self.animation.setDuration(self.scroll_duration)
         self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
                 
     def wheelEvent(self, event):
-        delta = event.angleDelta().y()
-        scroll_amount = round(-delta / 120 * self.step_size * self.scale_multiplier)    # Float error
+        modifiers = event.modifiers()
+        if modifiers & Qt.KeyboardModifier.AltModifier:  # Use == instead of &
+            step_size = self.step_size * self.alt_multiplier
+            delta = event.angleDelta().x()
+        elif modifiers & Qt.KeyboardModifier.ShiftModifier:  # Keep & for Shift since it works
+            step_size = self.step_size * self.alt_multiplier
+            delta = event.angleDelta().y()
+        else:
+            delta = event.angleDelta().y()
+            step_size = self.step_size
+        scroll_amount = round(-delta / 120 * step_size * self.scale_multiplier)    # Float error
         
         # Reset or accumulate scroll based on direction change
         if self.prev_delta != delta:

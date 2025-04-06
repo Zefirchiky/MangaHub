@@ -61,6 +61,9 @@ class AppController:
             chapter = self.state._manga.get_chapter(self.state.chapter_num)
         except ChapterNotFoundError:
             chapter = self.manager.get_chapter(self.state._manga, self.state.chapter_num)
+        self.state._manga.add_chapter(chapter)
+        self.state._manga.check_chapter(self.state.chapter_num)
+        self.state._manga.current_chapter = self.state.chapter_num
         self.state.set_chapter(chapter)
             
     def next_chapter(self) -> None:

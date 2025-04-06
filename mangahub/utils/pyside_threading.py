@@ -95,7 +95,6 @@ class BatchWorker(QObject):
                 if loop:
                     loop.quit()
                 logger.success(f"Batch processing completed: {fn_name} - [{items[0]} - {len(items)}]")
-                print()
                 return self._results
         
         for i, item in enumerate(items):

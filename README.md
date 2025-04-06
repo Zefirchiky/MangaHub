@@ -31,6 +31,7 @@ Huh?
     - MediaCard/FullMediaCard
     - Create cool design for Dashboards in fucking Figma
 - ASYNC
+- State in AppController is shit rn
 - Keywords to remember the read
 - Custom chapters naming
 - Event history

@@ -104,6 +104,8 @@ class MainWindow(QMainWindow):
         self.manga_viewer.prev_button.clicked.connect(self.app_controller.prev_chapter)
         self.manga_viewer.next_button.clicked.connect(self.app_controller.next_chapter)
         
+        self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
+        
         # self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
         
         logger.success('MainWindow connections initialized')

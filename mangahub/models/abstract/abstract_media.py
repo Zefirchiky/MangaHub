@@ -43,7 +43,7 @@ class AbstractMedia(ABC, TagModel):
     def get_chapter(self, chapter_num: int | float) -> AbstractChapter | ChapterNotFoundError:
         if chapter := self._chapters_data.get(chapter_num):
             return chapter
-        return ChapterNotFoundError(f'Chapter {chapter_num} not found in {self}')
+        raise ChapterNotFoundError(f'Chapter {chapter_num} not found in {self}')
             
     def check_chapter(self, chapter_num: int | float) -> None:
         self.checked_chapters.add(chapter_num)
