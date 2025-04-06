@@ -7,6 +7,7 @@ from .models_json_parser import ModelsJsonParser
 
 
 class MangaChaptersParser(ModelsJsonParser):
+    ''''''
     def __init__(self, manga: Manga):
         super().__init__(f"{manga.folder}/chapters.json", MangaChapter)
         self.manga = manga

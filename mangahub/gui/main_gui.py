@@ -66,22 +66,24 @@ class MainWindow(QMainWindow):
         self.selection_menu = SelectionMenu(self)
         self.settings_window = SettingsWindow()
         self.add_manga_window = AddMangaWindow(self.app_controller)
-        self.manga_dashboard = Dashboard()
+        self.dashboard = Dashboard()
         self.manga_viewer = MangaViewer()
         self.novel_viewer = NovelViewer()
 
         self.selection_menu.show()
         
-        self.root_layout.insertWidget(0, self.manga_dashboard)
+        self.root_layout.insertWidget(0, self.dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
         self.root_layout.insertWidget(2, self.novel_viewer)
         
         for manga in self.app_controller.manga_manager.get_all_manga().values():
             mc = MediaCard()
             mc.set_media(manga)
-            self.manga_dashboard.add_card(mc)
-            # mc.chapter_clicked.connect(self.app_controller.select_manga_chapter)
+            self.dashboard.add_card(mc)
+            mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
 
+        self.current_mc: MediaCard | None = None
+        
         self.init_connections()
         
         AppStatus.main_window_initialized = True
@@ -90,15 +92,17 @@ class MainWindow(QMainWindow):
     def init_connections(self):
         self.app_controller.init_connections()
         
-        self.app_controller.chapter_changed.connect(self.show_manga)
-        self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
-        self.app_controller.chapter_changed.connect(lambda _: self.manga_dashboard.update_manga(self.app_controller.manga_state._manga))
+        self.app_controller.manga_changed.connect(self.update_current_mc)
         self.app_controller.manga_changed.connect(self.manga_viewer.set_manga)
         
+        self.app_controller.chapter_changed.connect(self.show_manga)
+        self.app_controller.chapter_changed.connect(self.update_current_mc)
+        
+        
         self.manga_viewer.close_button.clicked.connect(lambda _: self.root_layout.setCurrentIndex(0))
-        self.manga_viewer.chapter_selection.activated.connect(lambda x: self.app_controller.select_chapter(x + 1))
-        self.manga_viewer.prev_button.clicked.connect(self.app_controller.select_prev_chapter)
-        self.manga_viewer.next_button.clicked.connect(self.app_controller.select_next_chapter)
+        self.manga_viewer.chapter_selection.activated.connect(lambda x: self.app_controller.set_chapter(x + 1))
+        self.manga_viewer.prev_button.clicked.connect(self.app_controller.prev_chapter)
+        self.manga_viewer.next_button.clicked.connect(self.app_controller.next_chapter)
         
         # self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
         
@@ -108,10 +112,10 @@ class MainWindow(QMainWindow):
         self.manga_viewer.clear()
         
         placeholders = self.app_controller.get_manga_chapter_placeholders()
-        worker = self.manga_manager.get_chapter_images()
+        worker = self.manga_manager.get_chapter_images(self.app_controller.state._manga, self.app_controller.state._chapter)
         
-        self.manga_viewer.prev_button.setEnabled(not self.app_controller.manga_state.is_first())
-        self.manga_viewer.next_button.setEnabled(not self.app_controller.manga_state.is_last())
+        self.manga_viewer.prev_button.setEnabled(not self.app_controller.state.is_first())
+        self.manga_viewer.next_button.setEnabled(not self.app_controller.state.is_last())
     
         current_y = 0
         for width, height in placeholders:
@@ -119,9 +123,13 @@ class MainWindow(QMainWindow):
             current_y += height + self.manga_viewer._vertical_spacing
         
         worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
-        self.app_controller.manga_state.set_worker(worker)
+        self.app_controller.state.set_worker(worker)
         
         self.root_layout.setCurrentIndex(1)
+
+    def update_current_mc(self):   # TODO(?): possibly another state, just for gui
+        self.current_mc = self.dashboard.get_card(self.app_controller.state.manga_name)
+        self.current_mc.update_buttons()
 
     def open_settings(self):
         self.settings_is_opened ^= 1
@@ -133,7 +141,7 @@ class MainWindow(QMainWindow):
     def add_manga(self):
         self.add_manga_window.show()
         self.add_manga_window.add_manga_button.clicked.connect(
-            lambda _: self.manga_dashboard.add_manga(
+            lambda _: self.dashboard.add_manga(
                 self.manga_manager.get_manga(self.add_manga_window.name_input.text())
                 )
             )

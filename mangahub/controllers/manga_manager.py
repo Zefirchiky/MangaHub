@@ -127,11 +127,7 @@ class MangaManager:
         return
         
     def get_chapter(self, manga: Manga, num: float):
-        chapter = manga.get_chapter(num)
-        if isinstance(chapter, ChapterNotFoundError):
-            chapter = MangaChaptersParser(manga).get_chapter(num)
-        
-        if chapter:
+        if chapter := MangaChaptersParser(manga).get_chapter(num):
             return chapter
         
         id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, num)

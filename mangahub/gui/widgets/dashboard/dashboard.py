@@ -21,7 +21,13 @@ class Dashboard(SmoothScrollArea):
         self.mc_h_padding = mc_h_padding
         
         self.max_mc_in_row = 0
-        self.mc_repo = {}
+        self.mc_repo: dict[str, MediaCard] = {}
+        
+    def get_card(self, name: str) -> MediaCard:
+        if card := self.mc_repo.get(name):
+            return card
+        else:
+            raise ValueError(f'Card {name} not found')
     
     def add_card(self, mc: MediaCard):
         self.root_layout.addWidget(mc)
