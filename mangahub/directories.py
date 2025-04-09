@@ -20,6 +20,10 @@ NOVELS_CONF_DIR = CONF_DIR / 'novels'
 '''=== LOGS ==='''
 LOG_DIR = STD_DIR / 'logs'
 
+'''=== CACHE ==='''
+CACHE_DIR = STD_DIR / 'cache'
+IMAGES_CACHE_DIR = CACHE_DIR / 'images'
+
 '''=== DATA ==='''
 DATA_DIR = STD_DIR / 'data'
 
@@ -41,6 +45,9 @@ BACKGROUNDS_DIR = RESOURCES_DIR / 'background'
 
 '''=== CREATE FOLDERS ==='''
 LOG_DIR.mkdir(exist_ok=True)
+
+CACHE_DIR.mkdir(exist_ok=True)
+IMAGES_CACHE_DIR.mkdir(exist_ok=True)
 
 DATA_DIR.mkdir(exist_ok=True)
 MANGA_DIR.mkdir(exist_ok=True)

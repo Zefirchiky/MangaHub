@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from directories import ICONS_DIR
-from gui.widgets import SvgIcon
+from ui.widgets import SvgIcon
 from models import URL
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (QComboBox, QFormLayout, QLabel, QLineEdit,

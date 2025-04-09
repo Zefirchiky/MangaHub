@@ -1,5 +1,6 @@
 mangahub/data/
 logs/
+cache/
 
 .mypy_cache/
 .dmypy.json

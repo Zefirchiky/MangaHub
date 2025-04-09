@@ -23,6 +23,11 @@ class ImageWidget(QWidget):
     error = Signal(tuple)
     status = Signal(str)
     
+    placeholder_changed = Signal(QPixmap)
+    placeholder_set = Signal(QPixmap)
+    image_changed = Signal(QPixmap)
+    image_set = Signal(QPixmap)
+    
     def __init__(self, image_data=None, width=0, height=0, save_original=False, parent=None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -63,6 +68,7 @@ class ImageWidget(QWidget):
         self.setLayout(self.root)
             
         self._border_radius = 5
+        self.is_placeholder = False
         self.clickable_left = False
         self.clickable_right = False
         self.save_original = save_original
@@ -105,6 +111,10 @@ class ImageWidget(QWidget):
         else:
             self.fit(self.width(), self.height())
             
+        self.image_changed.emit(self.image)
+        if self.is_placeholder:
+            self.image_set.emit(self.image)
+            self.is_placeholder = False
         return self
         
     def set_placeholder(self, placeholder: ImageType | None=None, width: int=0, height: int=0, color=(200, 200, 200, 50)):
@@ -126,6 +136,11 @@ class ImageWidget(QWidget):
             
         self.update_size()
         self.update()
+        
+        self.placeholder_changed.emit(self.placeholder)
+        if not self.is_placeholder:
+            self.placeholder_set.emit(self.placeholder)
+            self.is_placeholder = True
         return self.image
         
     def set_error_image(self, error_image: ImageType):
@@ -227,7 +242,7 @@ class ImageWidget(QWidget):
     @original_image.setter
     def original_image(self, image: ImageType) -> None:
         self._original_image = self._process_image(image)
-    
+        
     @Property(int)
     def border_radius(self):
         return self._border_radius

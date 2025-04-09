@@ -22,7 +22,8 @@ Huh?
 ## Roadmap
 
 ### TOP-PRIORITY
-- Connect dashboard to managers
+- Caching
+- Upgrade MangaViewer
 - ASYNC with Qt, probably
 
 ### TODO
@@ -32,16 +33,16 @@ Huh?
     - Create cool design for Dashboards in fucking Figma
 - ASYNC
 - State in AppController is shit rn
-- Keywords to remember the read
 - Custom chapters naming
-- Event history
 - Redo UrlParser (apparently, PySide6 has an amazing QUrl, so use it)
 - Manga search
 
 ### LONG-TERM TODO
 - ASYNC
 - System/Cultivation calculation and display
+- Keywords to remember the read
 - Build-in notes/to-do
+- Event history
 - Map
 - Saving media (ZIP)
 - Music

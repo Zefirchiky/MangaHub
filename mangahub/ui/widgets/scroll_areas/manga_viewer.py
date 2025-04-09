@@ -1,11 +1,11 @@
-from directories import *
-from gui.widgets.svg import SvgIcon
-from models.manga import Manga, MangaChapter
+from ui.widgets.svg import SvgIcon
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QPixmap
 from PySide6.QtWidgets import (QComboBox, QGraphicsPixmapItem,
                                QGraphicsRectItem, QPushButton)
 
+from directories import ICONS_DIR
+from models.manga import Manga, MangaChapter, ChapterImage
 from .smooth_graphics_view import SmoothGraphicsView
 
 
@@ -74,6 +74,26 @@ class MangaViewer(SmoothGraphicsView):
             item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
             item.setPos(placeholder.rect().x(), placeholder.rect().y())
             self.scene.addItem(item)
+            
+    def add_image(self, image_data, width, height, x, y):
+        if not image_data:
+            image = QGraphicsRectItem(x, y, width, height)
+            image.setBrush(QColor(200, 200, 200, 50))
+        else:
+            pixmap = QPixmap()
+            if pixmap.loadFromData(image_data):
+                image = QGraphicsPixmapItem(pixmap)
+                image.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+                image.setPos(x, y)
+        
+        self.scene.addItem(image)
+        return image
+        
+    def set_images(self, images: list[ChapterImage]):
+        y = 0
+        for image in images:
+            self.add_image(image.image, image.width, image.height, (0 - image.image.width()) // 2, y)
+            y += image.height + self._vertical_spacing
             
     def set_manga(self, manga: Manga):
         self.manga = manga

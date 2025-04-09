@@ -9,7 +9,7 @@ from models.sites import Site
 from PIL import Image
 from services.parsers import UrlParser
 from utils import MM, BatchWorker
-from utils.webp_dimensions import get_webp_dimensions
+from utils.image_dimensions import get_dimensions_from_bytes
 
 # TODO: reimplement
 

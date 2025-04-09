@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING
 
 from app_status import AppStatus
 from directories import IMAGES_DIR, RESOURCES_DIR
-from gui.multi_window import AddMangaWindow, SettingsWindow
-from gui.widgets import IconRepo, ImageWidget, SelectionMenu
-from gui.widgets.dashboard import Dashboard, MediaCard
-from gui.widgets.scroll_areas import MangaViewer, NovelViewer
-from gui.widgets.slide_menus import SideMenu
+from ui.multi_window import AddMangaWindow, SettingsWindow
+from ui.widgets import IconRepo, ImageWidget, SelectionMenu
+from ui.widgets.dashboard import Dashboard, MediaCard
+from ui.widgets.scroll_areas import MangaViewer, NovelViewer
+from ui.widgets.slide_menus import SideMenu
 from loguru import logger
 from PySide6.QtCore import QPoint, Qt, QTimer
 from PySide6.QtGui import QCursor, QIcon
@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(1, self.manga_viewer)
         self.root_layout.insertWidget(2, self.novel_viewer)
         
-        for manga in self.app_controller.manga_manager.get_all_manga().values():
+        for manga in self.app_controller.get_all_manga().values():
             mc = MediaCard()
             mc.set_media(manga)
             self.dashboard.add_card(mc)
@@ -113,19 +113,22 @@ class MainWindow(QMainWindow):
     def show_manga(self):
         self.manga_viewer.clear()
         
-        placeholders = self.app_controller.get_manga_chapter_placeholders()
-        worker = self.manga_manager.get_chapter_images(self.app_controller.state._manga, self.app_controller.state._chapter)
+        images = self.manga_manager.get_images(self.app_controller.state._manga, self.app_controller.state._chapter)
+        self.manga_viewer.set_images(images)
         
-        self.manga_viewer.prev_button.setEnabled(not self.app_controller.state.is_first())
-        self.manga_viewer.next_button.setEnabled(not self.app_controller.state.is_last())
+        # placeholders = self.app_controller.get_manga_chapter_placeholders()
+        # worker = self.manga_manager.get_chapter_images(self.app_controller.state._manga, self.app_controller.state._chapter)
+        
+        # self.manga_viewer.prev_button.setEnabled(not self.app_controller.state.is_first())
+        # self.manga_viewer.next_button.setEnabled(not self.app_controller.state.is_last())
     
-        current_y = 0
-        for width, height in placeholders:
-            self.manga_viewer.add_placeholder(width, height, current_y)
-            current_y += height + self.manga_viewer._vertical_spacing
+        # current_y = 0
+        # for width, height in placeholders:
+        #     self.manga_viewer.add_placeholder(width, height, current_y)
+        #     current_y += height + self.manga_viewer._vertical_spacing
         
-        worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
-        self.app_controller.state.set_worker(worker)
+        # worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
+        # self.app_controller.state.set_worker(worker)
         
         self.root_layout.setCurrentIndex(1)
 

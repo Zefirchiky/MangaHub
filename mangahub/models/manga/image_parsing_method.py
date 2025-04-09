@@ -1,7 +1,13 @@
+from __future__ import annotations
+
 from pydantic import BaseModel
 
 
 class ImageParsingMethod(BaseModel):
+    '''
+    Method, used to parse images from manga's page
+    '''
+    
     is_set: bool = False
     
     regex_from_html: bool = False
@@ -12,14 +18,14 @@ class ImageParsingMethod(BaseModel):
     id_format: str | None = None
     alts_format: str | None = None
     
-    def set_regex_from_html(self, url_regex: str) -> None:
+    def set_regex_from_html(self, url_regex: str) -> ImageParsingMethod:
         self.reset()
         self.is_set = True
         self.regex_from_html = True
         self.url_regex = url_regex
         return self
         
-    def set_bs_from_loaded_html(self, images_html_class: str = None, images_id_format: str = None, images_html_alts_format: str = None) -> None:
+    def set_bs_from_loaded_html(self, images_html_class: str | None = None, images_id_format: str | None = None, images_html_alts_format: str | None = None) -> ImageParsingMethod:
         self.reset()
         self.is_set = True
         self.bs_from_loaded_html = True

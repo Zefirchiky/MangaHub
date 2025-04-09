@@ -21,7 +21,7 @@ class MediaCard(QFrame):
             background-color: {CM().widget_bg.name()}; 
             border-radius: 10px;
             border: 1px solid {CM().widget_border.name()};
-            }}''')        
+            }}''')
         
         self.cover = ImageWidget()
         self.cover.set_placeholder(width=256, height=384)

@@ -37,6 +37,9 @@ class AppController:
     def get_manga(self, name: str) -> Manga:
         return self.manga_manager.get_manga(name)
     
+    def get_all_manga(self) -> dict[str, Manga]:
+        return self.manga_manager.get_all_manga()
+    
     def create_manga(self, name: str, url: str | URL='', site='MangaDex', backup_sites=[], **kwargs):
         manga = self.manga_manager.create_manga(name, url, site, backup_sites, **kwargs)
         return manga

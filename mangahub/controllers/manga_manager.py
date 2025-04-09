@@ -153,6 +153,14 @@ class MangaManager:
         image = ChapterImage(num, width, height)
         return image
     
+    def get_images(self, manga: Manga, chapter: MangaChapter):
+        images: list[ChapterImage] = []
+        
+        if chapter._images:     # TODO: there MIGHT be missing images
+            for image in chapter._images.values():
+                images.append(image)
+            return images
+    
     def get_chapter_images(self, manga: Manga, chapter: MangaChapter):
         logger.info(f"Getting images for '{manga.name}' chapter {chapter.number}")
         
@@ -187,6 +195,8 @@ class MangaManager:
         return images
     
     def get_chapter_placeholders(self, manga: Manga, chapter: MangaChapter):
+        
+        
         placeholders = []
         if chapter._images:
             for image in chapter._images.values():

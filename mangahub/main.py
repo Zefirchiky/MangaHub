@@ -6,8 +6,8 @@ from directories import (LOG_DIR, MANGA_JSON, NOVELS_CONF_DIR, NOVELS_JSON,
 from config import CM
 from controllers import (AppController, MangaManager, NovelsManager,
                          SitesManager)
-from gui import MainWindow
-from gui.widgets import IconRepo
+from ui import MainWindow
+from ui.widgets import IconRepo
 from loguru import logger
 from icecream import ic
 from models.novels import NovelFormatter
@@ -16,21 +16,22 @@ from PySide6.QtWidgets import QApplication
 from services.handlers import JsonHandler
 from services.parsers import SitesParser, UrlParser
 from services.repositories import MangaRepository, NovelsRepository
+from config import AppConfig
 from utils import MM
-from version import __version__
 
 logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", level="DEBUG", retention=10)
 
-ic(f"MangaHub v{__version__}")
+ic(f"MangaHub v{AppConfig.version}")
 logger.info(f"Working directory: {STD_DIR}")
 
 
 class App:
     def __init__(self):
-        logger.debug(f"MangaHub v{__version__}")
-        logger.info(f"Starting MangaHub v{__version__}")
+        logger.debug(f"MangaHub v{AppConfig.version}")
+        logger.info(f"Starting MangaHub v{AppConfig.version}")
         
-        myappid = f'mangahub.{__version__}'
+        print(AppConfig.version)
+        myappid = f'mangahub.{AppConfig.version().name}'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         
         self.gui_app = QApplication(sys.argv)
@@ -76,6 +77,16 @@ class App:
         # self.app_controller.remove_manga(self.app_controller.get_manga('Circles'))
         # self.app_controller.remove_manga('Bad Born Blood')
         # self.app_controller.get_manga('I, The Demon Lord, Am Being Targeted by My Female Disciples!').description = 'lol'
+        self.test_code()
+        
+        
+    def test_code(self):
+        from services.downloaders import ImageDownloader
+        d = ImageDownloader()
+
+        d.metadata_ready.connect(print)
+        d.download_error.connect(print)
+        # d.download_progress.connect(print)
 
     def run(self):
         self.gui_window.showMaximized()
@@ -83,9 +94,9 @@ class App:
         
         MM.show_message('info', f"Working directory: \n{STD_DIR}", 7000)
         
-        logger.success(f"MangaHub v{__version__} initialized")
+        logger.success(f"MangaHub v{AppConfig.version} initialized")
         self.gui_app.exec()
-        logger.info(f"MangaHub v{__version__} finished")
+        logger.info(f"MangaHub v{AppConfig.version} finished")
 
 
 if __name__ == "__main__":

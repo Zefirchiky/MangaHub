@@ -38,4 +38,4 @@ class NovelsSiteScraper:
     @staticmethod
     def get_temp_novel_text():
         with open('example_novel_chapter.txt', 'r') as f:
-            return f.read()        
+            return f.read()
