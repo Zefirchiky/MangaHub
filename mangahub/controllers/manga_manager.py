@@ -35,7 +35,7 @@ class MangaManager:
     def get_manga(self, name) -> Manga | None:
         manga = self.repository.get(name)
         if not manga:
-            MM.show_message('warning', f"Manga {name} not found")
+            MM.show_message(MM.MessageType.WARNING, f"Manga {name} not found")
             logger.warning(f"Manga {name} not found")
         return manga
     
@@ -58,7 +58,7 @@ class MangaManager:
         
     def create_manga(self, name: str, url: str | URL='', site='MangaDex', backup_sites=[], **kwargs):
         if self.get_manga(name):
-            MM.show_message('warning', f"Manga {name} already exists")
+            MM.show_message(MM.MessageType.WARNING, f"Manga {name} already exists")
             logger.warning(f"Manga {name} already exists")
             return
         
@@ -120,14 +120,14 @@ class MangaManager:
                 logger.warning(f"Site {manga.site} of manga '{manga.name}' not found while removing")
                 raise Exception(f"Site {manga.site} of manga '{manga.name}' not found while removing")
             logger.success(f"Manga '{manga.name}' successfully removed")
-            MM.show_message('success', f"Manga '{manga.name}' successfully removed")
+            MM.show_message(MM.MessageType.SUCCESS, f"Manga '{manga.name}' successfully removed")
             return mg
         
         logger.warning(f"Manga '{manga_name}' was not found for deletion")
         return
         
     def get_chapter(self, manga: Manga, num: float):
-        if chapter := MangaChaptersParser(manga).get_chapter(num):
+        if chapter := MangaChaptersParser(manga).get(num):
             return chapter
         
         id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, num)
@@ -184,11 +184,11 @@ class MangaManager:
                 break
             if site == manga.site:
                 logger.warning(f"Images wasn't parsed successfully for main site {site} of manga '{manga.name}'")
-                MM.show_message('warning', f"Images wasn't parsed successfully for main site {site} of manga '{manga.name}'")
+                MM.show_message(MM.MessageType.WARNING, f"Images wasn't parsed successfully for main site {site} of manga '{manga.name}'")
                 
         if not images:
             logger.warning(f"Images wasn't parsed successfully for manga '{manga.name}'")
-            MM.show_message('warning', f"Images wasn't parsed successfully for manga '{manga.name}'")
+            MM.show_message(MM.MessageType.WARNING, f"Images wasn't parsed successfully for manga '{manga.name}'")
             return
 
         logger.success(f"Got images for '{manga.name}' chapter {chapter.number}")
@@ -220,11 +220,11 @@ class MangaManager:
                 break
             if site == manga.site:
                 logger.warning(f"Placeholders wasn't parsed successfully for main site {site} of manga '{manga.name}'")
-                MM.show_message('warning', f"Placeholders wasn't parsed successfully for main site {site} of manga '{manga.name}'")
+                MM.show_message(MM.MessageType.WARNING, f"Placeholders wasn't parsed successfully for main site {site} of manga '{manga.name}'")
                 
         if not placeholders:
             logger.warning(f"Placeholders wasn't parsed successfully for '{manga.name}'")
-            MM.show_message('warning', f"Placeholders wasn't parsed successfully for '{manga.name}'")
+            MM.show_message(MM.MessageType.WARNING, f"Placeholders wasn't parsed successfully for '{manga.name}'")
             return
             
         logger.success(f"Got placeholders for '{manga.name}' chapter {chapter.number}")
@@ -254,7 +254,7 @@ class MangaManager:
             scraper = MangaSiteScraper(self.sites_manager, sites=manga.backup_sites)
             cover = scraper.get_manga_cover(manga)  # TODO
         else:
-            MM.show_message('error', f"No available site for {manga.id_} was found")
+            MM.show_message(MM.MessageType.ERROR, f"No available site for {manga.id_} was found")
             return None
         
         if cover:    

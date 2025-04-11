@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enum import Enum, auto
 
 from app_status import AppStatus
 from loguru import logger
@@ -7,10 +8,16 @@ from PySide6.QtCore import (QEasingCurve, QPropertyAnimation, QRect, Qt,
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy
 
 
+class MessageType(Enum):
+    INFO = auto()
+    SUCCESS = auto()
+    WARNING = auto()
+    ERROR = auto()
+
 class Message(QFrame):
     clicked = Signal(QFrame)
     
-    def __init__(self, parent=None, message_type='error', message=None, width=250, min_height=40):
+    def __init__(self, parent=None, message_type=MessageType.ERROR, message=None, width=250, min_height=40):
         super().__init__(parent)
         self.setStyleSheet(self._get_style(message_type))
         self.setFixedWidth(width)
@@ -26,7 +33,7 @@ class Message(QFrame):
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setWordWrap(True)
         
-        self.type_label = QLabel(f"{message_type.upper()}", self)
+        self.type_label = QLabel(f"{message_type.name}", self)
         self.type_label.setStyleSheet("border: none; background-color: transparent; font-size: 10px;")
         self.type_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.type_label.move(10, 5)
@@ -43,25 +50,25 @@ class Message(QFrame):
 
     def _get_style(self, message_type):
         styles = {
-            'error': """
+            MessageType.ERROR: """
                 border: 1px solid #ffebee;
                 background-color: rgba(244, 67, 54, 0.9);
                 color: #f8f8f8;
                 border-radius: 4px;
                 """,  # Red background with light red border
-            'info': """
+            MessageType.INFO: """
                 border: 1px solid #bbdefb;
                 background-color: rgba(33, 150, 243, 0.9);
                 color: #f8f8f8;
                 border-radius: 4px;
                 """,  # Blue background with light blue border
-            'success': """
+            MessageType.SUCCESS: """
                 border: 1px solid #e8f5e9;
                 background-color: rgba(76, 175, 80, 0.9);
                 color: #f8f8f8;
                 border-radius: 4px;
                 """,  # Green background with light green border
-            'warning': """
+            MessageType.WARNING: """
                 border: 1px solid #fff3e0;
                 background-color: rgba(255, 152, 0, 0.9);
                 color: #f8f8f8;
@@ -86,6 +93,7 @@ class MM:
     _instance: MM | None = None
     _initialized = False
     queue: list[Message] = []
+    MessageType = MessageType
     
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -114,7 +122,7 @@ class MM:
             logger.success("MessageManager initialized")
     
     @classmethod
-    def show_message(cls, message_type='error', message_text=None, progress=False, duration=5000):
+    def show_message(cls, message_type: MessageType=MessageType.ERROR, message_text=None, progress=False, duration=5000):
         if cls._instance is None:
             raise Exception("MessageManager has not been initialized!")
         if not AppStatus.main_window_initialized:
@@ -126,7 +134,7 @@ class MM:
             cls.queue.clear()
             return cls._instance._show_message(message_type, message_text, duration)
     
-    def _show_message(self, message_type='error', message_text=None, progress=False, duration=5000):
+    def _show_message(self, message_type=MessageType.ERROR, message_text=None, progress=False, duration=5000):
         message = Message(self.window, message_type, message_text, self.width, self.min_height)
         message.setGeometry(self.x, self.window.height(), message.width(), message.height())
         message.show()

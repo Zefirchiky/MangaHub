@@ -5,7 +5,7 @@ from services.parsers.manga_chapters_parser import MangaChaptersParser
 from loguru import logger
 
 
-class MangaRepository(ModelsJsonParser):
+class MangaRepository(ModelsJsonParser[Manga]):
     def __init__(self, file) -> None:
         super().__init__(file, Manga)
 
@@ -15,7 +15,7 @@ class MangaRepository(ModelsJsonParser):
 
     def get(self, name) -> Manga | None:
         try:
-            return super().get_model(name)
+            return super().get(name)
         except Exception as e:
             logger.warning(f"Manga {name} not found with error: {e}. Returning None")
             return None
@@ -24,7 +24,7 @@ class MangaRepository(ModelsJsonParser):
         return self.models_collection
     
     def load(self) -> dict[str, Manga]:
-        return super().get_all_models()
+        return super().get_all()
     
     def save(self) -> None:
         for manga in self.models_collection.values():

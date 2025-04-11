@@ -8,7 +8,7 @@ class SitesParser(ModelsJsonParser):
         super().__init__(file, Site)
 
     def get_site(self, name) -> Site | None:
-        return self.get_model(name)
+        return self.get(name)
 
     def get_all_sites(self) -> dict[str, Site]:
-        return self.get_all_models()
+        return self.get_all()

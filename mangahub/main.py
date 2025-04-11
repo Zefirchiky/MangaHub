@@ -1,7 +1,7 @@
 import ctypes
 import sys
 
-from directories import (LOG_DIR, MANGA_JSON, NOVELS_CONF_DIR, NOVELS_JSON,
+from directories import (IMAGES_CACHE_DIR, MANGA_JSON, NOVELS_CONF_DIR, NOVELS_JSON,
                          RESOURCES_DIR, SITES_JSON, STD_DIR)
 from config import CM
 from controllers import (AppController, MangaManager, NovelsManager,
@@ -19,19 +19,17 @@ from services.repositories import MangaRepository, NovelsRepository
 from config import AppConfig
 from utils import MM
 
-logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", level="DEBUG", retention=10)
 
-ic(f"MangaHub v{AppConfig.version}")
+ic(f"MangaHub v{AppConfig.version()}")
 logger.info(f"Working directory: {STD_DIR}")
 
 
 class App:
     def __init__(self):
-        logger.debug(f"MangaHub v{AppConfig.version}")
-        logger.info(f"Starting MangaHub v{AppConfig.version}")
+        logger.debug(f"MangaHub v{AppConfig.version()}")
+        logger.info(f"Starting MangaHub v{AppConfig.version()}")
         
-        print(AppConfig.version)
-        myappid = f'mangahub.{AppConfig.version().name}'
+        myappid = f'mangahub.{AppConfig.version()}'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         
         self.gui_app = QApplication(sys.argv)
@@ -82,21 +80,23 @@ class App:
         
     def test_code(self):
         from services.downloaders import ImageDownloader
-        d = ImageDownloader()
+        from models.images import ImageCache
+        self.cache = ImageCache(IMAGES_CACHE_DIR, 0)
+        self.d = ImageDownloader(self.cache)
 
-        d.metadata_ready.connect(print)
-        d.download_error.connect(print)
-        # d.download_progress.connect(print)
+        self.d.metadata_downloaded.connect(print)
+        self.d.download_error.connect(print)
+        # self.d.image_downloaded.connect(lambda url, name, image, meta: MM.show_message(MM.MessageType.INFO, f"Image downloaded: {name}"))
 
     def run(self):
         self.gui_window.showMaximized()
         self.gui_window.init()
         
-        MM.show_message('info', f"Working directory: \n{STD_DIR}", 7000)
+        MM.show_message(MM.MessageType.INFO, f"Working directory: \n{STD_DIR}", 7000)
         
-        logger.success(f"MangaHub v{AppConfig.version} initialized")
+        logger.success(f"MangaHub v{AppConfig.version()} initialized")
         self.gui_app.exec()
-        logger.info(f"MangaHub v{AppConfig.version} finished")
+        logger.info(f"MangaHub v{AppConfig.version()} finished")
 
 
 if __name__ == "__main__":

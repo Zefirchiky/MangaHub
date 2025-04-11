@@ -25,6 +25,8 @@ Huh?
 - Caching
 - Upgrade MangaViewer
 - ASYNC with Qt, probably
+- Make abstracts use generic types
+- ModelJsonParser and repositories
 
 ### TODO
 - FIX THE FUCKING INTERFACE:

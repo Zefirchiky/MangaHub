@@ -19,7 +19,7 @@ class SvgIcon(QIcon):
             with file.open("r") as f:
                 self.svg_content = f.read()
         except FileNotFoundError as e:
-            MM.show_message('error', str(e), 5000)
+            MM.show_message(MM.MessageType.ERROR, str(e), 5000)
             logger.error(str(e))
             return
 

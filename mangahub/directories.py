@@ -15,6 +15,7 @@ os.chdir(STD_DIR)
 
 '''=== CONFIGS ==='''
 CONF_DIR = STD_DIR / 'config'
+CONF_FILE = CONF_DIR / 'config.json'
 NOVELS_CONF_DIR = CONF_DIR / 'novels'
 
 '''=== LOGS ==='''

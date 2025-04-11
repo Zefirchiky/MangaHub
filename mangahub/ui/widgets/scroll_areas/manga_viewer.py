@@ -92,8 +92,8 @@ class MangaViewer(SmoothGraphicsView):
     def set_images(self, images: list[ChapterImage]):
         y = 0
         for image in images:
-            self.add_image(image.image, image.width, image.height, (0 - image.image.width()) // 2, y)
-            y += image.height + self._vertical_spacing
+            self.add_image(image._image, image.metadata.width, image.metadata.height, (0 - image.metadata.width) // 2, y)
+            y += image.metadata.height + self._vertical_spacing
             
     def set_manga(self, manga: Manga):
         self.manga = manga

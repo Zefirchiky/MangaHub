@@ -7,7 +7,8 @@ from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal, QUrl
 from PIL import Image
 from icecream import ic
 
-from models.images import ImageMetadata
+from models.images import ImageMetadata, ImageCache
+from resources.enums import StorageSize
 from utils.image_dimensions import get_dimensions_from_bytes
 
 from directories import IMAGES_CACHE_DIR
@@ -15,7 +16,8 @@ from config import AppConfig
 
 
 class ImageDownloadWorkerSignals(QObject):
-    progress = Signal(str, int, int, int)  # url, percent, bytes downloaded, total bytes
+    progress = Signal(str, int, int, int)   # url, percent, bytes downloaded, total bytes
+    metadata = Signal(str, ImageMetadata)   # url, metadata
     error = Signal(str, Exception)
     
 
@@ -23,11 +25,11 @@ class ImageDownloadWorker(QRunnable):
     """Worker thread for downloading an image without blocking the GUI"""
     _signals = ImageDownloadWorkerSignals()
     
-    def __init__(self, url: str, save_path: Path, callback, ext: str='', metadata_only: bool = False, chunk_size: int=8192, update_p: int=1):
+    def __init__(self, url: str, callback, ext: str='', metadata_only: bool = False, chunk_size: int=8192, update_p: int=1):
         super().__init__()
         
         self.url = url
-        self.ext = AppConfig.ImageDownloading.PIL_SUPPORTED_EXT.get(ext.upper()) or 'WEBP'
+        self.ext = AppConfig.ImageDownloading.PIL_SUPPORTED_EXT().get(ext.upper()) or 'WEBP'
         
         self.callback = callback
         self.metadata_only = metadata_only
@@ -49,8 +51,7 @@ class ImageDownloadWorker(QRunnable):
             async with aiohttp.ClientSession() as session:            
                 async with session.get(self.url) as response:
                     if response.status != 200:
-                        self._signals.error.emit(self.url, Exception(f'Error getting response: {response.status}'))
-                        return
+                        return None, None, Exception(f'Error getting response: {response.status}')
                     
                     size = int(response.headers.get("Content-Length", 0))
                     format = str(response.headers.get("Content-Type", '').split('/')[-1])
@@ -58,7 +59,7 @@ class ImageDownloadWorker(QRunnable):
                     downloaded = 0
                     prev_percentage = 0
                     
-                    if AppConfig.dev_mode:
+                    if AppConfig.dev_mode():
                         pbar = tqdm(
                             total=size,
                             unit='B',
@@ -81,13 +82,14 @@ class ImageDownloadWorker(QRunnable):
                                 size=size
                             )
                             if self.metadata_only:
-                                return metadata, None
+                                return None, metadata, None
+                            self._signals.metadata.emit(self.url, metadata)
                             
                         chunk_size = len(chunk)
                         downloaded += chunk_size
                         image_data.extend(chunk)
                         
-                        if AppConfig.dev_mode:
+                        if AppConfig.dev_mode():
                             pbar.update(chunk_size)
                         if size > 0:
                             percentage = int(downloaded / size * 100)
@@ -97,63 +99,68 @@ class ImageDownloadWorker(QRunnable):
                                     self.url, percentage, downloaded, size
                                 )
                     
-                    if AppConfig.dev_mode:
+                    if AppConfig.dev_mode():
                         pbar.close()
                     
                     if size > 0 and downloaded != size:
-                        self._signals.error.emit(self.url, Exception(f'Size downloaded does not match with size expected: {downloaded}/{size} bytes'))
-                        return
+                        return None, None, Exception(f'Size downloaded does not match with size expected: {downloaded}/{size} bytes')
                     
                     image_data = io.BytesIO(image_data)
                     with image_data as f:
                         img = Image.open(f)
                         if self.ext != format:
-                            img.save(f, self.ext)
+                            img.save(f, self.ext, optimize=True)
                             
-                        return image_data.getvalue(), None
+                        return image_data.getvalue(), metadata, None
                         
                 
         except Exception as e:
-            self._signals.error.emit(self.url, Exception(f'Error: {e}'))
-            return
+            return None, None, Exception(f'Error: {e}')
         
 
 class ImageDownloader(QObject):
     """Manages parallel downloading of images"""
     
-    metadata_ready = Signal(str, dict)  # url, metadata
-    image_downloaded = Signal(str, bytes)  # url, local path
-    download_error = Signal(str, str)    # url, error message
-    download_progress = Signal(str, int, int)  # url, bytes downloaded, total bytes
+    metadata_downloaded = ImageDownloadWorker._signals.metadata
+    image_downloaded = Signal(str, str, bytes, ImageMetadata)  # url, name.ext, image bytes, metadata
+    download_progress = ImageDownloadWorker._signals.progress
+    download_error = ImageDownloadWorker._signals.error
 
-    def __init__(self, cache: Path=IMAGES_CACHE_DIR, max_threads: int=''):
+    def __init__(self, cache: ImageCache, max_threads: int=''):
         super().__init__()
         self.cache = cache
-        self.cache.mkdir(exist_ok=True)
         
         self.pool = QThreadPool()
         if not max_threads:
-            self.pool.setMaxThreadCount(AppConfig.ImageDownloading.max_threads)
+            self.pool.setMaxThreadCount(AppConfig.ImageDownloading.max_threads())
         else:
             self.pool.setMaxThreadCount(max_threads)
+            
+        self.workers = {}
         
-    def _image_downloaded(self, url, filepath, result):
-        image, error = result
-        if error:
-            self.download_error.emit(url, image)
-        with open(filepath, 'wb') as f:
-            f.write(image)
-        self.image_downloaded.emit(url, image)
+    def _metadata_downloaded(self, url, result):
+        _, metadata, err = result
+        if err:
+            self.download_error.emit(url, err)
+            return
+        self.metadata_downloaded.emit(url, metadata)
         
-    def download_metadata(self, url):
-        pass
+    def _image_downloaded(self, url, name, result):
+        image, metadata, err = result
+        if err:
+            self.download_error.emit(url, err)
+            return
+        self.cache.add_image(name, image, metadata.size)
+        self.image_downloaded.emit(url, name, image, metadata)
         
-    def download_image(self, url: str, name: str='', update_percentage = 1):
-        if not QUrl(url).isValid():
+    def download_metadata(self, url: str, name: str=''):
+        url_ = QUrl(url)
+        if not url_.isValid():
             self.download_error.emit(url, 'Url is not valid')
+        url = url_.toString()
             
         # Finds or creates name and preferable extension
-        ext = AppConfig.ImageDownloading.preferable_format
+        ext = AppConfig.ImageDownloading.preferable_format()
         if name:
             if '.' in name:
                 name, ext = name.split('.')
@@ -164,14 +171,52 @@ class ImageDownloader(QObject):
             
         worker = ImageDownloadWorker(
             url        = url,
-            save_path  = self.cache,
             ext        = ext,
-            callback   = lambda result: self._image_downloaded(url, filepath, result),
-            chunk_size = AppConfig.ImageDownloading.chunk_size,
+            callback   = lambda result: self._metadata_downloaded(url, filepath, result),
+            chunk_size = AppConfig.ImageDownloading.chunk_size().bytes_value,
+            metadata_only=True
+        )
+        self.workers[name] = worker
+        self.pool.start(worker)
+        
+    def download_image(self, url: str, name: str='', update_percentage=1):
+        url_ = QUrl(url)
+        if not url_.isValid():
+            self.download_error.emit(url, 'Url is not valid')
+        url = url_.toString()
+            
+        # Finds or creates name and preferable extension
+        ext = AppConfig.ImageDownloading.preferable_format()
+        if name:
+            if '.' in name:
+                name, ext = name.split('.')
+        else:
+            name, _ = url.split('/')[-1].rsplit('.', 1)
+        name, ext = str(name), str(ext)
+            
+        worker = ImageDownloadWorker(
+            url        = url,
+            ext        = ext,
+            callback   = lambda result: self._image_downloaded(url, f'{name}.{ext.lower()}', result),
+            chunk_size = AppConfig.ImageDownloading.chunk_size().bytes_value,
             update_p   = update_percentage
         )
-        self.download_progress = worker._signals.progress
-        self.download_error = worker._signals.error
+        self.workers[name] = worker
         self.pool.start(worker)
+        
+    def download_images(self, urls: dict[str, str], update_percentage=10, metadata_only=False):
+        """Downloads images async.
 
-    
+        Args:
+            urls (dict[str, str]): Dictionary of urls and their preferable names. If extension is not in the name, preferable one will be used (check AppConfig.ImageDownloading.preferable_format)
+            update_percentage (int, optional): ImageDownloader will emit download_progress signal every x%. Defaults to 10.
+            metadata_only (bool, optional): Will only download metadata, emits metadata_downloaded. Defaults to False.
+        """
+        if metadata_only:
+            for url, name in urls.items():
+                self.download_metadata(url)
+                
+        else:
+            for url, name in urls.items():
+                self.download_image(url, name, update_percentage)
+        

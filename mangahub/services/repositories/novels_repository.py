@@ -2,7 +2,7 @@ from models.novels import Novel
 from services.parsers.models_json_parser import ModelsJsonParser
 
 
-class NovelsRepository(ModelsJsonParser):
+class NovelsRepository(ModelsJsonParser[Novel]):
     def __init__(self, file) -> None:
         super().__init__(file, Novel)
 
@@ -10,11 +10,8 @@ class NovelsRepository(ModelsJsonParser):
         self._models_collection[novel.name] = novel
         return self._models_collection
 
-    def get(self, name) -> Novel:
-        return super().get_model(name)
-
     def get_all(self) -> dict[str, Novel]:
         return self._models_collection
     
     def load(self) -> dict[str, Novel]:
-        return super().get_all_models()
+        return super().get_all()

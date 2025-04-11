@@ -6,29 +6,23 @@ from .chapter_images_parser import ChapterImagesParser
 from .models_json_parser import ModelsJsonParser
 
 
-class MangaChaptersParser(ModelsJsonParser):
+class MangaChaptersParser(ModelsJsonParser[MangaChapter]):
     ''''''
     def __init__(self, manga: Manga):
         super().__init__(f"{manga.folder}/chapters.json", MangaChapter)
         self.manga = manga
         self.chapters_collection = self._models_collection
 
-    def get_chapter(self, num: int | float) -> MangaChapter | None:
+    def get(self, num: int | float) -> MangaChapter | None:
         images_parser = ChapterImagesParser(f"{self.manga.folder}/chapter{num}/images.json")
         try:
-            chapter = super().get_model(num)
+            chapter = super().get(num)
         except Exception as e:
             logger.warning(f"Chapter {num} not found with error: {e}. Returning None")
             return None
         
-        chapter._images = images_parser.get_all_images()
+        chapter._images = images_parser.get_all()
         return chapter
-    
-    def get_model(self, name) -> MangaChapter | None:
-        return self.get_chapter(name)   # so get_all_chapters() uses custom get_chapter()
-    
-    def get_all_chapters(self) -> dict[float, MangaChapter]:
-        return self.get_all_models()
     
     def save(self, chapters_dict: dict[float, MangaChapter]):
         for chapter in chapters_dict.values():
