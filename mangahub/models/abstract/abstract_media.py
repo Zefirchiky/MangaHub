@@ -23,7 +23,7 @@ class AbstractMedia(ABC, TagModel):
     last_updated: str = Field(default_factory=lambda: str(datetime.now))
     
     site: str = 'MangaDex'
-    backup_sites: set[str] = set()
+    backup_sites: list[str] = []
     
     current_chapter: int | float = 0
     first_chapter: int | float = 0
@@ -39,6 +39,11 @@ class AbstractMedia(ABC, TagModel):
             self._chapters_data[chapter.number] = chapter
             self.update()
         return self
+    
+    def get_all_sites(self):
+        sites = self.backup_sites.copy()
+        sites.insert(0, self.site)
+        return sites
             
     def get_chapter(self, chapter_num: int | float) -> AbstractChapter | ChapterNotFoundError:
         if chapter := self._chapters_data.get(chapter_num):

@@ -24,7 +24,7 @@ Huh?
 ### TOP-PRIORITY
 - Caching
 - Upgrade MangaViewer
-- ASYNC with Qt, probably
+- ASYNC manga creation
 - Make abstracts use generic types
 - ModelJsonParser and repositories
 

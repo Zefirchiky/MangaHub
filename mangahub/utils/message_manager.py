@@ -122,7 +122,7 @@ class MM:
             logger.success("MessageManager initialized")
     
     @classmethod
-    def show_message(cls, message_type: MessageType=MessageType.ERROR, message_text=None, progress=False, duration=5000):
+    def show_message(cls, message_type: MessageType=MessageType.ERROR, message_text=None, duration=5000, progress=False):
         if cls._instance is None:
             raise Exception("MessageManager has not been initialized!")
         if not AppStatus.main_window_initialized:
@@ -132,9 +132,9 @@ class MM:
             for message in cls.queue:
                 cls._instance._show_message(*message)
             cls.queue.clear()
-            return cls._instance._show_message(message_type, message_text, duration)
+            return cls._instance._show_message(message_type, message_text, duration=duration)
     
-    def _show_message(self, message_type=MessageType.ERROR, message_text=None, progress=False, duration=5000):
+    def _show_message(self, message_type=MessageType.ERROR, message_text=None, duration=5000, progress=False):  # ! duration doesn't work
         message = Message(self.window, message_type, message_text, self.width, self.min_height)
         message.setGeometry(self.x, self.window.height(), message.width(), message.height())
         message.show()
@@ -143,12 +143,12 @@ class MM:
 
         self.active_messages.append(message)
         self.move_messages()
-
+        
         QTimer.singleShot(duration, lambda: self.destroy_message(message))
         
         return message
 
-    def destroy_message(self, message):
+    def destroy_message(self, message: Message):
         if message in self.active_messages:
             if message in self.move_anim_group:
                 self.move_anim_group.pop(message).stop()

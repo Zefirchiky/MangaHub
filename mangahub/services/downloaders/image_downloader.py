@@ -122,7 +122,7 @@ class ImageDownloader(QObject):
     """Manages parallel downloading of images"""
     
     metadata_downloaded = ImageDownloadWorker._signals.metadata
-    image_downloaded = Signal(str, str, bytes, ImageMetadata)  # url, name.ext, image bytes, metadata
+    image_downloaded = Signal(str, str, ImageMetadata)  # url, name.ext, metadata
     download_progress = ImageDownloadWorker._signals.progress
     download_error = ImageDownloadWorker._signals.error
 
@@ -151,7 +151,7 @@ class ImageDownloader(QObject):
             self.download_error.emit(url, err)
             return
         self.cache.add_image(name, image, metadata.size)
-        self.image_downloaded.emit(url, name, image, metadata)
+        self.image_downloaded.emit(url, name, metadata)
         
     def download_metadata(self, url: str, name: str=''):
         url_ = QUrl(url)

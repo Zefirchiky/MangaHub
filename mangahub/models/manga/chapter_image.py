@@ -1,10 +1,13 @@
+from typing import ClassVar
 from ..tags.tag_model import TagModel
-from ..images import ImageMetadata
-from pydantic import PrivateAttr
+from ..images import ImageMetadata, ImageCache
 
 
 class ChapterImage(TagModel):
+    _cache: ClassVar[ImageCache] = None
     number: int
-    _image: bytes = PrivateAttr(b'')
     metadata: ImageMetadata = None
     image_dir: str = ''
+    
+    def get_image(self) -> bytes:
+        return 

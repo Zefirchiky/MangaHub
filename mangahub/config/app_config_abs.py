@@ -2,19 +2,36 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Type, get_type_hints, get_origin, get_args, cast
+from types import UnionType
                     
                     
 class Setting[T]:
-    def __init__(self, value: T, name: str='', options=None, level=1, description=''):
+    """Class to create setting in the Config. Is strongly typed.
+    Create with `Setting[value_type](value)`.
+    
+    By default Setting will automatically try parsing `value` into instance of `value_type`. Specify `strongly_typed` to change it.
+    
+    Value of the class can be accessed by calling the instance: 
+    
+    ```number = Setting[int](15, 'Some Number')
+    number()   # returns a number._value (15)```
+    """
+    def __init__(self, 
+                 value: T, name: str='', 
+                 options=None, level=1, description='', 
+                 strongly_typed: bool=False):
         self._value = value
         self.name = name
         self.options = options
+        self.level = level
         self.description = description
         
+        self.strongly_typed = strongly_typed
         self._type: Type[T] | None = None
         
     def __set_name__(self, owner: Type, name: str):
         """Called when the Setting is declared in a class."""
+        self._attribute_owner = owner
         self._attribute_name = name
         
         if hasattr(self, "__orig_class__"):
@@ -29,18 +46,55 @@ class Setting[T]:
         # Handle cases like Setting[int]
         if origin is Setting and args:
             self._type = args[0]
+            
+        self._check_type(self._value)
         
     def __call__(self) -> T:
         return self._value
     
     def __set__(self, instance, value: T) -> None:
+        self._check_type(value)
+    
+    def _check_type(self, value: T) -> None:
         """Set a new value with type checking."""
-        if self._type is not None and value is not None and not isinstance(value, self._type):
-            try:
-                # Try to convert value to the expected type
-                value = cast(T, self._type(value))
-            except (ValueError, TypeError):
-                raise TypeError(f"Value for {self.name} must be of type {self._type.__name__}, got {type(value).__name__}")
+        type_origin = get_origin(self._type)
+        type_args = get_args(self._type)
+        
+        if self._type is not None and value is not None:
+            if type_origin is UnionType:
+                if not isinstance(value, type_args):
+                    if self.strongly_typed:
+                        raise TypeError(f"Value for Setting '{self.name}' ({self._attribute_owner.__name__}.{self._attribute_name}) must be of types {type_args} when Setting.strongly_typed is True, got {type(value).__name__}")
+                    
+                    converted = False
+                    for t in type_args:
+                        try:
+                            # Try to convert value to the expected type
+                            value = cast(T, t(value))
+                            converted = True
+                        except (ValueError, TypeError):
+                            continue
+                        
+                    if not converted:
+                        raise TypeError(f"Value for Setting '{self.name}' ({self._attribute_owner.__name__}.{self._attribute_name}) must be of type {type_args} or a value that can be converted to it, got {type(value)}. "
+                                            f"Failed to create instance of {(t.__name__ for t in type_args)} from value: {value} ({type(value).__name__})")
+                
+            # Handle complex types (dict[str, int], list[dict[int, int]])
+            elif type_origin and type_args:
+                print(f"Value for Setting '{self.name}' can not be typechecked, {self._type} is a complex type and is not supported yet. Skipping...")
+                self._type = type_origin
+                
+            # Handle simple types (int, str)
+            if not isinstance(value, self._type):
+                if self.strongly_typed:
+                    raise TypeError(f"Value for Setting '{self.name}' ({self._attribute_owner.__name__}.{self._attribute_name}) must be of type {self._type} when Setting.strongly_typed is True, got {type(value).__name__}")
+                try:
+                    # Try to convert value to the expected type
+                    value = cast(T, self._type(value))
+                except (ValueError, TypeError):
+                    raise TypeError(f"Value for Setting '{self.name}' ({self._attribute_owner.__name__}.{self._attribute_name}) must be of type {self._type} or a value that can be converted to it, got {type(value)}. "
+                                    f"Failed to create instance of {self._type.__name__} from value: {value} ({type(value).__name__})")
+                    
         
         self._value = value
         

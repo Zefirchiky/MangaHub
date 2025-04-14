@@ -3,7 +3,7 @@ import multiprocessing
 from loguru import logger
 
 from .app_config_abs import Config, Setting
-from resources.enums import SU, StorageUnit
+from resources.enums import SU, StorageSize
 from directories import LOG_DIR, CONF_FILE
 
 logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", level="DEBUG", retention=10)
@@ -14,11 +14,11 @@ class AppConfig(Config):
     dev_mode = Setting[bool](True, 'Dev Mode')
     
     class ImageDownloading(Config):
-        preferable_format = Setting[str]('WEBP')
+        preferable_format = Setting[str]('WEBP', 'Converted Images Format')
         
-        max_threads = Setting[int](multiprocessing.cpu_count())
-        chunk_size = Setting[StorageUnit](8*SU.KB, 'Image chunk size')
-        image_update_every = Setting[int](10)        # After image downloaded image_update_every% of size, update
+        max_threads = Setting[int](multiprocessing.cpu_count(), 'Max Download Threads')
+        chunk_size = Setting[StorageSize](8*SU.KB, 'Image chunk size')
+        image_update_every = Setting[int](10, 'Image Update Percentage')        # After image downloaded image_update_every% of size, update
         
         
         PIL_SUPPORTED_EXT = Setting[dict[str, str]]({

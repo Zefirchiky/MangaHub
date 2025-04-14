@@ -2,17 +2,22 @@ import os
 import shutil
 from typing import TYPE_CHECKING
 
-from directories import MANGA_DIR
+from directories import MANGA_DIR, IMAGES_CACHE_DIR
 from loguru import logger
 from models import URL
 from models.manga import ChapterImage, Manga, MangaChapter
 from models.abstract import ChapterNotFoundError
+from models.images import ImageCache, ImageMetadata
 from services.parsers import MangaChaptersParser, UrlParser
 from services.repositories import MangaRepository
 from services.scrapers import MangaDexScraper, MangaSiteScraper
+from services.downloaders import ImageDownloader
+
+from config import AppConfig
 from utils import MM
 
 from .sites_manager import SitesManager
+from .chapter_image_loader import ChapterImageLoader
 
 if TYPE_CHECKING:
     from mangahub.main import App
@@ -29,6 +34,10 @@ class MangaManager:
         self.sites_manager: SitesManager = self.app.sites_manager
         self.dex_scraper = MangaDexScraper()
         self.sites_scraper = MangaSiteScraper(self.sites_manager)
+        
+        self.image_cache = ImageCache(IMAGES_CACHE_DIR)     # TODO: give sizes
+        self.image_downloader = ImageDownloader(self.image_cache, AppConfig.ImageDownloading.max_threads())
+        self.chapter_loader = ChapterImageLoader(self.image_downloader, self.image_cache)
         
         logger.success('MangaManager initialized')
         
@@ -126,7 +135,7 @@ class MangaManager:
         logger.warning(f"Manga '{manga_name}' was not found for deletion")
         return
         
-    def get_chapter(self, manga: Manga, num: float):
+    def create_chapter(self, manga: Manga, num: float):
         if chapter := MangaChaptersParser(manga).get(num):
             return chapter
         
@@ -141,7 +150,18 @@ class MangaManager:
             name = self.sites_scraper.get_chapter_name(self.sites_manager.get_site(manga.site), manga, num)
         
         upload_date = self.dex_scraper.get_chapter_upload_date(manga.id_dex, num)
+        
         chapter = MangaChapter(number=num, name=name, id_dex=id_dex, upload_date=upload_date)
+        return chapter
+    
+    def get_chapter(self, manga: Manga, num: int) -> MangaChapter:
+        chapter = self.create_chapter(manga, num)
+        urls = self.get_chapter_urls(manga, chapter)
+        for i, url in enumerate(urls):
+            chapter._images[i] = ChapterImage(
+                number   = i,
+                metadata = ImageMetadata(url=url)
+            )
         return chapter
     
     def get_image(self, chapter: MangaChapter, num):
@@ -161,13 +181,10 @@ class MangaManager:
                 images.append(image)
             return images
     
-    def get_chapter_images(self, manga: Manga, chapter: MangaChapter):
+    def get_chapter_urls(self, manga: Manga, chapter: MangaChapter):
         logger.info(f"Getting images for '{manga.name}' chapter {chapter.number}")
-        
-        sites = list(manga.backup_sites)
-        sites.insert(0, manga.site)
-        images = []
-        for site in sites:
+
+        for site in manga.get_all_sites():
             if site == 'MangaDex':
                 if not chapter.id_dex:
                     chapter.id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, chapter.number)
@@ -176,9 +193,28 @@ class MangaManager:
                         continue
                     logger.success(f"Got id_dex for '{manga.name}' chapter {chapter.number}")
                     
-                images = self.dex_scraper.get_chapter_images(chapter.id_dex)
+                urls = self.dex_scraper.get_chapter_image_urls(chapter.id_dex)
             else:
-                images = self.sites_scraper.get_chapter_images(self.sites_manager.get_site(site), manga, chapter.number)
+                urls = self.sites_scraper.get_chapter_image_urls(self.sites_manager.get_site(site), manga, chapter.number)
+                
+        return urls
+    
+    def get_chapter_images(self, manga: Manga, chapter: MangaChapter):
+        logger.info(f"Getting images for '{manga.name}' chapter {chapter.number}")
+
+        images = []
+        for site in manga.get_all_sites():
+            if site == 'MangaDex':
+                if not chapter.id_dex:
+                    chapter.id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, chapter.number)
+                    if not chapter.id_dex:
+                        logger.warning(f"No id_dex for chapter {chapter.number} of '{manga.name}'")
+                        continue
+                    logger.success(f"Got id_dex for '{manga.name}' chapter {chapter.number}")
+                    
+                images = self.dex_scraper.get_chapter_image_urls(chapter.id_dex)
+            else:
+                images = self.sites_scraper.get_chapter_image_urls(self.sites_manager.get_site(site), manga, chapter.number)
                 
             if images:
                 break

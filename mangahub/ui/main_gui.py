@@ -1,18 +1,21 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from app_status import AppStatus
-from directories import IMAGES_DIR, RESOURCES_DIR
+from PySide6.QtCore import QPoint, Qt, QTimer
+from PySide6.QtGui import QCursor, QIcon
+from PySide6.QtWidgets import QMainWindow, QStackedLayout, QWidget
+from loguru import logger
+
 from ui.multi_window import AddMangaWindow, SettingsWindow
 from ui.widgets import IconRepo, ImageWidget, SelectionMenu
 from ui.widgets.dashboard import Dashboard, MediaCard
 from ui.widgets.scroll_areas import MangaViewer, NovelViewer
 from ui.widgets.slide_menus import SideMenu
-from loguru import logger
-from PySide6.QtCore import QPoint, Qt, QTimer
-from PySide6.QtGui import QCursor, QIcon
-from PySide6.QtWidgets import QMainWindow, QStackedLayout, QWidget
+
+from controllers import ChapterImageLoader
+from app_status import AppStatus
 from utils import MM  # TODO
+from directories import IMAGES_DIR, RESOURCES_DIR
 
 if TYPE_CHECKING:
     from main import App
@@ -69,6 +72,7 @@ class MainWindow(QMainWindow):
         self.dashboard = Dashboard()
         self.manga_viewer = MangaViewer()
         self.novel_viewer = NovelViewer()
+        self.chapter_image_loader = self.manga_manager.chapter_loader
 
         self.selection_menu.show()
         
@@ -76,11 +80,11 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(1, self.manga_viewer)
         self.root_layout.insertWidget(2, self.novel_viewer)
         
-        for manga in self.app_controller.get_all_manga().values():
-            mc = MediaCard()
-            mc.set_media(manga)
-            self.dashboard.add_card(mc)
-            mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
+        # for manga in self.app_controller.get_all_manga().values():
+        #     mc = MediaCard()
+        #     mc.set_media(manga)
+        #     self.dashboard.add_card(mc)
+        #     mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
 
         self.current_mc: MediaCard | None = None
         
@@ -113,22 +117,11 @@ class MainWindow(QMainWindow):
     def show_manga(self):
         self.manga_viewer.clear()
         
-        images = self.manga_manager.get_images(self.app_controller.state._manga, self.app_controller.state._chapter)
-        self.manga_viewer.set_images(images)
-        
-        # placeholders = self.app_controller.get_manga_chapter_placeholders()
-        # worker = self.manga_manager.get_chapter_images(self.app_controller.state._manga, self.app_controller.state._chapter)
-        
-        # self.manga_viewer.prev_button.setEnabled(not self.app_controller.state.is_first())
-        # self.manga_viewer.next_button.setEnabled(not self.app_controller.state.is_last())
-    
-        # current_y = 0
-        # for width, height in placeholders:
-        #     self.manga_viewer.add_placeholder(width, height, current_y)
-        #     current_y += height + self.manga_viewer._vertical_spacing
-        
-        # worker.signals.item_completed.connect(lambda r: self.manga_viewer.replace_placeholder(r[0], r[1].content))
-        # self.app_controller.state.set_worker(worker)
+        # manga, chapter = self.app_controller.state._manga, self.app_controller.state._chapter
+        # chapter = self.manga_manager.get_chapter(manga, self.app_controller.state.chapter_num)
+        # self.chapter_image_loader.load_chapter(manga.id_, chapter)
+        # self.chapter_image_loader.placeholder_ready.connect(self.manga_viewer.set_images(placeholders))     # TODO
+        self.manga_viewer.add_placeholder()
         
         self.root_layout.setCurrentIndex(1)
 

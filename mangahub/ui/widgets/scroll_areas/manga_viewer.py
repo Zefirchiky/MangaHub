@@ -1,13 +1,34 @@
 from ui.widgets.svg import SvgIcon
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QPixmap
-from PySide6.QtWidgets import (QComboBox, QGraphicsPixmapItem,
+from PySide6.QtWidgets import (QComboBox, QGraphicsPixmapItem, QGraphicsScene,
                                QGraphicsRectItem, QPushButton)
 
 from directories import ICONS_DIR
 from models.manga import Manga, MangaChapter, ChapterImage
 from .smooth_graphics_view import SmoothGraphicsView
 
+
+class MangaViewerScene(QGraphicsScene):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._image_items: dict[int, QGraphicsPixmapItem] = {}
+        self.cur_index = 0
+        self.cur_y = 0
+        
+    def add_placeholder(self, index: int, pixmap: QPixmap):
+        item = QGraphicsPixmapItem(pixmap)
+        self._image_items[index] = item
+        
+        if index - 1 == self.cur_index:
+            self.cur_y += item.boundingRect().height()
+            item.setPos(0, self.cur_y)
+            
+            if index > len(self._image_items):
+                self.addItem(item)
+                self._image_items[index] = item
+            else:
+                pass
 
 class MangaViewer(SmoothGraphicsView):
     def __init__(self, parent=None):
@@ -92,7 +113,7 @@ class MangaViewer(SmoothGraphicsView):
     def set_images(self, images: list[ChapterImage]):
         y = 0
         for image in images:
-            self.add_image(image._image, image.metadata.width, image.metadata.height, (0 - image.metadata.width) // 2, y)
+            self.add_image(image.get_image(), image.metadata.width, image.metadata.height, (0 - image.metadata.width) // 2, y)
             y += image.metadata.height + self._vertical_spacing
             
     def set_manga(self, manga: Manga):
