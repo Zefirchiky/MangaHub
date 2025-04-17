@@ -81,6 +81,7 @@ class ConfigMeta(type):
     
     def __new__(mcs, name: str, bases: tuple, namespace: dict) -> Type:
         cls = super().__new__(mcs, name, bases, namespace)
+        cls._config_name = name
         
         # Process nested Config classes to make them proper attributes
         for key, value in list(cls.__dict__.items()):
@@ -176,11 +177,15 @@ class Config(metaclass=ConfigMeta):
         collect_settings(self)
         return result
     
-    # def __str__(self) -> str:
-    #     s = ''
-    #     for key, value in self.get_settings_dict().items():
-    #         if isinstance(key, Config):
-    #             s += str(key)
-    #         else:
-    #             s += f"{value._attribute_owner.__name__}.{value._attribute_name}: {str(value)}\n"
-    #     return s
+    def __str__(self) -> str:
+        def handle_dict(dict_: dict[str, Setting | dict], indent: int=1) -> str:
+            s = ''
+            for key, value in dict_.items():
+                if isinstance(value, dict):
+                    s += '  ' * indent + f'{key}:\n'
+                    s += handle_dict(value, indent + 1)
+                else:
+                    s += '  ' * indent + f'{value._attribute_name}: {str(value)}\n'
+            return s
+        
+        return f'{self._config_name}:\n' + handle_dict(self.get_settings_dict())
