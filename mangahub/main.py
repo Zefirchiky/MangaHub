@@ -2,7 +2,7 @@ import ctypes
 import sys
 
 from directories import (IMAGES_CACHE_DIR, MANGA_JSON, NOVELS_CONF_DIR, NOVELS_JSON,
-                         RESOURCES_DIR, SITES_JSON, STD_DIR)
+                         RESOURCES_DIR, SITES_JSON, STD_DIR, CONF_FILE)
 from config import CM
 from controllers import (AppController, MangaManager, NovelsManager,
                          SitesManager)
@@ -85,15 +85,7 @@ class App:
         self.cache = ImageCache(IMAGES_CACHE_DIR, 0)
         ChapterImage._cache = self.cache
         self.d = ImageDownloader(self.cache)
-        # self.d.download_image('https://us.rule34.xxx/images/1476/1da2ed61f58c9d178c0c8c9684b2b3c8.png', 'best_one')
-        # self.d.download_images({
-        #     'https://us.rule34.xxx/images/1476/1da2ed61f58c9d178c0c8c9684b2b3c8.png': 'best_one',
-        #     'https://rule34ai.art/wp-content/uploads/2025/03/Jane-Doe-pussy-slit-728x825.jpeg.webp': '',
-        #     'https://us.rule34.xxx/images/2994/553666bb7494648e5f77773b8ac4c32dd8259485.png': '',
-        #     'https://hentailib.net/images/posts/700000/630000/624648.webp': '',
-        #     'https://rule34.xxx//samples/2696/sample_b7108e8e90d87bee09117a7db37e89c1efb0820c.jpg': '',
-        #     'https://66.media.tumblr.com/a5a03f5d50c230787bcc675d644ad09e/tumblr_n5zohrPGAW1ryn7v4o10_1280.jpg': '',
-        #     })
+
         self.d.metadata_downloaded.connect(print)
         self.d.download_error.connect(print)
         # self.d.image_downloaded.connect(lambda url, name, image, meta: MM.show_message(MM.MessageType.INFO, f"Image downloaded: {name}"))
@@ -106,6 +98,10 @@ class App:
         
         logger.success(f"MangaHub v{AppConfig.version()} initialized")
         self.gui_app.exec()
+        
+        # AppConfig().save(CONF_FILE)
+        logger.success("AppConfig was saved successfully")
+        
         logger.info(f"MangaHub v{AppConfig.version()} finished")
 
 

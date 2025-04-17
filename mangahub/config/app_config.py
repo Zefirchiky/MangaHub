@@ -17,7 +17,7 @@ class AppConfig(Config):
         preferable_format = Setting[str]('WEBP', 'Converted Images Format')
         
         max_threads = Setting[int](multiprocessing.cpu_count(), 'Max Download Threads')
-        chunk_size = Setting[StorageSize](8*SU.KB, 'Image chunk size')
+        chunk_size = Setting[StorageSize](8*SU.KB, 'Image chunk size', strongly_typed=False)
         image_update_every = Setting[int](10, 'Image Update Percentage')        # After image downloaded image_update_every% of size, update
         
         
@@ -31,10 +31,9 @@ class AppConfig(Config):
             'ICO':  'ICO',
             'TIFF': 'TIFF',
             'TIF':  'TIFF'
-        })
+        }, 'Formats that PIL supports')
         
-# try:
-#     AppConfig.load(CONF_FILE)
-# except FileNotFoundError:
-#     logger.warning('Config file wasn\'t found. New one will be created.')
-# AppConfig().save(CONF_FILE)
+try:
+    AppConfig.load(CONF_FILE)
+except FileNotFoundError:
+    logger.warning('Config file wasn\'t found. New one will be created.')

@@ -8,8 +8,8 @@ from models import URL
 from models.manga import ChapterImage, Manga, MangaChapter
 from models.abstract import ChapterNotFoundError
 from models.images import ImageCache, ImageMetadata
-from services.parsers import MangaChaptersParser, UrlParser
-from services.repositories import MangaRepository
+from services.parsers import UrlParser
+from services.repositories import MangaChaptersRepository, MangaRepository
 from services.scrapers import MangaDexScraper, MangaSiteScraper
 from services.downloaders import ImageDownloader
 
@@ -136,7 +136,7 @@ class MangaManager:
         return
         
     def create_chapter(self, manga: Manga, num: float):
-        if chapter := MangaChaptersParser(manga).get(num):
+        if chapter := MangaChaptersRepository(manga).get(num):
             return chapter
         
         id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, num)
@@ -155,6 +155,9 @@ class MangaManager:
         return chapter
     
     def get_chapter(self, manga: Manga, num: int) -> MangaChapter:
+        if chapter := manga.get_chapter(num):
+            return chapter
+            
         chapter = self.create_chapter(manga, num)
         urls = self.get_chapter_urls(manga, chapter)
         for i, url in enumerate(urls):

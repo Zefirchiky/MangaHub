@@ -9,7 +9,7 @@ from ..tags.tag_model import TagModel
 from .abstract_chapter import AbstractChapter, ChapterNotFoundError
 
 
-class AbstractMedia(ABC, TagModel):
+class AbstractMedia[ChapterType](ABC, TagModel):
     name: str
     id_: str
     description: str = ''
@@ -45,10 +45,11 @@ class AbstractMedia(ABC, TagModel):
         sites.insert(0, self.site)
         return sites
             
-    def get_chapter(self, chapter_num: int | float) -> AbstractChapter | ChapterNotFoundError:
+    def get_chapter(self, chapter_num: int | float, default_return=None) -> ChapterType:
         if chapter := self._chapters_data.get(chapter_num):
             return chapter
-        raise ChapterNotFoundError(f'Chapter {chapter_num} not found in {self}')
+        return default_return
+        # raise ChapterNotFoundError(f'Chapter {chapter_num} not found in {self}')
             
     def check_chapter(self, chapter_num: int | float) -> None:
         self.checked_chapters.add(chapter_num)
