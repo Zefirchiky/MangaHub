@@ -3,6 +3,7 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from xml.dom import minidom
+from loguru import logger
 
 
 class SVGManipulator:
@@ -257,6 +258,6 @@ class SVGManipulator:
                     if attr in elem.attrib:
                         del elem.attrib[attr]
             
-            print("Warning: lxml not available. Limited simplification applied.")
+            logger.warning("lxml not available. Limited simplification applied.")
             
         return self

@@ -104,7 +104,6 @@ class Config(metaclass=ConfigMeta):
                 continue
                 
             if isinstance(value, Setting):
-                print(value)
                 if hasattr(value(), 'to_dict') and callable(value().to_dict):
                     result[key] = value().to_dict()
                 else:

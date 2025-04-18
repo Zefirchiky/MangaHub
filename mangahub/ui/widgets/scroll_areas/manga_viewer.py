@@ -1,38 +1,113 @@
-from ui.widgets.svg import SvgIcon
-from PySide6.QtCore import QSize, Qt
+from queue import Queue
+
+from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QPixmap
 from PySide6.QtWidgets import (QComboBox, QGraphicsPixmapItem, QGraphicsScene,
                                QGraphicsRectItem, QPushButton)
 
+from loguru import logger
+
+from ui.widgets.svg import SvgIcon
 from directories import ICONS_DIR
 from models.manga import Manga, MangaChapter, ChapterImage
 from .smooth_graphics_view import SmoothGraphicsView
+from config import AppConfig
 
 
 class MangaViewerScene(QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.render
         self._image_items: dict[int, QGraphicsPixmapItem] = {}
-        self.cur_index = 0
+        self._pending_images: dict[int, QPixmap] = {}
+        self._temp_placeholder_storage: dict[int, QPixmap] = {}
+        self.cur_index = -1
         self.cur_y = 0
         
-    def add_placeholder(self, index: int, pixmap: QPixmap):
-        item = QGraphicsPixmapItem(pixmap)
-        self._image_items[index] = item
+        self._width = 0
+        self._height = 0
         
-        if index - 1 == self.cur_index:
-            self.cur_y += item.boundingRect().height()
-            item.setPos(0, self.cur_y)
+        self._image_queue = Queue()
+        self._image_timer = QTimer(self)
+        self._image_timer.timeout.connect(self._replace_placeholder)
+        self._image_processing = False
+        
+        self._placeholder_queue = Queue()
+        self._placeholder_timer = QTimer(self)
+        self._placeholder_timer.timeout.connect(self._add_placeholder)
+        self._placeholder_processing = False
+        
+    def add_placeholder(self, index: int, pixmap: QPixmap) -> bool:
+        self._placeholder_queue.put((index, pixmap))
+        if not self._placeholder_processing:
+            self._placeholder_processing = True
+            self._placeholder_timer.start(AppConfig.UI.placeholder_loading_intervals())
             
-            if index > len(self._image_items):
+    def _add_placeholder(self) -> bool:
+        if not self._placeholder_queue.empty():
+            index, pixmap = self._placeholder_queue.get()
+            item = QGraphicsPixmapItem(pixmap if index not in self._pending_images else self._pending_images.pop(index))
+            item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+            
+            if index - 1 == self.cur_index: # If current index is 1 more that prev
+                self.cur_index += 1
+                item.setPos(-pixmap.width() // 2, self.cur_y)
+                self.cur_y += item.boundingRect().height()
                 self.addItem(item)
                 self._image_items[index] = item
+                
+                if self._temp_placeholder_storage:
+                    keys = sorted(list(self._temp_placeholder_storage.keys()))
+                    pixmap = self._temp_placeholder_storage.pop(keys[0])
+                    is_added = self.add_placeholder(keys[0], pixmap)
+                    if not is_added:
+                        return False
+                
+                return True
+                
             else:
-                pass
+                self._temp_placeholder_storage[index] = pixmap
+                return False
+            
+        else:
+            self._placeholder_processing = False
+            self._placeholder_timer.stop()
+            
+    def replace_placeholder(self, index: int, pixmap: QPixmap):
+        self._image_queue.put((index, pixmap))
+        if not self._image_processing:
+            self._image_processing = True
+            self._image_timer.start(AppConfig.UI.image_loading_intervals())
+            
+    def _replace_placeholder(self):
+        if not self._image_queue.empty():
+            index, pixmap = self._image_queue.get()
+            if placeholder := self._image_items.get(index):
+                placeholder.setPixmap(pixmap)
+            else:
+                self._pending_images[index] = pixmap
+        
+        else:
+            self._image_processing = False
+            self._image_timer.stop()
+            
+    def _placeholders_load_finished(self):
+        """Returns missing placeholder numbers"""
+        if self._temp_placeholder_storage:
+            keys = list(self._temp_placeholder_storage.keys())
+            self._temp_placeholder_storage = {}
+            return [i for i in range(self.cur_index+1, keys[-1]) if i not in keys]
+            
+    def clear(self):
+        self._image_items = {}
+        self.cur_index, self.cur_y = -1, 0
+        super().clear()
 
 class MangaViewer(SmoothGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._scene = MangaViewerScene(parent)
+        self.setScene(self._scene)
         
         self._vertical_spacing = 0
         self._base_width = 480
@@ -75,47 +150,14 @@ class MangaViewer(SmoothGraphicsView):
         
         self.manga = None
 
-    def add_placeholder(self, width, height, y_pos):
-        placeholder = QGraphicsRectItem((0 - width) // 2, y_pos, width, height)
-        placeholder.setBrush(QColor(200, 200, 200, 50))  # Light grey placeholder
-        self.scene.addItem(placeholder)
-        self._placeholders.append(placeholder)
+    def add_placeholder(self, index: int, pixmap: QPixmap):
+        self._scene.add_placeholder(index, pixmap)
 
-    def replace_placeholder(self, index, image_data):
-        if index >= len(self._placeholders):
-            return
+    def replace_placeholder(self, index: int, image_data: bytes):
+        img = QPixmap()
+        img.loadFromData(image_data)
+        self._scene.replace_placeholder(index, img)
 
-        placeholder = self._placeholders[index]
-        self.scene.removeItem(placeholder)
-        self._placeholders[index] = None 
-
-        pixmap = QPixmap()
-        if pixmap.loadFromData(image_data):
-            item = QGraphicsPixmapItem(pixmap)
-            item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-            item.setPos(placeholder.rect().x(), placeholder.rect().y())
-            self.scene.addItem(item)
-            
-    def add_image(self, image_data, width, height, x, y):
-        if not image_data:
-            image = QGraphicsRectItem(x, y, width, height)
-            image.setBrush(QColor(200, 200, 200, 50))
-        else:
-            pixmap = QPixmap()
-            if pixmap.loadFromData(image_data):
-                image = QGraphicsPixmapItem(pixmap)
-                image.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-                image.setPos(x, y)
-        
-        self.scene.addItem(image)
-        return image
-        
-    def set_images(self, images: list[ChapterImage]):
-        y = 0
-        for image in images:
-            self.add_image(image.get_image(), image.metadata.width, image.metadata.height, (0 - image.metadata.width) // 2, y)
-            y += image.metadata.height + self._vertical_spacing
-            
     def set_manga(self, manga: Manga):
         self.manga = manga
         self.chapter_selection.clear()
@@ -153,9 +195,7 @@ class MangaViewer(SmoothGraphicsView):
         
     def clear(self):
         self.verticalScrollBar().setValue(0)
-        self._image_items = []
-        self._placeholders = []
-        self.scene.clear()
+        self._scene.clear()
 
     def resizeEvent(self, event):
         self.close_button.move(self.width() - self.close_button.width() - 15, 10)

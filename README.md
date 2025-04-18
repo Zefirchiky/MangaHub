@@ -49,7 +49,7 @@ Huh?
 - Saving media (ZIP)
 - Music
 - Easy color themes saving and loading
-- Better file compression (JXL)
+- Better image compression (JXL)
 
 ### LONG-LONG-TERM TODO
 - Multi-platforming

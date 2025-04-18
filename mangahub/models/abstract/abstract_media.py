@@ -9,7 +9,7 @@ from ..tags.tag_model import TagModel
 from .abstract_chapter import AbstractChapter, ChapterNotFoundError
 
 
-class AbstractMedia[ChapterType](ABC, TagModel):
+class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
     name: str
     id_: str
     description: str = ''
@@ -29,12 +29,12 @@ class AbstractMedia[ChapterType](ABC, TagModel):
     first_chapter: int | float = 0
     last_chapter: int | float = 0
     checked_chapters: set[int | float] = set()
-    _chapters_data: dict[int | float, AbstractChapter] = PrivateAttr(default_factory=dict)
+    _chapters_data: dict[int | float, ChapterType] = PrivateAttr(default_factory=dict)
         
     def add_backup_site(self, site_name) -> None:
         self.backup_sites.add(site_name)
                 
-    def add_chapter(self, chapter: AbstractChapter) -> AbstractMedia:
+    def add_chapter(self, chapter: ChapterType) -> AbstractMedia:
         if chapter.number not in self._chapters_data.keys():
             self._chapters_data[chapter.number] = chapter
             self.update()

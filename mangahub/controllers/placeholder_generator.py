@@ -5,7 +5,7 @@ from config import CM
 
 class PlaceholderGenerator:
     @staticmethod
-    def static(width: int, height: int, text: str='', color: QColor=QColor(200, 200, 200)):  # Use ColorManager
+    def static(width: int, height: int, text: str='', color: QColor=QColor('#202020')):  # Use ColorManager
         pixmap = QPixmap(width, height)
         pixmap.fill(CM.transparent)
         
@@ -17,8 +17,9 @@ class PlaceholderGenerator:
         
         if text:
             font = QFont("Arial", 12)
+            font.setStyleStrategy(QFont.StyleStrategy.PreferAntialias)
             painter.setFont(font)
-            painter.setPen(QColor(0, 0, 0, 180))
+            painter.setPen(QColor(220, 220, 220, 180))
             painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, text)
                     
         painter.end()

@@ -134,7 +134,7 @@ class MM:
             cls.queue.clear()
             return cls._instance._show_message(message_type, message_text, duration=duration)
     
-    def _show_message(self, message_type=MessageType.ERROR, message_text=None, duration=5000, progress=False):  # ! duration doesn't work
+    def _show_message(self, message_type=MessageType.ERROR, message_text=None, duration=5000, progress=False):
         message = Message(self.window, message_type, message_text, self.width, self.min_height)
         message.setGeometry(self.x, self.window.height(), message.width(), message.height())
         message.show()

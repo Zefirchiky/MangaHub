@@ -2,16 +2,12 @@ import asyncio
 import aiohttp
 import io
 from tqdm.asyncio import tqdm_asyncio as tqdm
-from pathlib import Path
 from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal, QUrl
 from PIL import Image
-from icecream import ic
 
 from models.images import ImageMetadata, ImageCache
-from resources.enums import StorageSize
 from utils.image_dimensions import get_dimensions_from_bytes
 
-from directories import IMAGES_CACHE_DIR
 from config import AppConfig
 
 
@@ -25,7 +21,7 @@ class ImageDownloadWorker(QRunnable):
     """Worker thread for downloading an image without blocking the GUI"""
     _signals = ImageDownloadWorkerSignals()
     
-    def __init__(self, url: str, callback, ext: str='', metadata_only: bool = False, chunk_size: int=8192, update_p: int=1):
+    def __init__(self, url: str, callback, ext: str='', metadata_only: bool = False, chunk_size: int=8192, update_p: int=1, convert=True):
         super().__init__()
         
         self.url = url
@@ -35,6 +31,7 @@ class ImageDownloadWorker(QRunnable):
         self.metadata_only = metadata_only
         self.chunk_size = chunk_size
         self.update_p = update_p
+        self.convert = convert
     
     def run(self):
         loop = asyncio.new_event_loop()
@@ -65,7 +62,8 @@ class ImageDownloadWorker(QRunnable):
                             unit='B',
                             unit_scale=True,
                             desc=f"Downloading {self.url}",
-                            disable=False
+                            dynamic_ncols=True,
+                            position=2
                         )
                     
                     async for chunk in response.content.iter_chunked(self.chunk_size):
@@ -105,13 +103,16 @@ class ImageDownloadWorker(QRunnable):
                     if size > 0 and downloaded != size:
                         return None, None, Exception(f'Size downloaded does not match with size expected: {downloaded}/{size} bytes')
                     
-                    image_data = io.BytesIO(image_data)
-                    with image_data as f:
-                        img = Image.open(f)
-                        if self.ext != format:
-                            img.save(f, self.ext, optimize=True)
-                            
-                        return image_data.getvalue(), metadata, None
+                    if self.convert:
+                        image_data = io.BytesIO(image_data)
+                        with image_data as f:
+                            img = Image.open(f)
+                            if self.ext != format:
+                                img.save(f, self.ext, optimize=True)    # TODO: Better conversion
+                                
+                            return image_data.getvalue(), metadata, None
+                        
+                    return image_data, metadata, None
                         
                 
         except Exception as e:
@@ -125,6 +126,7 @@ class ImageDownloader(QObject):
     image_downloaded = Signal(str, str, ImageMetadata)  # url, name.ext, metadata
     download_progress = ImageDownloadWorker._signals.progress
     download_error = ImageDownloadWorker._signals.error
+    finished = Signal(bool)
 
     def __init__(self, cache: ImageCache, max_threads: int=''):
         super().__init__()
@@ -138,22 +140,28 @@ class ImageDownloader(QObject):
             
         self.workers = {}
         
-    def _metadata_downloaded(self, url, result):
+    def _metadata_downloaded(self, url, name, result, emit_finish):
         _, metadata, err = result
         if err:
             self.download_error.emit(url, err)
             return
+        self.workers.pop(name)
+        if emit_finish and not self.workers:
+            self.finished.emit(True)
         self.metadata_downloaded.emit(url, metadata)
         
-    def _image_downloaded(self, url, name, result):
+    def _image_downloaded(self, url, name, result, emit_finish):
         image, metadata, err = result
         if err:
             self.download_error.emit(url, err)
             return
+        self.workers.pop(name)
+        if emit_finish and not self.workers:
+            self.finished.emit(True)
         self.cache.add_image(name, image, metadata.size)
         self.image_downloaded.emit(url, name, metadata)
         
-    def download_metadata(self, url: str, name: str=''):
+    def download_metadata(self, url: str, name: str='', emit_finish=True):
         url_ = QUrl(url)
         if not url_.isValid():
             self.download_error.emit(url, 'Url is not valid')
@@ -167,19 +175,19 @@ class ImageDownloader(QObject):
         else:
             name, _ = url.split('/')[-1].split('.')
         name, ext = str(name), str(ext)
-        filepath = self.cache / f'{name}.{ext.lower()}'
+        name = f'{name}.{ext.lower()}'
             
         worker = ImageDownloadWorker(
             url        = url,
             ext        = ext,
-            callback   = lambda result: self._metadata_downloaded(url, filepath, result),
+            callback   = lambda result: self._metadata_downloaded(url, name, result, emit_finish),
             chunk_size = AppConfig.ImageDownloading.chunk_size().bytes_value,
             metadata_only=True
         )
         self.workers[name] = worker
         self.pool.start(worker)
         
-    def download_image(self, url: str, name: str='', update_percentage=1):
+    def download_image(self, url: str, name: str='', update_percentage=1, convert=True, emit_finish=True):
         url_ = QUrl(url)
         if not url_.isValid():
             self.download_error.emit(url, 'Url is not valid')
@@ -193,18 +201,20 @@ class ImageDownloader(QObject):
         else:
             name, _ = url.split('/')[-1].rsplit('.', 1)
         name, ext = str(name), str(ext)
+        name = f'{name}.{ext.lower()}'
             
         worker = ImageDownloadWorker(
             url        = url,
             ext        = ext,
-            callback   = lambda result: self._image_downloaded(url, f'{name}.{ext.lower()}', result),
+            callback   = lambda result: self._image_downloaded(url, name, result, emit_finish),
             chunk_size = AppConfig.ImageDownloading.chunk_size().bytes_value,
-            update_p   = update_percentage
+            update_p   = update_percentage,
+            convert    = convert
         )
         self.workers[name] = worker
         self.pool.start(worker)
         
-    def download_images(self, urls: dict[str, str], update_percentage=10, metadata_only=False):
+    def download_images(self, urls: dict[str, str], update_percentage=10, metadata_only=False, convert=True):
         """Downloads images async.
 
         Args:
@@ -214,9 +224,9 @@ class ImageDownloader(QObject):
         """
         if metadata_only:
             for url, name in urls.items():
-                self.download_metadata(url)
+                self.download_metadata(url, emit_finish=False)
                 
         else:
             for url, name in urls.items():
-                self.download_image(url, name, update_percentage)
+                self.download_image(url, name, update_percentage, convert=convert, emit_finish=True)
         

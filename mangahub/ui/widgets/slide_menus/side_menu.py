@@ -47,7 +47,6 @@ class SideMenu(QFrame):
         menu_button.setFixedHeight(56)
         menu_button.setIconSize(QSize(40, 40))
         icon = IconRepo.get_icon(IconRepo.Icons.MENU)
-        icon.pressed.connect(print)
         menu_button.setIcon(icon.get_pixmap(40, 40))
         menu_button.clicked.connect(lambda: self.handle_full_menu())
 

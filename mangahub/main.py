@@ -20,7 +20,6 @@ from services.repositories import MangaRepository, NovelsRepository
 from config import AppConfig
 from utils import MM
 
-
 ic(f"MangaHub v{AppConfig.version()}")
 logger.info(f"Working directory: {STD_DIR}")
 
@@ -76,7 +75,7 @@ class App:
         # self.app_controller.remove_manga(self.app_controller.get_manga('Circles'))
         # self.app_controller.remove_manga('Bad Born Blood')
         # self.app_controller.get_manga('I, The Demon Lord, Am Being Targeted by My Female Disciples!').description = 'lol'
-        self.test_code()
+        # self.test_code()
         
         
     def test_code(self):
@@ -85,10 +84,6 @@ class App:
         self.cache = ImageCache(IMAGES_CACHE_DIR, 0)
         ChapterImage._cache = self.cache
         self.d = ImageDownloader(self.cache)
-
-        self.d.metadata_downloaded.connect(print)
-        self.d.download_error.connect(print)
-        # self.d.image_downloaded.connect(lambda url, name, image, meta: MM.show_message(MM.MessageType.INFO, f"Image downloaded: {name}"))
 
     def run(self):
         self.gui_window.showMaximized()

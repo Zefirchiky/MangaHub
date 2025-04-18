@@ -18,12 +18,11 @@ class ModelsJsonParser[KT: (str | int | float), T: BaseModel]:
             return self._models_collection[name]
         
         try:
-            data = self.data.get(str(name))
-            if data:
+            if data := self.data.get(str(name)):
                 model = self.model.model_validate(data)
                 self._models_collection[name] = model
                 return model
-            raise Exception(f'Model not found: {name}')
+            raise Exception(f'Model not found: {self.model}({name}) (file: {self.file}, key type: {self.key_type} (.get(str(name))), name type: {type(name)})')
         except KeyError:
             logger.warning(f"{model.__name__} {name} not found")
             MM.show_message(MM.MessageType.ERROR, f"{model.__name__} {name} not found")

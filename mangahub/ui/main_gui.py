@@ -2,14 +2,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPoint, Qt, QTimer
-from PySide6.QtGui import QCursor, QIcon
+from PySide6.QtGui import QCursor, QIcon, QPixmap
 from PySide6.QtWidgets import QMainWindow, QStackedLayout, QWidget
 from loguru import logger
 
 from ui.multi_window import AddMangaWindow, SettingsWindow
 from ui.widgets import IconRepo, ImageWidget, SelectionMenu
 from ui.widgets.dashboard import Dashboard, MediaCard
-from ui.widgets.scroll_areas import MangaViewer, NovelViewer
+from ui.widgets.scroll_areas import MangaViewer, MangaViewerScene, NovelViewer
 from ui.widgets.slide_menus import SideMenu
 
 from controllers import ChapterImageLoader
@@ -80,11 +80,11 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(1, self.manga_viewer)
         self.root_layout.insertWidget(2, self.novel_viewer)
         
-        # for manga in self.app_controller.get_all_manga().values():
-        #     mc = MediaCard()
-        #     mc.set_media(manga)
-        #     self.dashboard.add_card(mc)
-        #     mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
+        for manga in self.app_controller.get_all_manga().values():
+            mc = MediaCard()
+            mc.set_media(manga)
+            self.dashboard.add_card(mc)
+            mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
 
         self.current_mc: MediaCard | None = None
         
@@ -108,6 +108,10 @@ class MainWindow(QMainWindow):
         self.manga_viewer.prev_button.clicked.connect(self.app_controller.prev_chapter)
         self.manga_viewer.next_button.clicked.connect(self.app_controller.next_chapter)
         
+        self.chapter_image_loader.placeholder_ready.connect(lambda manga, chapter, i, pixmap: self.manga_viewer.add_placeholder(i, pixmap))
+        self.chapter_image_loader.image_ready.connect(lambda manga, chapter, i, name, image: self.manga_viewer.replace_placeholder(i, image))
+        self.chapter_image_loader.finished.connect(lambda: MM.show_message(MM.MessageType.SUCCESS, 'Images were downloaded successfully'))
+        
         self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
         
         # self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
@@ -117,11 +121,11 @@ class MainWindow(QMainWindow):
     def show_manga(self):
         self.manga_viewer.clear()
         
-        # manga, chapter = self.app_controller.state._manga, self.app_controller.state._chapter
+        manga, chapter = self.app_controller.state._manga, self.app_controller.state._chapter
         # chapter = self.manga_manager.get_chapter(manga, self.app_controller.state.chapter_num)
         # self.chapter_image_loader.load_chapter(manga.id_, chapter)
         # self.chapter_image_loader.placeholder_ready.connect(self.manga_viewer.set_images(placeholders))     # TODO
-        self.manga_viewer.add_placeholder()
+        self.chapter_image_loader.load_chapter(manga.id_, chapter)
         
         self.root_layout.setCurrentIndex(1)
 

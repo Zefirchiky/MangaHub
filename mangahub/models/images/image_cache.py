@@ -64,14 +64,14 @@ class ImageCache:
             self._freed_ram_data_bytes = 0
             self._freed_from_ram = {}
             
-    def get_image(self, name) -> bytes:
+    def get_image(self, name: str) -> bytes:    # TODO: Set image as recently used
         if image := self._ram_cache.get(name, None):
-            return image
+            return image[0]
         elif image := self._disc_cache.get(name, None):
             with open(image[0], 'rb') as f:
                 return f.read()     # Possibility of async chunk loading
-            
-        raise Exception(f'{name} was not found in cache')
+        else:
+            raise Exception(f'{name} was not found in cache')
         
     
     @property

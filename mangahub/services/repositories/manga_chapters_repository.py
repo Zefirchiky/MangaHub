@@ -10,8 +10,6 @@ class MangaChaptersRepository(ModelsJsonParser[int, MangaChapter]):
     def __init__(self, manga: Manga):
         super().__init__(f"{manga.folder}/chapters.json", MangaChapter, int)
         self.manga = manga
-        # from icecream import ic
-        # ic(manga._chapters_data[1]._images)
         self.chapters_collection = self._models_collection
 
     def get(self, num: int | float) -> MangaChapter | None:

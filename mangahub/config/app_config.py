@@ -11,9 +11,10 @@ logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", lev
 
 class AppConfig(Config):
     version = Setting[str]('0.1.0', 'Version')
-    dev_mode = Setting[bool](True, 'Dev Mode')
+    dev_mode = Setting[bool](False, 'Dev Mode')
     
     class ImageDownloading(Config):
+        convert_image = Setting[bool](False, 'Convert Image')
         preferable_format = Setting[str]('WEBP', 'Converted Images Format')
         
         max_threads = Setting[int](multiprocessing.cpu_count(), 'Max Download Threads')
@@ -32,6 +33,10 @@ class AppConfig(Config):
             'TIFF': 'TIFF',
             'TIF':  'TIFF'
         }, 'Formats that PIL supports')
+        
+    class UI(Config):
+        image_loading_intervals = Setting[int](100, 'Load Images in UI with Intervals')
+        placeholder_loading_intervals = Setting[int](40, 'Load Placeholders in UI with Intervals')
         
 try:
     AppConfig.load(CONF_FILE)

@@ -4,7 +4,7 @@ from ..abstract.abstract_media import AbstractMedia
 from .novel_chapter import NovelChapter
 
 
-class Novel(AbstractMedia):
+class Novel(AbstractMedia[NovelChapter]):
     _chapters_data: dict[int | float, NovelChapter] = PrivateAttr(default_factory=dict)
     
     def add_chapter(self, chapter: NovelChapter) -> None:

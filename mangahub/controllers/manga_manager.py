@@ -159,12 +159,14 @@ class MangaManager:
             return chapter
             
         chapter = self.create_chapter(manga, num)
-        urls = self.get_chapter_urls(manga, chapter)
-        for i, url in enumerate(urls):
-            chapter._images[i] = ChapterImage(
-                number   = i,
-                metadata = ImageMetadata(url=url)
-            )
+        if not chapter.urls_cached:
+            urls = self.download_chapter_urls(manga, chapter)
+            for i, url in enumerate(urls):
+                chapter._images[i] = ChapterImage(
+                    number   = i,
+                    metadata = ImageMetadata(url=url)
+                )
+            chapter.urls_cached = True
         return chapter
     
     def get_image(self, chapter: MangaChapter, num):
@@ -184,8 +186,8 @@ class MangaManager:
                 images.append(image)
             return images
     
-    def get_chapter_urls(self, manga: Manga, chapter: MangaChapter):
-        logger.info(f"Getting images for '{manga.name}' chapter {chapter.number}")
+    def download_chapter_urls(self, manga: Manga, chapter: MangaChapter):
+        logger.info(f"Downloading urls for '{manga.name}' chapter {chapter.number}'s images")
 
         for site in manga.get_all_sites():
             if site == 'MangaDex':
