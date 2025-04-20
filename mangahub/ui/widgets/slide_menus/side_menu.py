@@ -46,7 +46,7 @@ class SideMenu(QFrame):
                                 ''')
         menu_button.setFixedHeight(56)
         menu_button.setIconSize(QSize(40, 40))
-        icon = IconRepo.get_icon(IconRepo.Icons.MENU)
+        icon = IconRepo.get(IconRepo.Icons.MENU)
         menu_button.setIcon(icon.get_pixmap(40, 40))
         menu_button.clicked.connect(lambda: self.handle_full_menu())
 
@@ -59,7 +59,7 @@ class SideMenu(QFrame):
         self.settings_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.settings_button.setFixedHeight(56)
         self.settings_button.setIconSize(QSize(32, 32))
-        self.settings_button.setIcon(IconRepo.get_icon(IconRepo.Icons.SETTINGS).get_pixmap(32, 32))
+        self.settings_button.setIcon(IconRepo.get(IconRepo.Icons.SETTINGS).get_pixmap(32, 32))
         self.settings_button.clicked.connect(self.change_settings_icon)
 
         # root layout
@@ -184,9 +184,9 @@ class SideMenu(QFrame):
     @Slot()
     def change_settings_icon(self):
         if self.settings_button.isChecked():
-            self.settings_button.setIcon(IconRepo.get_icon(IconRepo.Icons.SETTINGS).set_color(CM().highlight).get_pixmap(32, 32))
+            self.settings_button.setIcon(IconRepo.get(IconRepo.Icons.SETTINGS).set_color(CM().highlight).get_pixmap(32, 32))
         else:
-            self.settings_button.setIcon(IconRepo.get_icon(IconRepo.Icons.SETTINGS).get_pixmap(32, 32))
+            self.settings_button.setIcon(IconRepo.get(IconRepo.Icons.SETTINGS).get_pixmap(32, 32))
 
     def set_settings_function(self, fn):
         self.settings_button.clicked.connect(fn)

@@ -19,13 +19,9 @@ def retry(max_retries=5, delay=1, exception_to_check=Exception):
                     return func(*args, **kwargs)
                 except exception_to_check as e:
                     retries += 1
-                    MM.show_message(
-                        'info', f"Attempt {retries}/{max_retries} failed: {str(e)}", duration=2000
-                    )
+                    MM.show_info(f"Attempt {retries}/{max_retries} failed: {str(e)}", duration=2000)
 
-            MM.show_message(
-                'error', f"Function {func.__name__} failed after {max_retries} attempts.", duration=5000
-            )
+            MM.show_error(f"Function {func.__name__} failed after {max_retries} attempts.", duration=5000)
             return None
         return wrapper
     return decorator_retry

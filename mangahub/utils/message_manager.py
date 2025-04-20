@@ -50,12 +50,6 @@ class Message(QFrame):
 
     def _get_style(self, message_type):
         styles = {
-            MessageType.ERROR: """
-                border: 1px solid #ffebee;
-                background-color: rgba(244, 67, 54, 0.9);
-                color: #f8f8f8;
-                border-radius: 4px;
-                """,  # Red background with light red border
             MessageType.INFO: """
                 border: 1px solid #bbdefb;
                 background-color: rgba(33, 150, 243, 0.9);
@@ -74,6 +68,12 @@ class Message(QFrame):
                 color: #f8f8f8;
                 border-radius: 4px;
                 """,  # Orange background with light orange border
+            MessageType.ERROR: """
+                border: 1px solid #ffebee;
+                background-color: rgba(244, 67, 54, 0.9);
+                color: #f8f8f8;
+                border-radius: 4px;
+                """,  # Red background with light red border
         }
         return styles.get(message_type, """
             border: 1px solid #cccccc;
@@ -89,7 +89,12 @@ class Message(QFrame):
 
 class MM:
     """MessageManager class handles the gui messages.
-    Use MM.show_message() to show a message."""
+    
+    Use `MM.show_message()` to show a message.
+    
+    Use `MM.show_[info | success | warning | error]` to show corresponding messages
+    
+    Corresponding `loguru.logger` is called every time a message is showing"""
     _instance: MM | None = None
     _initialized = False
     queue: list[Message] = []
@@ -122,9 +127,57 @@ class MM:
             logger.success("MessageManager initialized")
     
     @classmethod
-    def show_message(cls, message_type: MessageType=MessageType.ERROR, message_text=None, duration=5000, progress=False):
+    def show_info(cls, message_text: str=None, duration=5000, progress=False):
+        cls.show_message(message_text, MessageType.INFO, duration, progress)
+    
+    @classmethod
+    def show_success(cls, message_text: str=None, duration=5000, progress=False):
+        cls.show_message(message_text, MessageType.SUCCESS, duration, progress)
+    
+    @classmethod
+    def show_warning(cls, message_text: str=None, duration=5000, progress=False):
+        cls.show_message(message_text, MessageType.WARNING, duration, progress)
+    
+    @classmethod
+    def show_error(cls, message_text: str=None, duration=5000, progress=False):
+        cls.show_message(message_text, MessageType.ERROR, duration, progress)
+        
+    @classmethod
+    def show_message(cls, message_text: str=None, message_type: MessageType | str=MessageType.ERROR, duration=5000, progress=False):
+        """Shows a message in the main window.
+        If the main window is not initialized yet, the message is queued for later display.
+        If the main window is initialized, the message is displayed directly.
+        The message type can be one of the values in MessageType or a string that is matched against
+        'info', 'i', 'success', 's', 'warning', 'w', 'error', 'e'.
+        If the message type is a string, it is matched case-insensitive.
+        If progress is True, the message is shown with a progress bar.
+        The duration is the time in milliseconds the message is displayed.
+        The message text is logged depending on the message type.
+        """
         if cls._instance is None:
             raise Exception("MessageManager has not been initialized!")
+        
+        if isinstance(message_type, str):
+            match message_type.lower():
+                case 'info' | 'i':
+                    message_type = MessageType.INFO
+                case 'success' | 's':
+                    message_type = MessageType.INFO
+                case 'warning' | 'w':
+                    message_type = MessageType.INFO
+                case 'error' | 'e':
+                    message_type = MessageType.INFO
+        
+        match message_type:
+            case MessageType.INFO:
+                logger.info(message_text)
+            case MessageType.SUCCESS:
+                logger.success(message_text)
+            case MessageType.WARNING:
+                logger.warning(message_text)
+            case MessageType.ERROR:
+                logger.error(message_text)
+                
         if not AppStatus.main_window_initialized:
             cls.queue.append((message_type, message_text, progress, duration))
             return 

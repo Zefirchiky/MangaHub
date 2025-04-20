@@ -33,6 +33,7 @@ Huh?
     - Fine-tune the Dashboard
     - MediaCard/FullMediaCard
     - Create cool design for Dashboards in fucking Figma
+- Proper manga state saving
 - ASYNC
 - State in AppController is shit rn
 - Custom chapters naming

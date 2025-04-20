@@ -23,8 +23,7 @@ class NovelsManager:
     def get_novel(self, name: str) -> Novel:
         novel = self.repository.get(name)
         if not novel:
-            logger.warning(f"Novel {name} not found")
-            MM.show_message(MM.MessageType.WARNING, f"Novel {name} not found")
+            MM.show_warning(f"Novel {name} not found")
         
         return self._ensure_novels_essential_data({novel.name: novel})
     

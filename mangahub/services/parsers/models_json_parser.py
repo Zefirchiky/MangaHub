@@ -24,8 +24,7 @@ class ModelsJsonParser[KT: (str | int | float), T: BaseModel]:
                 return model
             raise Exception(f'Model not found: {self.model}({name}) (file: {self.file}, key type: {self.key_type} (.get(str(name))), name type: {type(name)})')
         except KeyError:
-            logger.warning(f"{model.__name__} {name} not found")
-            MM.show_message(MM.MessageType.ERROR, f"{model.__name__} {name} not found")
+            MM.show_error(f"{model.__name__} {name} not found")
             return 
         
     def get_all(self) -> dict[KT, T]:

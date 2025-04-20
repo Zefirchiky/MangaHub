@@ -27,7 +27,7 @@ class UrlParser:
             if site.url == self.url.site_url:
                 return site
 
-        MM.show_message(MM.MessageType.ERROR, f"No site for {self.url} was found")
+        MM.show_error(f"No site for {self.url} was found")
         return None
     
     @property
@@ -61,8 +61,7 @@ class UrlParser:
         regex = re.compile(url_pattern)
         self._cached_regex_match = regex.match(self.url.url)
         if not self._cached_regex_match:
-            logger.error(f"No match for {self.url} was foundP{' (no title page url format)' if not self.site.title_page.url_format else ''}")
-            MM.show_message(MM.MessageType.ERROR, f"No match for {self.url} was found{' (try adding title page url format to the site)' if not self.site.title_page.url_format else ''}")
+            MM.show_error(f"No match for {self.url} was found{' (try adding title page url format to the site)' if not self.site.title_page.url_format else ''}")
          
         return self._cached_regex_match
 

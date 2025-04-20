@@ -76,10 +76,10 @@ class MangaSiteScraper:
             if manga.name not in self.chapter_pages:
                 self.chapter_pages[manga.name] = {}
             self.chapter_pages[manga.name][num] = chapter_page
-            MM.show_message(MM.MessageType.SUCCESS, f"Chapter '{manga.name}' {num} page loaded")
+            MM.show_success(f"Chapter '{manga.name}' {num} page loaded")
             return chapter_page
             
-        MM.show_message(MM.MessageType.ERROR, f"Chapter '{manga.name}' {num}: No site responded")
+        MM.show_error(f"Chapter '{manga.name}' {num}: No site responded")
         return None
     
     def get_chapter_name(self, site: Site, manga: Manga, num) -> str:
@@ -140,9 +140,8 @@ class MangaSiteScraper:
             return 
         
         placeholders_worker = BatchWorker()
-        placeholders_worker.signals.all_completed.connect(lambda _: MM.show_message(MM.MessageType.SUCCESS, "Image sizes downloaded"))
-        placeholders_worker.signals.error.connect(lambda error: MM.show_message(MM.MessageType.ERROR, str(error), 5000))
-        placeholders_worker.signals.error.connect(logger.error)
+        placeholders_worker.signals.all_completed.connect(lambda _: MM.show_success("Image sizes downloaded"))
+        placeholders_worker.signals.error.connect(lambda error: MM.show_error(str(error), 5000))
         placeholders = list(placeholders_worker.process_batch(self.get_image_size, image_urls, blocking=True))
         return placeholders
     
@@ -152,7 +151,7 @@ class MangaSiteScraper:
             return 
         
         images_worker = BatchWorker()
-        images_worker.signals.all_completed.connect(lambda _: MM.show_message(MM.MessageType.SUCCESS, "Images downloaded"))
+        images_worker.signals.all_completed.connect(lambda _: MM.show_success("Images downloaded"))
         images_worker.process_batch(requests.get, image_urls, blocking=False)
         return images_worker
 
@@ -160,6 +159,6 @@ class MangaSiteScraper:
         try:
             response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
         except requests.exceptions.RequestException as e:
-            MM.show_message(MM.MessageType.ERROR, str(e), 5000)
+            MM.show_error(str(e), 5000)
             return None
         return BeautifulSoup(response.text, 'html.parser')

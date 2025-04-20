@@ -57,7 +57,7 @@ class AppController:
         manga = self.manager.get_manga(name)
         self.state.set_manga(manga)
         
-   
+    
     def set_chapter(self, number: float):
         self.state.set_chapter_num(number)
         try:

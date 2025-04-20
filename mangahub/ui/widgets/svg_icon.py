@@ -250,7 +250,7 @@ class IconRepo:
         return cls
     
     @classmethod
-    def get_icon(cls, icon_name: str | IconsEnum, copy=True) -> SVGIcon:
+    def get(cls, icon_name: str | IconsEnum, copy=True) -> SVGIcon:
         icon_name = icon_name.value if isinstance(icon_name, IconsEnum) else icon_name
         if icon_name not in cls._icons:
             logger.warning(f"Icon {icon_name} not found in the repo. Loading from {ICONS_DIR}")
@@ -258,8 +258,8 @@ class IconRepo:
         return cls._icons[icon_name].copy() if copy else cls._icons[icon_name]
     
     @classmethod
-    def get_icon_with_color(self, icon_name: str, color: str) -> SVGIcon:
-        icon = self.get_icon(icon_name)
+    def get_icon_with_color(self, icon_name: str | IconsEnum, color: str) -> SVGIcon:
+        icon = self.get(icon_name)
         icon.set_color(color)
         return icon
     
@@ -271,11 +271,11 @@ class IconRepo:
             IconRepo.add_icon(icon, SVGIcon(ICONS_DIR / f'{icon.value}.svg'))
         
         # UTILS
-        IconRepo.get_icon(IconRepo.Icons.EYE, False).set_size(20, 20).set_second_icon(
-            IconRepo.get_icon(IconRepo.Icons.NOT_EYE)
+        IconRepo.get(IconRepo.Icons.EYE, False).set_size(20, 20).set_second_icon(
+            IconRepo.get(IconRepo.Icons.NOT_EYE)
             .set_color('grey')
             )
         
-        full_menu = IconRepo.get_icon(IconRepo.Icons.MENU)
+        full_menu = IconRepo.get(IconRepo.Icons.MENU)
         full_menu.svg.change_color(full_menu.color.name(), fill_if_none=True)
-        IconRepo.get_icon(IconRepo.Icons.MENU, False).set_second_icon(full_menu)
+        IconRepo.get(IconRepo.Icons.MENU, False).set_second_icon(full_menu)

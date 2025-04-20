@@ -33,7 +33,7 @@ class ChapterButton(QPushButton):
         
     def add_eye(self, is_on=True) -> ChapterButton:
         if not self.eye_icon:
-            self.eye_icon = IconRepo.get_icon('eye').change_icon(int(is_on))
+            self.eye_icon = IconRepo.get('eye').change_icon(int(is_on))
             self.root.insertWidget(0, self.eye_icon)
             self.root.insertWidget(1, Separator('v', thickness=1))
         return self
