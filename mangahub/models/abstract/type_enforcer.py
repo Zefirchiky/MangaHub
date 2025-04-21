@@ -38,8 +38,8 @@ class TypeEnforcer[T]:
         self._attribute_name = name
 
         if hasattr(self, "__orig_class__"):
-            origin = get_origin(self.__orig_class__)
-            args = get_args(self.__orig_class__)
+            origin = get_origin(self.__orig_class__)    # type: ignore
+            args = get_args(self.__orig_class__)        # type: ignore
         elif name in (hints := get_type_hints(owner)):
             origin = get_origin(hints[name])
             args = get_args(origin)

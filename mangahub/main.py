@@ -84,8 +84,10 @@ class App:
         # self.app_controller.get_manga('I, The Demon Lord, Am Being Targeted by My Female Disciples!').description = 'lol'
         self.test_code()
 
-    def test_code(self): ...
-
+    def test_code(self):
+        # print({3, 4, 5, 6} - {1, 2, 3, 4})
+        ...
+        
     def run(self):
         self.gui_window.showMaximized()
         self.gui_window.init()

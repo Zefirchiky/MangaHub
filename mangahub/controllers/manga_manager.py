@@ -2,8 +2,12 @@ import os
 import shutil
 from typing import TYPE_CHECKING
 
+from PySide6.QtGui import QPixmap
+
 from directories import MANGA_DIR, IMAGES_CACHE_DIR
 from loguru import logger
+
+from .placeholder_generator import PlaceholderGenerator
 from models import URL
 from models.manga import ChapterImage, Manga, MangaChapter
 from models.abstract import ChapterNotFoundError
@@ -35,7 +39,7 @@ class MangaManager:
         self.dex_scraper = MangaDexScraper()
         self.sites_scraper = MangaSiteScraper(self.sites_manager)
         
-        self.image_cache = ImageCache(IMAGES_CACHE_DIR)     # TODO: give sizes
+        self.image_cache = ImageCache(IMAGES_CACHE_DIR, max_ram=AppConfig.Caching.Image.max_ram(), max_disc=AppConfig.Caching.Image.max_disc())     # TODO: give sizes
         self.image_downloader = ImageDownloader(self.image_cache, AppConfig.ImageDownloading.max_threads())
         self.chapter_loader = ChapterImageLoader(self.image_downloader, self.image_cache)
         
@@ -166,14 +170,24 @@ class MangaManager:
             chapter.urls_cached = True
         return chapter
     
-    def get_image(self, chapter: MangaChapter, num):
-        image = chapter.images.get(num)
-        if image:
-            return image
-        
-        width, height = self.dex_scraper.get_image_size(chapter.id_dex, num)
-        image = ChapterImage(num, width, height)
-        return image
+    def get_image(self, name: str) -> bytes:
+        print(name)
+        self.image_cache.save_image(name)
+        return self.image_cache.get_image(name)
+            
+    def get_placeholder(self, manga: Manga, chapter: MangaChapter, i: int) -> QPixmap:
+        if not chapter._images:   # TODO
+            pass
+        elif not chapter._images.get(i):
+            pass
+        elif not chapter._images[i].metadata:
+            pass
+        else:
+            return PlaceholderGenerator.static(
+                chapter._images[i].metadata.width,  # type: ignore
+                chapter._images[i].metadata.height, # type: ignore
+                f'#{i}'
+                )
     
     def get_images(self, manga: Manga, chapter: MangaChapter):
         images: list[ChapterImage] = []

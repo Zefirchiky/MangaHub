@@ -9,5 +9,5 @@ class ChapterImage(TagModel):
     metadata: ImageMetadata = None
     image_dir: str = ''
     
-    def get_image(self) -> bytes:
-        return 
+    # def get_image(self) -> bytes:
+    #     return self._cache.get_image

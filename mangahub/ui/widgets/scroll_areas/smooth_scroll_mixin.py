@@ -11,17 +11,17 @@ class SmoothScrollMixin:
         self._prev_delta = 0
         self._accumulated_scroll = 0
         self._dscroll_amount = 0
-        self._animation_running = False
+        self._scroll_animation_running = False
         
         # Configurable parameters
-        self.scale_multiplier = AppConfig.Scrolling.scale_multiplier
+        self.scale_multiplier = AppConfig.Scrolling.scale_multiplier()
         self.step_size = AppConfig.Scrolling.step()
         self.scroll_duration = AppConfig.Scrolling.step_duration()
         self.alt_multiplier = AppConfig.Scrolling.alt_multiplier()
         
-        self._animation = QPropertyAnimation(self.scroll_bar, b"value")
-        self._animation.setDuration(self.scroll_duration)
-        self._animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+        self._scroll_animation = QPropertyAnimation(self.scroll_bar, b"value")
+        self._scroll_animation.setDuration(self.scroll_duration)
+        self._scroll_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
         
     def wheelEvent(self, event):
         modifiers = event.modifiers()
@@ -50,23 +50,23 @@ class SmoothScrollMixin:
         min_value = self.scroll_bar.minimum()
         target_value = max(min_value, min(max_value, target_value))
 
-        self._animation.stop()
+        self._scroll_animation.stop()
         
         # If running, restart animation from current value
-        if self._animation_running:
-            self._animation.setStartValue(self._animation.currentValue())
+        if self._scroll_animation_running:
+            self._scroll_animation.setStartValue(self._scroll_animation.currentValue())
         else:
-            self._animation.setStartValue(current_value)
+            self._scroll_animation.setStartValue(current_value)
             
-        self._animation.setEndValue(target_value)
-        self._animation.start()
+        self._scroll_animation.setEndValue(target_value)
+        self._scroll_animation.start()
 
-        self._animation_running = True
-        self._animation.finished.connect(self.on_animation_finished)
+        self._scroll_animation_running = True
+        self._scroll_animation.finished.connect(self.on_animation_finished)
         
         self._prev_delta = delta
         event.accept()
 
     def on_animation_finished(self):
         self._accumulated_scroll = 0
-        self._animation_running = False
+        self._scroll_animation_running = False

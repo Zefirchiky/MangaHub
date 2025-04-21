@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import sys
 
 from PySide6.QtCore import QPoint, Qt, QTimer
 from PySide6.QtGui import QCursor, QIcon, QPixmap
@@ -12,8 +13,9 @@ from ui.widgets.dashboard import Dashboard, MediaCard
 from ui.widgets.scroll_areas import MangaViewer, MangaViewerScene, NovelViewer
 from ui.widgets.slide_menus import SideMenu
 
-from controllers import ChapterImageLoader
+from controllers import ChapterImageLoader, PlaceholderGenerator
 from app_status import AppStatus
+from resources.enums import StorageSize
 from utils import MM  # TODO
 from directories import IMAGES_DIR, RESOURCES_DIR
 
@@ -77,7 +79,7 @@ class MainWindow(QMainWindow):
         self.settings_window = SettingsWindow()
         self.add_manga_window = AddMangaWindow(self.app_controller)
         self.dashboard = Dashboard()
-        self.manga_viewer = MangaViewer()
+        self.manga_viewer = MangaViewer(self)
         self.novel_viewer = NovelViewer()
         self.chapter_image_loader = self.manga_manager.chapter_loader
 
@@ -130,7 +132,7 @@ class MainWindow(QMainWindow):
             chapter,
             i,
             name,
-            image: self.manga_viewer.replace_placeholder(i, image)
+            image: self.manga_viewer.replace_placeholder(i, name)
         )
         self.chapter_image_loader.finished.connect(self.manga_viewer._on_chapter_loaded)
         self.chapter_image_loader.finished.connect(
@@ -152,6 +154,12 @@ class MainWindow(QMainWindow):
         # chapter = self.manga_manager.get_chapter(manga, self.app_controller.state.chapter_num)
         # self.chapter_image_loader.load_chapter(manga.id_, chapter)
         # self.chapter_image_loader.placeholder_ready.connect(self.manga_viewer.set_images(placeholders))     # TODO
+        # for num, image in chapter._images.items():
+        #     width, height = image.metadata.width, image.metadata.height
+        #     pm = PlaceholderGenerator.static(width, height, text=str(num))
+        #     self.manga_viewer.add_placeholder(num, pm)
+        #     self.manga_viewer.replace_placeholder(image.number, str(image.number))
+            
         self.chapter_image_loader.load_chapter(manga.id_, chapter)
 
         self.root_layout.setCurrentIndex(1)

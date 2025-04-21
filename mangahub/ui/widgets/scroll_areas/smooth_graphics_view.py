@@ -13,19 +13,19 @@ class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
         self.setObjectName("smooth_graphics_view")
         self.viewport().setObjectName("smooth_graphics_view")
         self.setStyleSheet(f'''
-                           #smooth_graphics_view {{
-                               border: 1px solid {self.palette().window().color().lighter().name()};
-                               border-radius: 5px;
+                            #smooth_graphics_view {{
+                                border: 1px solid {self.palette().window().color().lighter().name()};
+                                border-radius: 5px;
                             }}''')
         
-        self.scene = QGraphicsScene(self)
-        self.setScene(self.scene)
+        self._scene = QGraphicsScene(self)
+        self.setScene(self._scene)
         self.bg_image = QPixmap(str(BACKGROUNDS_DIR/'manga_viewer.jpg').replace('\\', '/'))
         self.setBackgroundBrush(self.bg_image)
         
         # Optimize rendering
         self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.SmartViewportUpdate)
-        self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform | QPainter.RenderHint.Antialiasing)
         self.setOptimizationFlag(QGraphicsView.OptimizationFlag.DontAdjustForAntialiasing, True)
         self.setOptimizationFlag(QGraphicsView.OptimizationFlag.DontSavePainterState, True)
         self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)

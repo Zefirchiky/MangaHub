@@ -1,5 +1,4 @@
 from __future__ import annotations
-from enum import Enum
 
 
 class StorageUnit:
@@ -128,11 +127,11 @@ class StorageSize:
         return f"StorageSize({self.bytes_value})"
     
     
-    def to_dict(self):
+    def to_dict(self) -> dict[str, int | float]:
         return {'value': self.bytes_value}
     
-    def from_dict(self, data):
-        self.bytes_value = data['value']
+    def from_dict(self, dict_) -> None:
+        self.bytes_value = dict_['value']
 
 
 class SU:

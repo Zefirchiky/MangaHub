@@ -3,6 +3,7 @@ from typing import Type, Protocol
 from pathlib import Path
 from abc import ABC, abstractmethod
 from enum import Flag, auto
+import typing
 import json
 from models.abstract import TypeEnforcer
 
@@ -10,10 +11,9 @@ from models.abstract import TypeEnforcer
 # JSON serializable primitive types
 type JsonPrimitiveTypes = str | int | float | bool | None
 
-# Recursive type definition for nested JSON structures
 # This is a type alias for all types that can be serialized to JSON
 type JsonSerializableTypes = (
-    JsonPrimitiveTypes | dict[str, JsonSerializableTypes] | list[JsonSerializableTypes]
+    JsonPrimitiveTypes | dict[typing.Any, typing.Any] | list[typing.Any]
 )
 
 
@@ -42,6 +42,12 @@ class Level(Flag):
     ADVANCED = auto()
     READ_ONLY = auto()
     HIDDEN = auto()
+    
+class SettingType(Flag):
+    PERFORMANCE = auto()
+    COSMETIC = auto()
+    QOL = auto()
+    OTHER = auto()
 
 class Setting[T: SettingValue | SettingValueProtocol | JsonSerializableTypes](
     TypeEnforcer[T]
@@ -51,6 +57,7 @@ class Setting[T: SettingValue | SettingValueProtocol | JsonSerializableTypes](
     SettingValueProtocol = SettingValueProtocol
     
     Level = Level
+    SettingType = SettingType
 
     def __init__(
         self,
@@ -58,7 +65,8 @@ class Setting[T: SettingValue | SettingValueProtocol | JsonSerializableTypes](
         name: str = "",
         unit: str = "",     # TODO: Better units
         options=None,
-        level=Level,
+        level: Level=Level.USER,
+        type_: SettingType=SettingType.OTHER,
         description="",
         strongly_typed: bool = True,
     ):
@@ -80,6 +88,7 @@ class Setting[T: SettingValue | SettingValueProtocol | JsonSerializableTypes](
         self.unit = unit
         self.options = options
         self.level = level
+        self.type_ = type_
         self.description = description
 
         self._type: Type[T] | None = None
@@ -88,14 +97,14 @@ class Setting[T: SettingValue | SettingValueProtocol | JsonSerializableTypes](
         return self._value
 
     def __set__(self, instance, value: T) -> None:
-        self._check_type(value)
+        self._check_type(value, self._type)
 
     def __str__(self) -> str:
-        return f"{self.name}: {self._type.__name__}({self()}{f' {self.unit}' if self.unit else ''})"
+        return f"{self.name}: {self._type.__name__}({self()}{f' {self.unit}' if self.unit else ''})"    # type: ignore
 
-    def to_dict(self) -> dict[str,]:
-        """Convert setting to dictionary."""
-        return {"value": self._value.to_dict(), "name": self.name, "description": self.description}
+    # def to_dict(self) -> dict[str, typing.Any]:
+    #     """Convert setting to dictionary."""
+    #     return {"value": self._value.to_dict, "name": self.name, "description": self.description}
 
 
 class ConfigMeta(type):
@@ -103,7 +112,7 @@ class ConfigMeta(type):
 
     def __new__(mcs, name: str, bases: tuple, namespace: dict) -> Type:
         cls = super().__new__(mcs, name, bases, namespace)
-        cls._config_name = name
+        setattr(cls, '_config_name', name)
 
         # Process nested Config classes to make them proper attributes
         for key, value in list(cls.__dict__.items()):
@@ -121,7 +130,7 @@ class ConfigMeta(type):
 class Config(metaclass=ConfigMeta):
     """Base configuration class."""
 
-    def to_dict(self) -> dict[str,]:
+    def to_dict(self) -> dict[str, typing.Any]:
         """Convert config to dictionary recursively."""
         result = {}
 
@@ -143,7 +152,7 @@ class Config(metaclass=ConfigMeta):
     # def to_dict_with_metadata(self) -> dict[str, ]:   # TODO: May be
 
     @classmethod
-    def from_dict(cls, data: dict[str,]) -> Config:
+    def from_dict(cls, data: dict[str, typing.Any]) -> Config:
         """Create config instance from dictionary."""
         instance = cls()
 
@@ -158,10 +167,10 @@ class Config(metaclass=ConfigMeta):
 
         return instance
 
-    def save(cls, file_path: str | Path) -> None:
+    def save(self, file_path: str | Path) -> None:
         """Save config to JSON file."""
         with open(file_path, "w") as f:
-            json.dump(cls.to_dict(), f, indent=4)
+            json.dump(self.to_dict(), f, indent=4)
 
     @classmethod
     def load(cls, file_path: str | Path) -> Config:

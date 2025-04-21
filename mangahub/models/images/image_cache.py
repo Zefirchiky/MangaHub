@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from queue import SimpleQueue
 from resources.enums import SU, StorageSize
-from icecream import ic
+from directories import IMAGES_CACHE_DIR
 
 
 class ImageCache:
@@ -22,20 +22,21 @@ class ImageCache:
         self._disc_cache = {}
         self._freed_ram_data_bytes = StorageSize()
         
-    def _free_ram(self, bytes_to_free: int) -> SimpleQueue:
+    def _free_ram(self, bytes_to_free: StorageSize) -> None:
         while self.free_ram < bytes_to_free:  # While free ram is less that requested
             old_item = self._ram_name_history.get()
             self._freed_from_ram[old_item] = self._ram_cache.pop(old_item)
             self._freed_ram_data_bytes += bytes_to_free
             self.cur_ram -= self._freed_from_ram[old_item][1]  # Free oldest image
     
-    def _free_disc(self, bytes_to_free: int):
+    def _free_disc(self, bytes_to_free: StorageSize):
         while self.max_disc - self.cur_disc < bytes_to_free:
             file, size = self._disc_cache.pop(self._disc_name_history.get())
             self.cur_disc -= size
             os.remove(file)
         
-    def add_image(self, name: str, image: bytes, size: int):
+    def add_image(self, name: str, image: bytes, size_: int):
+        size: StorageSize = StorageSize(size_)
         if self.max_ram < size:             # If image larger that maximum ram available
             self._free_ram(self.max_ram)    # Free all ram
             self._freed_from_ram[name] = [image, size]
@@ -81,3 +82,8 @@ class ImageCache:
     @property
     def free_disc(self) -> StorageSize:
         return self.max_disc - self.cur_disc
+    
+    def save_image(self, name: str, path: Path=IMAGES_CACHE_DIR):
+        path.mkdir(exist_ok=True)
+        with open(path / name, 'wb') as f:
+            f.write(self.get_image(name))
