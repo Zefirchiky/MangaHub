@@ -8,11 +8,12 @@ from PIL import Image
 from models.images import ImageMetadata, ImageCache
 from utils.image_dimensions import get_dimensions_from_bytes
 
+from icecream import ic
 from config import AppConfig
 
 
 class ImageDownloadWorkerSignals(QObject):
-    progress = Signal(str, int, int, int)   # url, percent, bytes downloaded, total bytes
+    progress = Signal(str, int, int, int, int)   # url, percent, bytes downloaded, bytes downloaded diff, total bytes
     metadata = Signal(str, ImageMetadata)   # url, metadata
     error = Signal(str, Exception)
     
@@ -55,6 +56,7 @@ class ImageDownloadWorker(QRunnable):
                     image_data = bytearray()
                     downloaded = 0
                     prev_percentage = 0
+                    diff = 0
                     
                     if AppConfig.dev_mode():
                         pbar = tqdm(
@@ -84,6 +86,7 @@ class ImageDownloadWorker(QRunnable):
                             self._signals.metadata.emit(self.url, metadata)
                             
                         chunk_size = len(chunk)
+                        diff += chunk_size
                         downloaded += chunk_size
                         image_data.extend(chunk)
                         
@@ -94,8 +97,9 @@ class ImageDownloadWorker(QRunnable):
                             if percentage - prev_percentage >= self.update_p or percentage == 100:
                                 prev_percentage = percentage
                                 self._signals.progress.emit(
-                                    self.url, percentage, downloaded, size
+                                    self.url, percentage, downloaded, diff, size
                                 )
+                                diff = 0
                     
                     if AppConfig.dev_mode():
                         pbar.close()
@@ -124,11 +128,12 @@ class ImageDownloader(QObject):
     
     metadata_downloaded = ImageDownloadWorker._signals.metadata
     image_downloaded = Signal(str, str, ImageMetadata)  # url, name.ext, metadata
+    overall_download_progress = Signal(int, int, int, int)  # len(urls), percent, current bytes, total bytes
     download_progress = ImageDownloadWorker._signals.progress
     download_error = ImageDownloadWorker._signals.error
-    finished = Signal(bool)
+    finished = Signal(int)
 
-    def __init__(self, cache: ImageCache, max_threads: int=''):
+    def __init__(self, cache: ImageCache, max_threads: int=0):
         super().__init__()
         self.cache = cache
         
@@ -140,6 +145,29 @@ class ImageDownloader(QObject):
             
         self.workers = {}
         
+        self.counted_urls = set()
+        self.total_bytes = 0
+        self.total_bytes_is_known = False
+        self.current_bytes = 0
+        self.percent = 0
+        self.download_progress.connect(
+            lambda url, percent, downloaded, diff, total: self._update_overall_progress(url, diff, total)
+            )
+        
+    def _update_overall_progress(self, url: str, diff: int, total: int):
+        if not self.total_bytes_is_known and url not in self.counted_urls:
+            self.total_bytes += total
+            self.counted_urls.add(url)
+        self.current_bytes += diff
+            
+        if self.total_bytes > 0:  # Avoid division by zero
+            percent = int(self.current_bytes / self.total_bytes * 100)
+            if percent >= self.percent + 1 or percent == 100:  # TODO: Update every 1% change   Add setting for this
+                self.percent = percent
+                self.overall_download_progress.emit(
+                    len(self.counted_urls), percent, self.current_bytes, self.total_bytes
+                )
+        
     def _metadata_downloaded(self, url, name, result, emit_finish):
         _, metadata, err = result
         if err:
@@ -147,7 +175,7 @@ class ImageDownloader(QObject):
             return
         self.workers.pop(name)
         if emit_finish and not self.workers:
-            self.finished.emit(True)
+            self.finished.emit(0)
         self.metadata_downloaded.emit(url, metadata)
         
     def _image_downloaded(self, url, name, result, emit_finish):
@@ -157,7 +185,7 @@ class ImageDownloader(QObject):
             return
         self.workers.pop(name)
         if emit_finish and not self.workers:
-            self.finished.emit(True)
+            self.finished.emit(self.total_bytes)
         self.cache.add_image(name, image, metadata.size)
         self.image_downloaded.emit(url, name, metadata)
         
@@ -214,7 +242,7 @@ class ImageDownloader(QObject):
         self.workers[name] = worker
         self.pool.start(worker)
         
-    def download_images(self, urls: dict[str, str], update_percentage=10, metadata_only=False, convert=True):
+    def download_images(self, urls: dict[str, str], update_percentage=10, metadata_only=False, convert=True, total_bytes=0):
         """Downloads images async.
 
         Args:
@@ -222,6 +250,16 @@ class ImageDownloader(QObject):
             update_percentage (int, optional): ImageDownloader will emit download_progress signal every x%. Defaults to 10.
             metadata_only (bool, optional): Will only download metadata, emits metadata_downloaded. Defaults to False.
         """
+        if total_bytes:
+            self.total_bytes = total_bytes
+            self.total_bytes_is_known = True
+        else:
+            self.total_bytes = 0
+            self.total_bytes_is_known = False
+        self.counted_urls = set()
+        self.current_bytes = 0
+        self.percent = 0
+        
         if metadata_only:
             for url, name in urls.items():
                 self.download_metadata(url, emit_finish=False)

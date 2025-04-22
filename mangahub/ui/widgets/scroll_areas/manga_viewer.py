@@ -34,7 +34,6 @@ class MangaViewerScene(QGraphicsScene):
     images_request = Signal(set)
     
     def __init__(self, parent: MangaViewer):
-        print(QPixmap.defaultDepth())
         super().__init__(parent)
         
         self._image_items: dict[int, tuple[QGraphicsPixmapItem, int, int]] = {}

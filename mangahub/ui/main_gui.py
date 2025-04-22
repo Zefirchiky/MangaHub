@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
         # side menu
         self.side_menu = SideMenu(self)
         self.side_menu.add_button(
-            lambda: self.root_layout.setCurrentIndex(0),
+            lambda: self.root_layout.setCurrentIndex(0 if self.root_layout.currentIndex() != 0 else 1),
             IconRepo.get(IconRepo.Icons.MANGA),
             "Manga",
             is_default=True,
@@ -134,6 +134,8 @@ class MainWindow(QMainWindow):
             name,
             image: self.manga_viewer.replace_placeholder(i, name)
         )
+        
+        self.chapter_image_loader.overall_download_progress.connect(print)
         self.chapter_image_loader.finished.connect(self.manga_viewer._on_chapter_loaded)
         self.chapter_image_loader.finished.connect(
             lambda: MM.show_success("Images were downloaded successfully")

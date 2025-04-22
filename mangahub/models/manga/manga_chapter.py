@@ -6,4 +6,5 @@ class MangaChapter(AbstractChapter):
     id_dex: str = ''
     url: str = ''
     urls_cached: bool = False
+    total_bytes: int = 0
     _images: dict[int, ChapterImage] = {}

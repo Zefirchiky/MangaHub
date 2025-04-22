@@ -171,8 +171,6 @@ class MangaManager:
         return chapter
     
     def get_image(self, name: str) -> bytes:
-        print(name)
-        self.image_cache.save_image(name)
         return self.image_cache.get_image(name)
             
     def get_placeholder(self, manga: Manga, chapter: MangaChapter, i: int) -> QPixmap:
