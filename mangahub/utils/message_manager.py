@@ -127,23 +127,23 @@ class MM:
             logger.success("MessageManager initialized")
     
     @classmethod
-    def show_info(cls, message_text: str=None, duration=5000, progress=False):
+    def show_info(cls, message_text: str='', duration=5000, progress=False):
         cls.show_message(message_text, MessageType.INFO, duration, progress)
     
     @classmethod
-    def show_success(cls, message_text: str=None, duration=5000, progress=False):
+    def show_success(cls, message_text: str='', duration=5000, progress=False):
         cls.show_message(message_text, MessageType.SUCCESS, duration, progress)
     
     @classmethod
-    def show_warning(cls, message_text: str=None, duration=5000, progress=False):
+    def show_warning(cls, message_text: str='', duration=5000, progress=False):
         cls.show_message(message_text, MessageType.WARNING, duration, progress)
     
     @classmethod
-    def show_error(cls, message_text: str=None, duration=5000, progress=False):
+    def show_error(cls, message_text: str='', duration=5000, progress=False):
         cls.show_message(message_text, MessageType.ERROR, duration, progress)
         
     @classmethod
-    def show_message(cls, message_text: str=None, message_type: MessageType | str=MessageType.ERROR, duration=5000, progress=False):
+    def show_message(cls, message_text: str='', message_type: MessageType | str=MessageType.ERROR, duration=5000, progress=False):
         """Shows a message in the main window.
         If the main window is not initialized yet, the message is queued for later display.
         If the main window is initialized, the message is displayed directly.

@@ -4,7 +4,7 @@ from pathlib import Path
 from .file_handler import FileHandler
 
 
-class JsonHandler(FileHandler):
+class JsonHandler(FileHandler[dict, dict]):
     def __init__(self, file: Path | str):
         if isinstance(file, str):
             file = Path(file)
@@ -19,7 +19,7 @@ class JsonHandler(FileHandler):
         self.file = file
         self.data = None
 
-    def load(self) -> None:
+    def load(self) -> dict:
         with self.file.open('r') as f:
             self.data = json.load(f)
         return self.data
@@ -27,6 +27,6 @@ class JsonHandler(FileHandler):
     def get_data(self) -> dict:
         return self.data if self.data is not None else self.load()
 
-    def save_data(self, data) -> None:
+    def save_data(self, data):
         with self.file.open('w') as f:
             json.dump(data, f, indent=4)

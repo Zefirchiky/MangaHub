@@ -9,7 +9,7 @@ from models.abstract import TypeEnforcer
 
 
 # JSON serializable primitive types
-type JsonPrimitiveTypes = str | int | float | bool | None
+type JsonPrimitiveTypes = str | int | float | bool | dict | list | None
 
 # This is a type alias for all types that can be serialized to JSON
 type JsonSerializableTypes = (
@@ -102,9 +102,20 @@ class Setting[T: SettingValue | SettingValueProtocol | JsonSerializableTypes](
     def __str__(self) -> str:
         return f"{self.name}: {self._type.__name__}({self()}{f' {self.unit}' if self.unit else ''})"    # type: ignore
 
-    # def to_dict(self) -> dict[str, typing.Any]:
-    #     """Convert setting to dictionary."""
-    #     return {"value": self._value.to_dict, "name": self.name, "description": self.description}
+    def to_dict(self) -> dict[str, JsonSerializableTypes]:
+        """Convert setting to dictionary."""
+        result = {
+            "name": self.name,
+            "options": self.options,
+            "description": self.description,
+            "type": self.type_,
+        }
+        if self._check_type(self._type, JsonSerializableTypes):
+            result["value"] = self._value
+        else:
+            result["value"] = self._value.to_dict()
+        
+        return result
 
 
 class ConfigMeta(type):

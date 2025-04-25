@@ -5,7 +5,7 @@ from resources.enums import SU, StorageSize
 from directories import IMAGES_CACHE_DIR
 
 
-class ImageCache:
+class ImageCache:   # TODO: SAVE/LOAD
     def __init__(self, cache_path: Path, max_ram: int | StorageSize=100*SU.MB, max_disc: int | StorageSize=500*SU.MB):
         self.cache_path = cache_path
         

@@ -27,7 +27,7 @@ from services.repositories import MangaRepository, NovelsRepository
 from config import AppConfig
 from utils import MM
 
-ic(f"MangaHub v{AppConfig.version()}")
+
 logger.info(f"Working directory: {STD_DIR}")
 
 
@@ -87,7 +87,7 @@ class App:
     def test_code(self):
         # print({3, 4, 5, 6} - {1, 2, 3, 4})
         ...
-        
+
     def run(self):
         self.gui_window.showMaximized()
         self.gui_window.init()

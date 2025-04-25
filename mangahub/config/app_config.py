@@ -1,17 +1,42 @@
 import multiprocessing
+import builtins
+import sys
 
 from loguru import logger
+from rich import print
+from rich.console import Console
+import rich.traceback
 
 from .app_config_abs import Config, Setting, Level, SettingType
 from resources.enums import SU, StorageSize
 from directories import LOG_DIR, CONF_FILE
 
-logger.add(f"{LOG_DIR}/log-{{time}}.log", format="{time} {level} {message}", level="DEBUG", retention=10)
+builtins.print = print
+
+logger.add(f"{LOG_DIR}/latest.log", level="DEBUG", backtrace=True, diagnose=True, retention=1, mode='w')
+logger.add(f"{LOG_DIR}/log-{{time}}.log", level="DEBUG", backtrace=False, diagnose=False, retention=2, mode='w')
+
+console = Console()
+def custom_exception_handler(exc_type: type[BaseException], exc_value: BaseException, traceback):
+    logger.opt(exception=(exc_type, exc_value, traceback)).error("An error occurred:")
+    
+    console.print("\n[bold red]An exception occurred:[/bold red]")
+    rich_traceback = rich.traceback.Traceback.from_exception(
+        exc_type, exc_value, traceback, 
+        show_locals=True, 
+        word_wrap=True, 
+        indent_guides=True
+    )
+    console.print(rich_traceback)
+    
+    console.print(f"[dim]Full error details logged to {f"{LOG_DIR}\\latest.log"}[/dim]")
+
+sys.excepthook = custom_exception_handler
 
 
 class AppConfig(Config):
     version = Setting[str]('0.1.0', 'Version', level=Level.USER | Level.READ_ONLY)
-    dev_mode = Setting[bool](False, 'Dev Mode', level=Level.USER)
+    dev_mode = Setting[bool](True, 'Dev Mode', level=Level.USER)
     debug_mode = Setting[bool](True, 'Debug Mode', level=Level.USER_DEV)
     
     class ImageDownloading(Config):
@@ -56,6 +81,8 @@ class AppConfig(Config):
             max_ram = Setting[StorageSize](100*SU.MB, 'Max Ram for Images')
             max_disc = Setting[StorageSize](500*SU.MB, 'Max Disc Space for Images')
         
+        
+print(f"MangaHub v{AppConfig.version()}")
         
 try:
     AppConfig.load(CONF_FILE)

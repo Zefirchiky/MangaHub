@@ -1,3 +1,4 @@
+from pathlib import Path
 from loguru import logger
 from pydantic import BaseModel
 from services.handlers import JsonHandler
@@ -5,7 +6,7 @@ from utils import MM
 
 
 class ModelsJsonParser[KT: (str | int | float), T: BaseModel]:
-    def __init__(self, file, model: T, key_type: KT):
+    def __init__(self, file: Path | str, model: T, key_type: KT):
         self.file = file
         self.model = model
         self.key_type = key_type

@@ -156,7 +156,9 @@ class MangaManager:
         return chapter
     
     def get_chapter(self, manga: Manga, num: int) -> MangaChapter:
+        print(manga, num)
         if chapter := manga.get_chapter(num):
+            print(chapter)
             return chapter
             
         chapter = self.create_chapter(manga, num)
@@ -168,6 +170,7 @@ class MangaManager:
                     metadata = ImageMetadata(url=url)
                 )
             chapter.urls_cached = True
+        print(chapter)
         return chapter
     
     def get_image(self, name: str) -> bytes:

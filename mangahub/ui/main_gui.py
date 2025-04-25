@@ -111,6 +111,7 @@ class MainWindow(QMainWindow):
         self.app_controller.chapter_changed.connect(self.show_manga)
         self.app_controller.chapter_changed.connect(self.update_current_mc)
 
+        # Setting chapter
         self.manga_viewer.close_button.clicked.connect(
             lambda _: self.root_layout.setCurrentIndex(0)
         )
@@ -122,12 +123,13 @@ class MainWindow(QMainWindow):
 
         self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
         
-        self.chapter_image_loader.placeholder_ready.connect(
+        # Connecting download to manga_viewer
+        self.app_controller.manga_chapter_placeholder_ready.connect(
             lambda manga, chapter, i, pixmap: self.manga_viewer.add_placeholder(
                 i, pixmap
             )
         )
-        self.chapter_image_loader.image_ready.connect(
+        self.app_controller.manga_chapter_image_ready.connect(
             lambda manga,
             chapter,
             i,
@@ -180,7 +182,7 @@ class MainWindow(QMainWindow):
     def add_manga(self):
         self.add_manga_window.show()
         self.add_manga_window.add_manga_button.clicked.connect(
-            lambda _: self.dashboard.add_manga(
+            lambda _: self.dashboard.add_card(
                 self.manga_manager.get_manga(self.add_manga_window.name_input.text())
             )
         )
