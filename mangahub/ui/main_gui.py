@@ -17,7 +17,7 @@ from controllers import ChapterImageLoader, PlaceholderGenerator
 from app_status import AppStatus
 from resources.enums import StorageSize
 from utils import MM  # TODO
-from directories import IMAGES_DIR, RESOURCES_DIR
+from config import AppConfig
 
 if TYPE_CHECKING:
     from main import App
@@ -30,11 +30,11 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("MangaHub")
         self.setMinimumSize(1200, 800)
-        self.setWindowIcon(QIcon(str(RESOURCES_DIR / "app_icon.ico")))
+        self.setWindowIcon(QIcon(str(AppConfig.Dirs.RESOURCES / "app_icon.ico")))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         ImageWidget.set_default_placeholder(width=200, height=300)
-        ImageWidget.set_default_error_image(IMAGES_DIR / "placeholder.jpg")
+        ImageWidget.set_default_error_image(AppConfig.Dirs.IMAGES / "placeholder.jpg")
 
         IconRepo.init_default_icons()
 
@@ -137,7 +137,11 @@ class MainWindow(QMainWindow):
             image: self.manga_viewer.replace_placeholder(i, name)
         )
         
-        self.chapter_image_loader.overall_download_progress.connect(print)
+        self.chapter_image_loader.overall_download_progress.connect(
+            lambda urls_num, percent, current, total: MM.show_progress(
+                f'Images downloading for {self.app_controller.state.manga_name}', current, total, 'Downloading progress', percent
+                )
+            )    # len(urls), percent, current bytes, total bytes
         self.chapter_image_loader.finished.connect(self.manga_viewer._on_chapter_loaded)
         self.chapter_image_loader.finished.connect(
             lambda: MM.show_success("Images were downloaded successfully")
@@ -155,16 +159,8 @@ class MainWindow(QMainWindow):
             self.app_controller.state._manga,
             self.app_controller.state._chapter,
         )
-        # chapter = self.manga_manager.get_chapter(manga, self.app_controller.state.chapter_num)
-        # self.chapter_image_loader.load_chapter(manga.id_, chapter)
-        # self.chapter_image_loader.placeholder_ready.connect(self.manga_viewer.set_images(placeholders))     # TODO
-        # for num, image in chapter._images.items():
-        #     width, height = image.metadata.width, image.metadata.height
-        #     pm = PlaceholderGenerator.static(width, height, text=str(num))
-        #     self.manga_viewer.add_placeholder(num, pm)
-        #     self.manga_viewer.replace_placeholder(image.number, str(image.number))
             
-        self.chapter_image_loader.load_chapter(manga.id_, chapter)
+        self.app_controller.manga_manager.chapter_loader.load_chapter(manga.id_, chapter)
 
         self.root_layout.setCurrentIndex(1)
 

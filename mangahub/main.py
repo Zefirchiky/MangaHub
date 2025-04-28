@@ -1,22 +1,11 @@
 import ctypes
 import sys
 
-from directories import (
-    IMAGES_CACHE_DIR,
-    MANGA_JSON,
-    NOVELS_CONF_DIR,
-    NOVELS_JSON,
-    RESOURCES_DIR,
-    SITES_JSON,
-    STD_DIR,
-    CONF_FILE,
-)
 from config import CM
 from controllers import AppController, MangaManager, NovelsManager, SitesManager
 from ui import MainWindow
 from ui.widgets import IconRepo
 from loguru import logger
-from icecream import ic
 from models.novels import NovelFormatter
 from models.manga import ChapterImage
 from PySide6.QtGui import QIcon
@@ -28,7 +17,7 @@ from config import AppConfig
 from utils import MM
 
 
-logger.info(f"Working directory: {STD_DIR}")
+logger.info(f"Working directory: {AppConfig.Dirs.STD_DIR}")
 
 
 class App:
@@ -40,7 +29,7 @@ class App:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         self.gui_app = QApplication(sys.argv)
-        self.gui_app.setWindowIcon(QIcon(f"{RESOURCES_DIR}/app_icon.ico"))
+        self.gui_app.setWindowIcon(QIcon(f"{AppConfig.Dirs.RESOURCES}/app_icon.ico"))
         self.gui_window = MainWindow(self)
         self.message_manager = MM(self)
         self.color_manager = CM(self)
@@ -48,17 +37,17 @@ class App:
 
         # Set defaults
         NovelFormatter.global_replaces = JsonHandler(
-            f"{NOVELS_CONF_DIR}/global_replace.json"
+            f"{AppConfig.Dirs.NOVELS_CONF}/global_replace.json"
         ).load()
 
-        self.sites_json_parser = SitesParser(SITES_JSON)
+        self.sites_json_parser = SitesParser(AppConfig.Dirs.SITES_JSON)
         UrlParser.set_parser(self.sites_json_parser)
         self.sites_manager = SitesManager(self)
 
-        self.manga_repository = MangaRepository(MANGA_JSON)
+        self.manga_repository = MangaRepository(AppConfig.Dirs.MANGA_JSON)
         self.manga_manager = MangaManager(self)
 
-        self.novels_repository = NovelsRepository(NOVELS_JSON)
+        self.novels_repository = NovelsRepository(AppConfig.Dirs.NOVELS_JSON)
         self.novels_manager = NovelsManager(self)
 
         self.app_controller = AppController(self)
@@ -92,7 +81,7 @@ class App:
         self.gui_window.showMaximized()
         self.gui_window.init()
 
-        MM.show_info(f"Working directory: \n{STD_DIR}", 7000)
+        MM.show_info(f"Working directory: \n{AppConfig.Dirs.STD_DIR}", 7000)
 
         logger.success(f"MangaHub v{AppConfig.version()} initialized")
         self.gui_app.exec()

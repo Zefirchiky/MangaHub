@@ -28,7 +28,7 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
     current_chapter: int | float = 0
     first_chapter: int | float = 0
     last_chapter: int | float = 0
-    checked_chapters: set[int | float] = set()
+    checked_chapters: set[int | float] = Field(default_factory=set)
     _chapters_data: dict[int | float, ChapterType] = PrivateAttr(default_factory=dict)
         
     def add_backup_site(self, site_name) -> None:

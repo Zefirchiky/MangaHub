@@ -1,12 +1,11 @@
-from directories import ICONS_DIR
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, QSize, Qt
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QBoxLayout, QFrame, QPushButton
+from loguru import logger
 
 from ..separators import Separator
-from ..svg import SvgIcon
+from ..svg_icon import IconRepo
 
-from loguru import logger
 
 
 class SlideMenu(QFrame):
@@ -25,7 +24,7 @@ class SlideMenu(QFrame):
         self.buttons = {}
         self.buttons_layout = QBoxLayout(QBoxLayout.Direction.TopToBottom if is_vertical else QBoxLayout.Direction.LeftToRight)
 
-        expand_button_icon = SvgIcon(ICONS_DIR / "menu.svg")
+        expand_button_icon = IconRepo.get(IconRepo.Icons.MENU)
 
         expansion_button = QPushButton()
         expansion_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))

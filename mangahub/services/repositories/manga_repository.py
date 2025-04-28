@@ -16,12 +16,16 @@ class MangaRepository(ModelsJsonParser[str, Manga]):
     def get(self, name) -> Manga | None:
         try:
             return super().get(name)
+        
         except Exception as e:
             logger.warning(f"Manga {name} not found with error: {e}. Returning None")
             return None
     
-    def load(self) -> dict[str, Manga]:
-        return super().get_all()
+    def load(self) -> dict[str, Manga]: # TODO: Lazy chapters loading
+        for manga in (mangas := super().get_all()).values():
+            for chapter in MangaChaptersRepository(manga).get_all().values():
+                manga.add_chapter(chapter)
+        return mangas
     
     def save(self) -> None:
         for manga in self.models_collection.values():

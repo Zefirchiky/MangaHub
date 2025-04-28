@@ -1,9 +1,9 @@
-from directories import BACKGROUNDS_DIR
 from models.novels import Novel
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTextBrowser
 
 from .smooth_scroll_area import SmoothScrollArea
+from config import AppConfig
 
 
 class NovelViewer(SmoothScrollArea):
@@ -13,7 +13,7 @@ class NovelViewer(SmoothScrollArea):
         self.viewport().setObjectName("NovelViewer")
         self.viewport().setStyleSheet(f"""
                             #NovelViewer {{
-                                background: url({str(BACKGROUNDS_DIR).replace('\\', '/')}/novel_viewer.jpg) repeat;
+                                background: url({str(AppConfig.Dirs.BACKGROUNDS).replace('\\', '/')}/novel_viewer.jpg) repeat;
                             }}
                            """)
         

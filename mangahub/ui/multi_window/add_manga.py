@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
-from directories import ICONS_DIR
-from ui.widgets import SvgIcon
+from ui.widgets import IconRepo
 from models import URL
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (QComboBox, QFormLayout, QLabel, QLineEdit,
@@ -44,7 +43,7 @@ class AddMangaWindow(QMainWindow):
 
         sites_add_button = QPushButton()
         sites_add_button.setStyleSheet("QPushButton { background-color: transparent; border: 2px dashed grey; border-radius: 5px; }")
-        sites_add_button.setIcon(SvgIcon(ICONS_DIR / "add.svg").get_icon('white'))
+        sites_add_button.setIcon(IconRepo.get(IconRepo.Icons.ADD).get_qicon())
         sites_add_button.setIconSize(QSize(16, 16))
 
         sites_layout = QVBoxLayout()

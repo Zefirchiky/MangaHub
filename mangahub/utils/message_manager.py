@@ -5,7 +5,7 @@ from app_status import AppStatus
 from loguru import logger
 from PySide6.QtCore import (QEasingCurve, QPropertyAnimation, QRect, Qt,
                             QTimer, Signal)
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy
+from PySide6.QtWidgets import QFrame, QVBoxLayout, QLabel, QSizePolicy, QProgressBar
 
 
 class MessageType(Enum):
@@ -37,16 +37,29 @@ class Message(QFrame):
         self.type_label.setStyleSheet("border: none; background-color: transparent; font-size: 10px;")
         self.type_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.type_label.move(10, 5)
+        
+        self.progress_bar: QProgressBar = None
 
-        root_layout = QHBoxLayout()
-        root_layout.addWidget(self.label)
+        self.root_layout = QVBoxLayout()
+        self.root_layout.addWidget(self.label)
 
-        self.setLayout(root_layout)
+        self.setLayout(self.root_layout)
         self.adjust_height()
         
     def adjust_height(self):
         label_height = self.label.sizeHint().height()
-        self.setFixedHeight(max(self.min_height, label_height + 30))
+        height = label_height + 30
+        if self.progress_bar:
+            height += self.progress_bar.height() + 30
+        self.setFixedHeight(max(self.min_height, height))
+        
+    def set_progress_bar(self, total, minimum = 0):     # TODO: Doesnt work properly
+        self.progress_bar = QProgressBar(minimum=minimum, maximum=total)
+        self.progress_bar.setFixedWidth(self.width() - 20)
+        self.progress_bar.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.root_layout.addWidget(self.progress_bar)
+        return self.progress_bar
 
     def _get_style(self, message_type):
         styles = {
@@ -121,29 +134,43 @@ class MM:
             self.x = 10
             
             self.active_messages = []
+            self.progress_messages: dict[str, Message] = {}
             self.move_anim_group = {}
             self.destroy_anim_group = {}
 
             logger.success("MessageManager initialized")
     
     @classmethod
+    def show_progress(cls, progress_name: str, cur_value: int, total: int, message_text: str='', cur_percent: int=-1, wait_after_complete=5000):
+        cls._instance._show_progress(progress_name, cur_value, total, message_text, cur_percent, wait_after_complete)
+    
+    def _show_progress(self, progress_name: str, cur_value: int, total: int, message_text: str='', cur_percent: int=-1, wait_after_complete=5000):
+        if progress_name not in self.progress_messages:
+            self.progress_messages[progress_name] = self.show_message(message_text, MessageType.INFO, wait_after_complete, no_logging=True)
+            self.progress_messages[progress_name].set_progress_bar(total)
+        pbar = self.progress_messages[progress_name].progress_bar
+        pbar.setValue(cur_value)
+        if total != pbar.maximum():
+            pbar.setMaximum(total)
+    
+    @classmethod
     def show_info(cls, message_text: str='', duration=5000, progress=False):
-        cls.show_message(message_text, MessageType.INFO, duration, progress)
+        return cls.show_message(message_text, MessageType.INFO, duration, progress)
     
     @classmethod
     def show_success(cls, message_text: str='', duration=5000, progress=False):
-        cls.show_message(message_text, MessageType.SUCCESS, duration, progress)
+        return cls.show_message(message_text, MessageType.SUCCESS, duration, progress)
     
     @classmethod
     def show_warning(cls, message_text: str='', duration=5000, progress=False):
-        cls.show_message(message_text, MessageType.WARNING, duration, progress)
+        return cls.show_message(message_text, MessageType.WARNING, duration, progress)
     
     @classmethod
     def show_error(cls, message_text: str='', duration=5000, progress=False):
-        cls.show_message(message_text, MessageType.ERROR, duration, progress)
+        return cls.show_message(message_text, MessageType.ERROR, duration, progress)
         
     @classmethod
-    def show_message(cls, message_text: str='', message_type: MessageType | str=MessageType.ERROR, duration=5000, progress=False):
+    def show_message(cls, message_text: str='', message_type: MessageType | str=MessageType.ERROR, duration=5000, progress=False, no_logging=False):
         """Shows a message in the main window.
         If the main window is not initialized yet, the message is queued for later display.
         If the main window is initialized, the message is displayed directly.
@@ -168,15 +195,16 @@ class MM:
                 case 'error' | 'e':
                     message_type = MessageType.INFO
         
-        match message_type:
-            case MessageType.INFO:
-                logger.info(message_text)
-            case MessageType.SUCCESS:
-                logger.success(message_text)
-            case MessageType.WARNING:
-                logger.warning(message_text)
-            case MessageType.ERROR:
-                logger.error(message_text)
+        if not no_logging:
+            match message_type:
+                case MessageType.INFO:
+                    logger.info(message_text)
+                case MessageType.SUCCESS:
+                    logger.success(message_text)
+                case MessageType.WARNING:
+                    logger.warning(message_text)
+                case MessageType.ERROR:
+                    logger.error(message_text)
                 
         if not AppStatus.main_window_initialized:
             cls.queue.append((message_type, message_text, progress, duration))
@@ -197,7 +225,8 @@ class MM:
         self.active_messages.append(message)
         self.move_messages()
         
-        QTimer.singleShot(duration, lambda: self.destroy_message(message))
+        if not duration == -1:
+            QTimer.singleShot(duration, lambda: self.destroy_message(message))
         
         return message
 

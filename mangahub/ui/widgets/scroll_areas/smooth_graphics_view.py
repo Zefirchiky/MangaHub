@@ -1,9 +1,9 @@
-from directories import BACKGROUNDS_DIR
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView
 
 from .smooth_scroll_mixin import SmoothScrollMixin
+from config import AppConfig
 
 
 class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
@@ -20,7 +20,7 @@ class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
         
         self._scene = QGraphicsScene(self)
         self.setScene(self._scene)
-        self.bg_image = QPixmap(str(BACKGROUNDS_DIR/'manga_viewer.jpg').replace('\\', '/'))
+        self.bg_image = QPixmap(str(AppConfig.Dirs.BACKGROUNDS/'manga_viewer.jpg').replace('\\', '/'))
         self.setBackgroundBrush(self.bg_image)
         
         # Optimize rendering

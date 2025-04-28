@@ -1,7 +1,7 @@
-from ..tags import TagModel
+from pydantic import BaseModel
 
 
-class ImageMetadata(TagModel):
+class ImageMetadata(BaseModel):
     url: str
     name: str = ''
     width: int = 0

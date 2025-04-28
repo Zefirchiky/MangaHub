@@ -1,4 +1,3 @@
-from directories import ICONS_DIR
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, QSize, Qt
 from PySide6.QtWidgets import (
     QComboBox,
@@ -10,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 from .scroll_areas import SmoothScrollArea
-from .svg import SvgIcon
+from .svg_icon import SVGIcon, IconRepo
 
 
 class AddElement(QPushButton):
@@ -19,7 +18,7 @@ class AddElement(QPushButton):
 
         self.setFixedSize(80, 20)
         self.setIconSize(QSize(16, 16))
-        self.setIcon(SvgIcon(ICONS_DIR / "add.svg").get_icon("white"))
+        self.setIcon(IconRepo.get(IconRepo.Icons.ADD).get_qicon())
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.setStyleSheet("""
@@ -35,7 +34,7 @@ class AddElementList(QComboBox):
 
         self.setFixedSize(80, 20)
         self.setIconSize(QSize(16, 16))
-        self.setIcon(SvgIcon(ICONS_DIR / "add.svg").get_icon("white"))
+        self.setIcon(IconRepo.get(IconRepo.Icons.ADD).get_qicon())
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.setStyleSheet("""
@@ -50,7 +49,7 @@ class SelectionElement(QPushButton):
         self,
         parent=None,
         text="Text",
-        icon: SvgIcon | None = None,
+        icon: SVGIcon | IconRepo.Icons | None = None,
         bg_color=None,
         border_color=None,
         text_color="white",
@@ -76,7 +75,7 @@ class SelectionElement(QPushButton):
 
         if icon:
             self.setIconSize(QSize(16, 16))
-            self.setIcon(icon.get_icon(icon_color))
+            self.setIcon(icon.get_icon(icon_color).get_qicon())
 
         self.setText(text)
 

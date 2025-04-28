@@ -3,12 +3,12 @@ from enum import Enum
 from pathlib import Path
 
 from config import CM
-from directories import ICONS_DIR
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QPushButton
 
 from ..svg_icon import SVGIcon
+from config import AppConfig
 
 
 class IconTypes(Enum):
@@ -66,9 +66,9 @@ class IconButton(QPushButton):
 
     def set_icon(self, icon: str | Path | IconTypes, color="white") -> IconButton:
         if isinstance(icon, IconTypes):
-            icon = ICONS_DIR / icon.value
+            icon = AppConfig.Dirs.ICONS / icon.value    # TODO(?): Use IconRepo
         self.setIcon(
-            SVGIcon(Path(icon)).set_hover_size_factor(1.2).set_color(color).get_pixmap()
+            SVGIcon(Path(icon)).set_hover_size_factor(1.2).set_color(color).get_qicon()
         )
         return self
 

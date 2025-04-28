@@ -23,7 +23,7 @@ class ModelsJsonParser[KT: (str | int | float), T: BaseModel]:
                 model = self.model.model_validate(data)
                 self._models_collection[name] = model
                 return model
-            raise Exception(f'Model not found: {self.model}({name}) (file: {self.file}, key type: {self.key_type} (.get(str(name))), name type: {type(name)})')
+            raise Exception(f'Model not found: {self.model}({name})\n(file: {self.file}\nkey type: {self.key_type} (.get(str(name)))\nname type: {type(name)})')
         except KeyError:
             MM.show_error(f"{model.__name__} {name} not found")
             return 
@@ -31,8 +31,7 @@ class ModelsJsonParser[KT: (str | int | float), T: BaseModel]:
     def get_all(self) -> dict[KT, T]:
         for name in self.data.keys():
             name = self.key_type(name)
-            if name not in self._models_collection.keys():
-                self._models_collection[name] = self.get(name)
+            self.get(name)
         
         return self._models_collection
     
@@ -47,5 +46,5 @@ class ModelsJsonParser[KT: (str | int | float), T: BaseModel]:
         self._models_collection = models_dict
     
     def save(self, models_dict: dict[KT, T]):
-        models_list = {name: model.model_dump(mode="json", exclude_unset=True, exclude_none=True) for name, model in models_dict.items()}
+        models_list = {name: model.model_dump(mode="json") for name, model in models_dict.items()}
         self.json_parser.save_data(models_list)

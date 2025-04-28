@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from config import CM
-from directories import ICONS_DIR
 from loguru import logger
 from PySide6.QtCore import QByteArray, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
@@ -11,6 +10,7 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from resources.enums import IconsEnum
 from utils import SVGManipulator
+from config import AppConfig
 
 
 class SVGIcon(QLabel):
@@ -253,8 +253,8 @@ class IconRepo:
     def get(cls, icon_name: str | IconsEnum, copy=True) -> SVGIcon:
         icon_name = icon_name.value if isinstance(icon_name, IconsEnum) else icon_name
         if icon_name not in cls._icons:
-            logger.warning(f"Icon {icon_name} not found in the repo. Loading from {ICONS_DIR}")
-            cls._icons[icon_name] = SVGIcon(svg_path=ICONS_DIR / f"{icon_name}.svg")
+            logger.warning(f"Icon {icon_name} not found in the repo. Loading from {AppConfig.Dirs.ICONS}")
+            cls._icons[icon_name] = SVGIcon(svg_path=AppConfig.Dirs.ICONS / f"{icon_name}.svg")
         return cls._icons[icon_name].copy() if copy else cls._icons[icon_name]
     
     @classmethod
@@ -268,7 +268,7 @@ class IconRepo:
         SVGIcon._default_size = (32, 32)
         
         for icon in IconsEnum:
-            IconRepo.add_icon(icon, SVGIcon(ICONS_DIR / f'{icon.value}.svg'))
+            IconRepo.add_icon(icon, SVGIcon(AppConfig.Dirs.ICONS / f'{icon.value}.svg'))
         
         # UTILS
         IconRepo.get(IconRepo.Icons.EYE, False).set_size(20, 20).set_second_icon(

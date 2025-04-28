@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QPixmap
 
-from directories import MANGA_DIR, IMAGES_CACHE_DIR
 from loguru import logger
 
 from .placeholder_generator import PlaceholderGenerator
@@ -39,7 +38,7 @@ class MangaManager:
         self.dex_scraper = MangaDexScraper()
         self.sites_scraper = MangaSiteScraper(self.sites_manager)
         
-        self.image_cache = ImageCache(IMAGES_CACHE_DIR, max_ram=AppConfig.Caching.Image.max_ram(), max_disc=AppConfig.Caching.Image.max_disc())     # TODO: give sizes
+        self.image_cache = ImageCache(AppConfig.Dirs.IMAGES_CACHE, max_ram=AppConfig.Caching.Image.max_ram(), max_disc=AppConfig.Caching.Image.max_disc())     # TODO: give sizes
         self.image_downloader = ImageDownloader(self.image_cache, AppConfig.ImageDownloading.max_threads())
         self.chapter_loader = ChapterImageLoader(self.image_downloader, self.image_cache)
         
@@ -55,12 +54,12 @@ class MangaManager:
         for manga in self.repository.get_all().values():
             if not manga._chapters_data.get(1):
                 manga.add_chapter(self.get_chapter(manga, 1))
-                manga.current_chapter = 1
-                manga.first_chapter = 1
+                
             if not manga._chapters_data.get(manga.last_chapter):
                 manga.add_chapter(self.get_chapter(manga, manga.last_chapter))
-            if manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter and \
-                manga.current_chapter and not manga._chapters_data.get(manga.current_chapter):
+                
+            if (manga.current_chapter != 1 and manga.current_chapter != manga.last_chapter 
+                and manga.current_chapter and not manga._chapters_data.get(manga.current_chapter)):
                 manga.add_chapter(self.get_chapter(manga, manga.current_chapter))
         
         return self.repository.get_all()
@@ -83,7 +82,7 @@ class MangaManager:
             
         id_ = name.lower().replace(' ', '-').replace(',', '').replace('.', '').replace('?', '').replace('!', '')
         id_dex = self.dex_scraper.get_manga_id(name)
-        folder = f'{MANGA_DIR}/{id_}'
+        folder = f'{AppConfig.Dirs.MANGA}/{id_}'
         os.makedirs(folder, exist_ok=True)
         if id_dex:
             last = self.dex_scraper.get_last_chapter_num(id_dex)
@@ -156,9 +155,7 @@ class MangaManager:
         return chapter
     
     def get_chapter(self, manga: Manga, num: int) -> MangaChapter:
-        print(manga, num)
         if chapter := manga.get_chapter(num):
-            print(chapter)
             return chapter
             
         chapter = self.create_chapter(manga, num)
@@ -170,7 +167,6 @@ class MangaManager:
                     metadata = ImageMetadata(url=url)
                 )
             chapter.urls_cached = True
-        print(chapter)
         return chapter
     
     def get_image(self, name: str) -> bytes:
@@ -286,8 +282,8 @@ class MangaManager:
         _id = url_parser.manga_id
         name = _id.title().replace('-', ' ')
 
-        if not os.path.exists(f'{MANGA_DIR}/{_id}'):
-            os.makedirs(f'{MANGA_DIR}/{_id}')
+        if not os.path.exists(f'{AppConfig.Dirs.MANGA}/{_id}'):
+            os.makedirs(f'{AppConfig.Dirs.MANGA}/{_id}')
             
         cover = self.ensure_cover(_id, url_parser)
 

@@ -1,7 +1,6 @@
 import asyncio
 import aiohttp
 import io
-from tqdm.asyncio import tqdm_asyncio as tqdm
 from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal, QUrl
 from PIL import Image
 
@@ -18,6 +17,7 @@ class ImageDownloadWorkerSignals(QObject):
     error = Signal(str, Exception)
     
 
+# TODO: Better use of async
 class ImageDownloadWorker(QRunnable):
     """Worker thread for downloading an image without blocking the GUI"""
     _signals = ImageDownloadWorkerSignals()
@@ -58,16 +58,6 @@ class ImageDownloadWorker(QRunnable):
                     prev_percentage = 0
                     diff = 0
                     
-                    if AppConfig.dev_mode():
-                        pbar = tqdm(
-                            total=size,
-                            unit='B',
-                            unit_scale=True,
-                            desc=f"Downloading {self.url}",
-                            dynamic_ncols=True,
-                            position=2
-                        )
-                    
                     async for chunk in response.content.iter_chunked(self.chunk_size):
                         if not chunk:
                             break
@@ -90,8 +80,6 @@ class ImageDownloadWorker(QRunnable):
                         downloaded += chunk_size
                         image_data.extend(chunk)
                         
-                        if AppConfig.dev_mode():
-                            pbar.update(chunk_size)
                         if size > 0:
                             percentage = int(downloaded / size * 100)
                             if percentage - prev_percentage >= self.update_p or percentage == 100:
@@ -101,8 +89,6 @@ class ImageDownloadWorker(QRunnable):
                                 )
                                 diff = 0
                     
-                    if AppConfig.dev_mode():
-                        pbar.close()
                     
                     if size > 0 and downloaded != size:
                         return None, None, Exception(f'Size downloaded does not match with size expected: {downloaded}/{size} bytes')

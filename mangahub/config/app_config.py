@@ -7,31 +7,8 @@ from rich import print
 from rich.console import Console
 import rich.traceback
 
-from .app_config_abs import Config, Setting, Level, SettingType
+from easy_config_hub import Config, DirectoriesConfig, Setting, Level, SettingType
 from resources.enums import SU, StorageSize
-from directories import LOG_DIR, CONF_FILE
-
-builtins.print = print
-
-logger.add(f"{LOG_DIR}/latest.log", level="DEBUG", backtrace=True, diagnose=True, retention=1, mode='w')
-logger.add(f"{LOG_DIR}/log-{{time}}.log", level="DEBUG", backtrace=False, diagnose=False, retention=2, mode='w')
-
-console = Console()
-def custom_exception_handler(exc_type: type[BaseException], exc_value: BaseException, traceback):
-    logger.opt(exception=(exc_type, exc_value, traceback)).error("An error occurred:")
-    
-    console.print("\n[bold red]An exception occurred:[/bold red]")
-    rich_traceback = rich.traceback.Traceback.from_exception(
-        exc_type, exc_value, traceback, 
-        show_locals=True, 
-        word_wrap=True, 
-        indent_guides=True
-    )
-    console.print(rich_traceback)
-    
-    console.print(f"[dim]Full error details logged to {f"{LOG_DIR}\\latest.log"}[/dim]")
-
-sys.excepthook = custom_exception_handler
 
 
 class AppConfig(Config):
@@ -80,11 +57,67 @@ class AppConfig(Config):
         class Image(Config):
             max_ram = Setting[StorageSize](100*SU.MB, 'Max Ram for Images')
             max_disc = Setting[StorageSize](500*SU.MB, 'Max Disc Space for Images')
+            
+    
+    class Dirs(DirectoriesConfig):
+        STD_DIR = DirectoriesConfig.STD_DIR
         
+        '''=== CONFIGS ==='''
+        CONF = STD_DIR / 'config'
+        CONF_JSON = CONF / 'config.json'
+        NOVELS_CONF = CONF / 'novels'
+
+        '''=== LOGS ==='''
+        LOG = STD_DIR / 'logs'
+
+        '''=== CACHE ==='''
+        CACHE = STD_DIR / 'cache'
+        IMAGES_CACHE = CACHE / 'images'
+
+        '''=== DATA ==='''
+        DATA = STD_DIR / 'data'
+
+        NOVELS = DATA / 'novels'
+        MANGA = DATA / 'manga'
+        STATE = DATA / 'state'
+
+        NOVELS_JSON = DATA / 'novels.json'
+        MANGA_JSON = DATA / 'manga.json'
+        SITES_JSON = DATA / 'sites.json'
+
+        '''=== RESOURCES ==='''
+        RESOURCES = STD_DIR / 'resources'
+
+        ICONS = RESOURCES / 'icons'
+        IMAGES = RESOURCES / 'img'
+        BACKGROUNDS = RESOURCES / 'background'
+        
+
+builtins.print = print
+
+logger.add(f"{AppConfig.Dirs.LOG}/latest.log", level="DEBUG", backtrace=True, diagnose=True, retention=1, mode='w')
+logger.add(f"{AppConfig.Dirs.LOG}/log-{{time}}.log", level="DEBUG", backtrace=False, diagnose=False, retention=2, mode='w')
+
+console = Console()
+def custom_exception_handler(exc_type: type[BaseException], exc_value: BaseException, traceback):
+    logger.opt(exception=(exc_type, exc_value, traceback)).error("An error occurred:")
+    
+    console.print("\n[bold red]An exception occurred:[/bold red]")
+    rich_traceback = rich.traceback.Traceback.from_exception(
+        exc_type, exc_value, traceback, 
+        show_locals=True, 
+        word_wrap=True, 
+        indent_guides=True
+    )
+    console.print(rich_traceback)
+    
+    console.print(f"[dim]Full error details logged to {f"{AppConfig.Dirs.LOG}\\latest.log"}[/dim]")
+
+sys.excepthook = custom_exception_handler
         
 print(f"MangaHub v{AppConfig.version()}")
         
 try:
-    AppConfig.load(CONF_FILE)
+    AppConfig.load(AppConfig.Dirs.CONF_JSON)
 except FileNotFoundError:
     logger.warning('Config file wasn\'t found. New one will be created.')

@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "aiohttp>=3.11.11",
     "bs4>=0.0.2",
+    "easy-config-hub",
     "icecream>=2.1.4",
     "loguru>=0.7.3",
     "lxml>=5.3.1",
@@ -22,10 +23,12 @@ dependencies = [
     "rich>=14.0.0",
     "ruff>=0.8.4",
     "tomli>=2.2.1",
-    "tqdm>=4.67.1",
 ]
 
 [tool.mypy]
 python = "3.13"
 ignore_missing_imports = true
 strict = false
+
+[tool.uv.sources]
+easy-config-hub = { path = "../packages/easy-config-hub" }

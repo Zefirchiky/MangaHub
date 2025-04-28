@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from queue import SimpleQueue
 from resources.enums import SU, StorageSize
-from directories import IMAGES_CACHE_DIR
+from config import AppConfig
 
 
 class ImageCache:   # TODO: SAVE/LOAD
@@ -83,7 +83,7 @@ class ImageCache:   # TODO: SAVE/LOAD
     def free_disc(self) -> StorageSize:
         return self.max_disc - self.cur_disc
     
-    def save_image(self, name: str, path: Path=IMAGES_CACHE_DIR):
+    def save_image(self, name: str, path: Path=AppConfig.Dirs.IMAGES_CACHE):
         path.mkdir(exist_ok=True)
         with open(path / name, 'wb') as f:
             f.write(self.get_image(name))

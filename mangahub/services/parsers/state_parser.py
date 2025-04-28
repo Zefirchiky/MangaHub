@@ -1,12 +1,11 @@
-from directories import STATE_DIR
 from models.manga import MangaState
 
 from .model_json_parser import ModelJsonParser
-
+from config import AppConfig
 
 class StateParser(ModelJsonParser):
     def __init__(self, file: str, state: MangaState):
-        super().__init__(STATE_DIR / file, state)
+        super().__init__(AppConfig.Dirs.STATE / file, state)
         
     def get_state(self) -> MangaState:
         return self.get_model()

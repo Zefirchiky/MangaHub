@@ -70,6 +70,7 @@ class AppController:
         self.state.set_chapter_num(number)
         if not (chapter := self.state._manga.get_chapter(self.state.chapter_num)):
             chapter = self.manager.get_chapter(self.state._manga, self.state.chapter_num)
+        chapter.set_is_read(True)
             
         self.state._manga.add_chapter(chapter)
         self.state._manga.check_chapter(self.state.chapter_num)
