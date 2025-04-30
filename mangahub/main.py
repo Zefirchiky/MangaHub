@@ -7,7 +7,6 @@ from ui import MainWindow
 from ui.widgets import IconRepo
 from loguru import logger
 from models.novels import NovelFormatter
-from models.manga import ChapterImage
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from services.handlers import JsonHandler
@@ -82,6 +81,7 @@ class App:
         self.gui_window.init()
 
         MM.show_info(f"Working directory: \n{AppConfig.Dirs.STD_DIR}", 7000)
+        MM.show_progress("lol1", 12, 100, "lol", format_="%p% (%v/%t Bytes)")
 
         logger.success(f"MangaHub v{AppConfig.version()} initialized")
         self.gui_app.exec()

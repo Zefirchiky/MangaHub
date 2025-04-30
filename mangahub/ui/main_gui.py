@@ -1,23 +1,21 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-import sys
 
 from PySide6.QtCore import QPoint, Qt, QTimer
-from PySide6.QtGui import QCursor, QIcon, QPixmap
+from PySide6.QtGui import QCursor, QIcon
 from PySide6.QtWidgets import QMainWindow, QStackedLayout, QWidget
 from loguru import logger
 
 from ui.multi_window import AddMangaWindow, SettingsWindow
 from ui.widgets import IconRepo, ImageWidget, SelectionMenu
 from ui.widgets.dashboard import Dashboard, MediaCard
-from ui.widgets.scroll_areas import MangaViewer, MangaViewerScene, NovelViewer
+from ui.widgets.scroll_areas import MangaViewer, NovelViewer
 from ui.widgets.slide_menus import SideMenu
 
-from controllers import ChapterImageLoader, PlaceholderGenerator
 from app_status import AppStatus
-from resources.enums import StorageSize
 from utils import MM  # TODO
 from config import AppConfig
+
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from main import App
@@ -50,7 +48,9 @@ class MainWindow(QMainWindow):
         # side menu
         self.side_menu = SideMenu(self)
         self.side_menu.add_button(
-            lambda: self.root_layout.setCurrentIndex(0 if self.root_layout.currentIndex() != 0 else 1),
+            lambda: self.root_layout.setCurrentIndex(
+                0 if self.root_layout.currentIndex() != 0 else 1
+            ),
             IconRepo.get(IconRepo.Icons.MANGA),
             "Manga",
             is_default=True,
@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
         self.manga_viewer.next_button.clicked.connect(self.app_controller.next_chapter)
 
         self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
-        
+
         # Connecting download to manga_viewer
         self.app_controller.manga_chapter_placeholder_ready.connect(
             lambda manga, chapter, i, pixmap: self.manga_viewer.add_placeholder(
@@ -136,17 +136,25 @@ class MainWindow(QMainWindow):
             name,
             image: self.manga_viewer.replace_placeholder(i, name)
         )
-        
+
         self.chapter_image_loader.overall_download_progress.connect(
             lambda urls_num, percent, current, total: MM.show_progress(
-                f'Images downloading for {self.app_controller.state.manga_name}', current, total, 'Downloading progress', percent
-                )
-            )    # len(urls), percent, current bytes, total bytes
+                f"Images downloading for {self.app_controller.state.manga_name} {self.app_controller.state.chapter_num}",
+                current,
+                total,
+                "Downloading progress",
+                format_="%p% (%v/%t Bytes)",
+            )
+        )  # len(urls), percent, current bytes, total bytes
+        self.chapter_image_loader.finished.connect(
+            lambda: MM.finish_progress(
+                f"Images downloading for {self.app_controller.state.manga_name} {self.app_controller.state.chapter_num}"
+            )
+        )
         self.chapter_image_loader.finished.connect(self.manga_viewer._on_chapter_loaded)
         self.chapter_image_loader.finished.connect(
             lambda: MM.show_success("Images were downloaded successfully")
         )
-
 
         # self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
 
@@ -159,8 +167,10 @@ class MainWindow(QMainWindow):
             self.app_controller.state._manga,
             self.app_controller.state._chapter,
         )
-            
-        self.app_controller.manga_manager.chapter_loader.load_chapter(manga.id_, chapter)
+
+        self.app_controller.manga_manager.chapter_loader.load_chapter(
+            manga.id_, chapter
+        )
 
         self.root_layout.setCurrentIndex(1)
 
