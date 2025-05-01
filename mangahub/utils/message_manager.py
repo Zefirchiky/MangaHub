@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QProgressBar,
 )
-from PySide6.QtGui import QFont
 
 
 class MessageType(Enum):

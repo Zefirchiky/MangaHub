@@ -36,7 +36,7 @@ class ChapterImageLoader(QObject):
     @Slot(int)  # type: ignore
     def _set_chapter_total_bytes(self, total: int):
         self.chapter.total_bytes = total
-    
+
     def load_chapter(self, manga_id: str, chapter: MangaChapter):
         self._reset()
         self.manga_id = manga_id

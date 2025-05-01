@@ -6,10 +6,10 @@ from .novel_chapter import NovelChapter
 
 class Novel(AbstractMedia[NovelChapter]):
     _chapters_data: dict[int | float, NovelChapter] = PrivateAttr(default_factory=dict)
-    
+
     def add_chapter(self, chapter: NovelChapter) -> None:
         super().add_chapter(chapter)
-        
+
     @property
     def text(self) -> str:
         text = ""

@@ -5,7 +5,7 @@ class BodyPart(ABC):
     def __init__(self, name: str):
         self.name = name
         self.hp = 0
-        
-    def damaged(self, damage: int) -> 'BodyPart':
+
+    def damaged(self, damage: int) -> "BodyPart":
         self.hp -= damage
         return self

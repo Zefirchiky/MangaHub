@@ -12,16 +12,18 @@ class MangaChaptersRepository(ModelsJsonParser[int, MangaChapter]):
         self.manga = manga
 
     def get(self, num: int | float) -> MangaChapter | None:
-        images_parser = ChapterImagesParser(f"{self.manga.folder}/chapter{num}/images.json")
+        images_parser = ChapterImagesParser(
+            f"{self.manga.folder}/chapter{num}/images.json"
+        )
         try:
             chapter = super().get(num)
         except Exception as e:
             logger.warning(f"Chapter {num} not found with error: {e}. \nReturning None")
             return None
-        
+
         chapter._images = images_parser.get_all()
         return chapter
-    
+
     def save(self, chapters_dict: dict[float, MangaChapter]):
         for chapter in chapters_dict.values():
             if chapter._images:

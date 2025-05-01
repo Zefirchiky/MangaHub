@@ -6,7 +6,8 @@ class Gender(Enum):
     FEMALE = auto()
     GENDERLESS = auto()
     HERMAPHRODITE = auto()
-    
+
+
 class Orientation(Enum):
     STRAIGHT = auto()
     LGBT = auto()

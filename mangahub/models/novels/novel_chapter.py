@@ -4,7 +4,7 @@ from .novel_paragraph import NovelParagraph
 
 class NovelChapter(AbstractChapter):
     _paragraphs_data: list[NovelParagraph] = []
-    
+
     @property
     def text(self) -> str:
         text = ""

@@ -5,18 +5,20 @@ from PySide6.QtWidgets import QFrame
 
 
 class Separator(QFrame):
-    def __init__(self, orientation='h', thickness=2, padding=5, color=None, parent=None):
+    def __init__(
+        self, orientation="h", thickness=2, padding=5, color=None, parent=None
+    ):
         super().__init__(parent)
         self.orientation = orientation
         self.thickness = thickness
         self.padding = padding
         self.color = QColor(color or CM().icon)
-        
-        if self.orientation.lower() == 'h':
+
+        if self.orientation.lower() == "h":
             self.setFixedHeight(self.thickness)
         else:
             self.setFixedWidth(self.thickness)
-        
+
         self.setStyleSheet("background-color: transparent;")
 
     def paintEvent(self, event):
@@ -24,8 +26,12 @@ class Separator(QFrame):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.color)
-        
-        if self.orientation == 'h':
-            painter.drawRect(self.padding, 0, self.width() - 2*self.padding, self.thickness)
+
+        if self.orientation == "h":
+            painter.drawRect(
+                self.padding, 0, self.width() - 2 * self.padding, self.thickness
+            )
         else:
-            painter.drawRect(0, self.padding, self.thickness, self.height() - 2*self.padding)
+            painter.drawRect(
+                0, self.padding, self.thickness, self.height() - 2 * self.padding
+            )

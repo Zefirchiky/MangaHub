@@ -1,7 +1,11 @@
+from .html_downloader import HtmlDownloaderWorkerSignals, HtmlDownloaderWorker, HtmlDownloader
 from .image_downloader import ImageDownloadWorkerSignals, ImageDownloadWorker, ImageDownloader
 
 __all__ = [
-    'ImageDownloadWorkerSignals', 
+    'HtmlDownloaderWorkerSignals', 
+	'HtmlDownloaderWorker', 
+	'HtmlDownloader', 
+	'ImageDownloadWorkerSignals', 
 	'ImageDownloadWorker', 
 	'ImageDownloader',
 ]

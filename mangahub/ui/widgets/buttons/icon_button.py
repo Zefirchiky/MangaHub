@@ -66,7 +66,7 @@ class IconButton(QPushButton):
 
     def set_icon(self, icon: str | Path | IconTypes, color="white") -> IconButton:
         if isinstance(icon, IconTypes):
-            icon = AppConfig.Dirs.ICONS / icon.value    # TODO(?): Use IconRepo
+            icon = AppConfig.Dirs.ICONS / icon.value  # TODO(?): Use IconRepo
         self.setIcon(
             SVGIcon(Path(icon)).set_hover_size_factor(1.2).set_color(color).get_qicon()
         )
@@ -75,7 +75,7 @@ class IconButton(QPushButton):
     def set_size(self, size: int) -> IconButton:
         self.setFixedSize(size, size)
         return self
-    
+
     def set_icon_size(self, size: int) -> IconButton:
         self.setIconSize(QSize(size, size))
         return self

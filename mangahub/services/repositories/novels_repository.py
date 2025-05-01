@@ -12,6 +12,6 @@ class NovelsRepository(ModelsJsonParser[str, Novel]):
 
     def get_all(self) -> dict[str, Novel]:
         return self._models_collection
-    
+
     def load(self) -> dict[str, Novel]:
         return super().get_all()

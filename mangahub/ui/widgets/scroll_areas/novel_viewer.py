@@ -13,17 +13,16 @@ class NovelViewer(SmoothScrollArea):
         self.viewport().setObjectName("NovelViewer")
         self.viewport().setStyleSheet(f"""
                             #NovelViewer {{
-                                background: url({str(AppConfig.Dirs.BACKGROUNDS).replace('\\', '/')}/novel_viewer.jpg) repeat;
+                                background: url({str(AppConfig.Dirs.BACKGROUNDS).replace("\\", "/")}/novel_viewer.jpg) repeat;
                             }}
                            """)
-        
-        
+
         self.text = QTextBrowser()
         self.text.setFixedWidth(1000)
-        
+
         self.setWidget(self.text)
-        
+
         self.novel: Novel = None
-        
+
     def set_novel(self, novel: Novel):
         self.text.setHtml(novel.text)

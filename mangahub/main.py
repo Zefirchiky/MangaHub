@@ -1,5 +1,6 @@
 import ctypes
 import sys
+from pathlib import Path
 
 from config import CM
 from controllers import AppController, MangaManager, NovelsManager, SitesManager
@@ -9,7 +10,7 @@ from loguru import logger
 from models.novels import NovelFormatter
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
-from services.handlers import JsonHandler
+from services.handlers import JsonHandler, HtmlHandler
 from services.parsers import SitesParser, UrlParser
 from services.repositories import MangaRepository, NovelsRepository
 from config import AppConfig
@@ -73,8 +74,15 @@ class App:
         self.test_code()
 
     def test_code(self):
-        # print({3, 4, 5, 6} - {1, 2, 3, 4})
-        ...
+        from services.downloaders import HtmlDownloader
+        self.jh = JsonHandler('test_json')
+        self.mh = HtmlHandler('test_md')
+        self.d = HtmlDownloader()
+        self.d.finished.connect(lambda url, text: HtmlHandler.fast_save(Path(url.replace('/', '-').replace(':', '-')).resolve(), text))
+        self.d.get_htmls([
+            'https://stackoverflow.com/questions/862412/is-it-possible-to-have-multiple-statements-in-a-python-lambda-expression',
+            'https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRunnable.html#PySide6.QtCore.QRunnable'
+            ])
 
     def run(self):
         self.gui_window.showMaximized()

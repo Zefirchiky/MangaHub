@@ -7,5 +7,5 @@ __all__ = [
 	'AbstractChapterSignals', 
 	'AbstractChapter', 
 	'AbstractMedia', 
-	'TextElement', 
+	'TextElement',
 ]

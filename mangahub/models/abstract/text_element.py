@@ -6,16 +6,15 @@ from pydantic import field_validator
 
 class TextElement(TagModel):
     text: str
-    
-    @field_validator('text')
+
+    @field_validator("text")
     def validate_text(cls, text: str) -> str:
-        return text.strip().replace('\n', '')
-    
-    
+        return text.strip().replace("\n", "")
+
     def __str__(self) -> str:
         return self.text
-    
-    def __add__(self, text: TextElement | str) -> 'TextElement':
+
+    def __add__(self, text: TextElement | str) -> "TextElement":
         if isinstance(text, TextElement):
             text = text.text
         self.text += text
