@@ -1,20 +1,20 @@
-from typing import TYPE_CHECKING
-
+from __future__ import annotations
 from loguru import logger
 from models.novels import Novel, NovelChapter
 from services.repositories import NovelsRepository
 from services.scrapers import NovelsSiteScraper
 from utils import MM
 
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from mangahub.main import App
 
 
 class NovelsManager:
-    def __init__(self, app: "App"):
+    def __init__(self, app: App):
         self.app = app
         self.repository: NovelsRepository = self.app.novels_repository
-        self.repository.load()
+        self.repository.get_all()
         self.scraper = NovelsSiteScraper(self.app.sites_manager)
         self.sites_manager = self.app.sites_manager
 

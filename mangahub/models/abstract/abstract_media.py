@@ -2,21 +2,26 @@ from __future__ import annotations
 
 from abc import ABC
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import Field, PrivateAttr
 
 from ..tags.tag_model import TagModel
-from .abstract_chapter import AbstractChapter
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .abstract_chapter import AbstractChapter
+    from services.repositories.abstract import ChaptersRepository
 
 
 class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
     name: str
     id_: str
+    folder: Path
     description: str = ""
     author: str = ""
     status: str = "Unknown"
 
-    folder: str = ""
     cover: str = ""
 
     year: int = 0
@@ -30,15 +35,16 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
     first_chapter: int | float = 0
     last_chapter: int | float = 0
     checked_chapters: set[int | float] = Field(default_factory=set)
-    _chapters_data: dict[int | float, ChapterType] = PrivateAttr(default_factory=dict)
+    
+    _chapters_repo: ChaptersRepository = PrivateAttr(default=None)
 
     def add_backup_site(self, site_name) -> None:
-        self.backup_sites.add(site_name)
+        self._changed = True
+        self.backup_sites.append(site_name)
 
     def add_chapter(self, chapter: ChapterType) -> AbstractMedia:
-        if chapter.number not in self._chapters_data.keys():
-            self._chapters_data[chapter.number] = chapter
-            self.update()
+        self._changed = True
+        self._chapters_repo.add(chapter.num, chapter)
         return self
 
     def get_all_sites(self):
@@ -47,20 +53,19 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
         return sites
 
     def get_chapter(self, chapter_num: int | float, default_return=None) -> ChapterType:
-        if chapter := self._chapters_data.get(chapter_num):
+        if chapter := self._chapters_repo.get(chapter_num):
             return chapter
         return default_return
 
     def check_chapter(self, chapter_num: int | float) -> None:
+        self._changed = True
         if chapter_num > self.last_read_chapter:
             self.last_read_chapter = chapter_num
         self.checked_chapters.add(chapter_num)
 
     def uncheck_chapter(self, chapter_num: int | float) -> None:
+        self._changed = True
         self.checked_chapters.remove(chapter_num)
-
-    def update(self) -> None:
-        self.last_updated = str(datetime.now())
 
     def __str__(self) -> str:
         return f"Manga {self.name} ({self.id_})"

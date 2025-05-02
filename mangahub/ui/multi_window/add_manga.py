@@ -45,7 +45,7 @@ class AddMangaWindow(QMainWindow):
         sites_label = QLabel("Site name:")
 
         main_site_list = QComboBox()
-        main_site_list.addItems(list(self.sites_manager.get_all_sites().keys()))
+        main_site_list.addItems(list(self.sites_manager.get_all().keys()))
 
         sites_list = QComboBox()
 

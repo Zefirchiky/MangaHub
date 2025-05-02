@@ -64,17 +64,17 @@ class MediaCard(QFrame):
         if not self.is_buttons_connected:
             self.top_button.clicked.connect(
                 lambda: self.chapter_clicked.emit(
-                    self.media.name, self.top_button.chapter.number
+                    self.media.name, self.top_button.chapter.num
                 )
             )
             self.mid_button.clicked.connect(
                 lambda: self.chapter_clicked.emit(
-                    self.media.name, self.mid_button.chapter.number
+                    self.media.name, self.mid_button.chapter.num
                 )
             )
             self.bot_button.clicked.connect(
                 lambda: self.chapter_clicked.emit(
-                    self.media.name, self.bot_button.chapter.number
+                    self.media.name, self.bot_button.chapter.num
                 )
             )
             self.is_buttons_connected = True
@@ -82,7 +82,7 @@ class MediaCard(QFrame):
 
     def set_media(self, media: AbstractMedia):
         self.media = media
-        self.set_cover(media.folder + "/" + media.cover)
+        self.set_cover(media.folder / media.cover)
         self.set_name(media.name)
         self.top_button.set_chapter(media.get_chapter(media.first_chapter))
         self.mid_button.set_chapter(media.get_chapter(media.current_chapter))

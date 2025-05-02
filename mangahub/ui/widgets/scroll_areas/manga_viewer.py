@@ -227,7 +227,7 @@ class MangaViewer(SmoothGraphicsView):
 
     def set_chapter(self, chapter: MangaChapter):
         self.chapter = chapter
-        self.chapter_selection.setCurrentIndex(int(chapter.number - 1))
+        self.chapter_selection.setCurrentIndex(int(chapter.num - 1))
 
     def add_placeholder(self, index: int, pixmap: QPixmap):
         self._scene.add_placeholder(index, pixmap)

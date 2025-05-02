@@ -1,6 +1,7 @@
+from __future__ import annotations
 import os
 import shutil
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from PySide6.QtGui import QPixmap
 
@@ -9,10 +10,9 @@ from loguru import logger
 from .placeholder_generator import PlaceholderGenerator
 from models import URL
 from models.manga import ChapterImage, Manga, MangaChapter
-from models.abstract import ChapterNotFoundError
 from models.images import ImageCache, ImageMetadata
 from services.parsers import UrlParser
-from services.repositories import MangaChaptersRepository, MangaRepository
+from services.repositories.manga import MangaChaptersRepository, MangaRepository, ImagesDataRepository
 from services.scrapers import MangaDexScraper, MangaSiteScraper
 from services.downloaders import ImageDownloader
 
@@ -22,6 +22,7 @@ from utils import MM
 from .sites_manager import SitesManager
 from .chapter_image_loader import ChapterImageLoader
 
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from mangahub.main import App
 
@@ -30,10 +31,9 @@ if TYPE_CHECKING:
 
 
 class MangaManager:
-    def __init__(self, app: "App"):
+    def __init__(self, app: App):
         self.app = app
-        self.repository: MangaRepository = self.app.manga_repository
-        self.repository.load()
+        self.repo: MangaRepository = self.app.manga_repository
         self.sites_manager: SitesManager = self.app.sites_manager
         self.dex_scraper = MangaDexScraper()
         self.sites_scraper = MangaSiteScraper(self.sites_manager)
@@ -53,42 +53,46 @@ class MangaManager:
         logger.success("MangaManager initialized")
 
     def get_manga(self, name) -> Manga | None:
-        manga = self.repository.get(name)
+        manga = self.repo.get(name)
         if not manga:
             MM.show_warning(f"Manga {name} not found")
         return manga
 
     def get_all_manga(self) -> dict[str, Manga]:
-        for manga in self.repository.get_all().values():
-            if not manga._chapters_data.get(1):
+        for manga in self.repo.get_all().values():
+            if not manga._chapters_repo.get(1):
                 manga.add_chapter(self.get_chapter(manga, 1))
 
-            if not manga._chapters_data.get(manga.last_chapter):
+            if not manga._chapters_repo.get(manga.last_chapter):
                 manga.add_chapter(self.get_chapter(manga, manga.last_chapter))
 
             if (
                 manga.current_chapter != 1
                 and manga.current_chapter != manga.last_chapter
                 and manga.current_chapter
-                and not manga._chapters_data.get(manga.current_chapter)
+                and not manga._chapters_repo.get(manga.current_chapter)
             ):
                 manga.add_chapter(self.get_chapter(manga, manga.current_chapter))
 
-        return self.repository.get_all()
+        return self.repo.get_all()
 
     def add_new_manga(self, manga: Manga):
-        self.repository.add(manga)
+        self.repo.add(manga.name, manga)
 
     def create_manga(
-        self, name: str, url: str | URL = "", site="MangaDex", backup_sites=[], **kwargs
+        self, name: str, url: str | URL = "", site="MangaDex", backup_sites=[], overwrite=False, **kwargs
     ):
-        if self.get_manga(name):
+        if overwrite:
+            if self.get_manga(name):
+                self.remove_manga(name)
+            
+        elif self.get_manga(name):
             MM.show_warning(f"Manga {name} already exists")
             return
 
         if url:
             url = URL(url)
-            site = self.sites_manager.get_site(url=url)
+            site = self.sites_manager.get(url=url)
             if site:
                 site = site.name
             else:
@@ -102,9 +106,9 @@ class MangaManager:
             .replace("?", "")
             .replace("!", "")
         )
+        folder=Path(AppConfig.Dirs.MANGA) / id_
+        folder.mkdir(exist_ok=True)
         id_dex = self.dex_scraper.get_manga_id(name)
-        folder = f"{AppConfig.Dirs.MANGA}/{id_}"
-        os.makedirs(folder, exist_ok=True)
         if id_dex:
             last = self.dex_scraper.get_last_chapter_num(id_dex)
 
@@ -118,17 +122,23 @@ class MangaManager:
         manga = Manga(
             name=name,
             id_=id_,
-            id_dex=id_dex,
             folder=folder,
+            id_dex=id_dex,
+            
+            first_chapter=1,    # TODO: Dynamic first chap
+            current_chapter=1,
+            last_read_chapter=1,
             last_chapter=last,
             site=site,
             backup_sites=backup_sites,
+            
             **kwargs,
-        )
+        ).set_changed()
+        manga._chapters_repo = MangaChaptersRepository(folder / 'chapters.json')
 
         if not id_dex or not last:
             last = self.sites_scraper.get_last_chapter_num(
-                self.sites_manager.get_site(site), manga
+                self.sites_manager.get(site), manga
             )
             if last:
                 manga.last_chapter = last
@@ -138,24 +148,23 @@ class MangaManager:
 
         self.add_new_manga(manga)
         if site != "MangaDex":
-            self.sites_manager.get_site(manga.site).add_manga(manga)  # type: ignore
+            self.sites_manager.get(name=manga.site).add_manga(manga)  # type: ignore
         for site in manga.backup_sites:
             if site != "MangaDex":
-                site_ = self.sites_manager.get_site(manga.site)
+                site_ = self.sites_manager.get(manga.site)
                 if site_:
                     site_.add_manga(manga)
 
-        logger.success(f"Manga '{manga.name}' created")
+        logger.success(f"{manga} was created")
         return manga
 
     def remove_manga(self, manga: Manga | str) -> Manga:
         if isinstance(manga, str):
-            manga_name = manga
-            manga = self.repository.get(manga)
+            manga = self.repo.get(manga)
         if manga:
             shutil.rmtree(manga.folder)
-            mg = self.manga_collection.pop(manga.name)
-            site = self.sites_manager.get_site(manga.site)
+            mg = self.repo.pop(manga.name)
+            site = self.sites_manager.get(manga.site)
             if site:
                 site.remove_manga(manga)
             else:
@@ -174,7 +183,7 @@ class MangaManager:
         return
 
     def create_chapter(self, manga: Manga, num: float):
-        if chapter := MangaChaptersRepository(manga).get(num):
+        if chapter := manga._chapters_repo.get(num):
             return chapter
 
         id_dex = self.dex_scraper.get_chapter_id(manga.id_dex, num)
@@ -186,14 +195,15 @@ class MangaManager:
                 logger.warning(f"No id_dex for chapter {num} of '{manga.name}'")
         else:
             name = self.sites_scraper.get_chapter_name(
-                self.sites_manager.get_site(manga.site), manga, num
+                self.sites_manager.get(manga.site), manga, num
             )
 
         upload_date = self.dex_scraper.get_chapter_upload_date(manga.id_dex, num)
 
         chapter = MangaChapter(
-            number=num, name=name, id_dex=id_dex, upload_date=upload_date
-        )
+            num=num, folder=manga.folder / f'chapter{num}', name=name, id_dex=id_dex, upload_date=upload_date
+        ).set_changed()
+        chapter._images = ImagesDataRepository(chapter.folder / 'images.json')
         return chapter
 
     def get_chapter(self, manga: Manga, num: int) -> MangaChapter:
@@ -204,8 +214,11 @@ class MangaManager:
         if not chapter.urls_cached:
             urls = self.download_chapter_urls(manga, chapter)
             for i, url in enumerate(urls):
-                chapter._images[i] = ChapterImage(
-                    number=i, metadata=ImageMetadata(url=url)
+                chapter._images.add(
+                    i,
+                    ChapterImage(
+                        number=i, name=f"{manga.id_}_{chapter.num}_{i}", metadata=ImageMetadata(url=url)
+                    ).set_changed()
                 )
             chapter.urls_cached = True
         return chapter
@@ -218,12 +231,12 @@ class MangaManager:
             pass
         elif not chapter._images.get(i):
             pass
-        elif not chapter._images[i].metadata:
+        elif not chapter._images.get(i).metadata:
             pass
         else:
             return PlaceholderGenerator.static(
-                chapter._images[i].metadata.width,  # type: ignore
-                chapter._images[i].metadata.height,  # type: ignore
+                chapter._images.get(i).metadata.width,  # type: ignore
+                chapter._images.get(i).metadata.height,  # type: ignore
                 f"#{i}",
             )
 
@@ -231,61 +244,61 @@ class MangaManager:
         images: list[ChapterImage] = []
 
         if chapter._images:  # TODO: there MIGHT be missing images
-            for image in chapter._images.values():
+            for image in chapter._images.get_all().values():
                 images.append(image)
             return images
 
     def download_chapter_urls(self, manga: Manga, chapter: MangaChapter):
         logger.info(
-            f"Downloading urls for '{manga.name}' chapter {chapter.number}'s images"
+            f"Downloading urls for '{manga.name}' chapter {chapter.num}'s images"
         )
 
         for site in manga.get_all_sites():
             if site == "MangaDex":
                 if not chapter.id_dex:
                     chapter.id_dex = self.dex_scraper.get_chapter_id(
-                        manga.id_dex, chapter.number
+                        manga.id_dex, chapter.num
                     )
                     if not chapter.id_dex:
                         logger.warning(
-                            f"No id_dex for chapter {chapter.number} of '{manga.name}'"
+                            f"No id_dex for chapter {chapter.num} of '{manga.name}'"
                         )
                         continue
                     logger.success(
-                        f"Got id_dex for '{manga.name}' chapter {chapter.number}"
+                        f"Got id_dex for '{manga.name}' chapter {chapter.num}"
                     )
 
                 urls = self.dex_scraper.get_chapter_image_urls(chapter.id_dex)
             else:
                 urls = self.sites_scraper.get_chapter_image_urls(
-                    self.sites_manager.get_site(site), manga, chapter.number
+                    self.sites_manager.get(site), manga, chapter.num
                 )
 
         return urls
 
     def get_chapter_images(self, manga: Manga, chapter: MangaChapter):
-        logger.info(f"Getting images for '{manga.name}' chapter {chapter.number}")
+        logger.info(f"Getting images for '{manga.name}' chapter {chapter.num}")
 
         images = []
         for site in manga.get_all_sites():
             if site == "MangaDex":
                 if not chapter.id_dex:
                     chapter.id_dex = self.dex_scraper.get_chapter_id(
-                        manga.id_dex, chapter.number
+                        manga.id_dex, chapter.num
                     )
                     if not chapter.id_dex:
                         logger.warning(
-                            f"No id_dex for chapter {chapter.number} of '{manga.name}'"
+                            f"No id_dex for chapter {chapter.num} of '{manga.name}'"
                         )
                         continue
                     logger.success(
-                        f"Got id_dex for '{manga.name}' chapter {chapter.number}"
+                        f"Got id_dex for '{manga.name}' chapter {chapter.num}"
                     )
 
                 images = self.dex_scraper.get_chapter_image_urls(chapter.id_dex)
             else:
                 images = self.sites_scraper.get_chapter_image_urls(
-                    self.sites_manager.get_site(site), manga, chapter.number
+                    self.sites_manager.get(site), manga, chapter.num
                 )
 
             if images:
@@ -301,21 +314,21 @@ class MangaManager:
             )
             return
 
-        logger.success(f"Got images for '{manga.name}' chapter {chapter.number}")
+        logger.success(f"Got images for '{manga.name}' chapter {chapter.num}")
         return images
 
     def get_chapter_placeholders(self, manga: Manga, chapter: MangaChapter):
         placeholders = []
         if chapter._images:
-            for image in chapter._images.values():
-                placeholders.append((image.width, image.height))
+            for image in chapter._images.get_all().values():
+                placeholders.append((image.metadata.width, image.metadata.height))
             logger.success(
-                f"Got placeholders for '{manga.name}' chapter {chapter.number} from cache"
+                f"Got placeholders for '{manga.name}' chapter {chapter.num} from cache"
             )
             return placeholders
 
         logger.info(
-            f"Downloading placeholders for '{manga.name}' chapter {chapter.number}"
+            f"Downloading placeholders for '{manga.name}' chapter {chapter.num}"
         )
         sites = list(manga.backup_sites)
         sites.insert(0, manga.site)
@@ -323,13 +336,13 @@ class MangaManager:
             if site == "MangaDex":
                 if not chapter.id_dex:
                     logger.warning(
-                        f"No id_dex for chapter {chapter.number} of '{manga.name}'"
+                        f"No id_dex for chapter {chapter.num} of '{manga.name}'"
                     )
                     continue
                 placeholders = self.dex_scraper.get_chapter_placeholders(chapter.id_dex)
             else:
                 placeholders = self.sites_scraper.get_chapter_placeholders(
-                    self.sites_manager.get_site(site), manga, chapter.number
+                    self.sites_manager.get(site), manga, chapter.num
                 )
 
             if placeholders:
@@ -345,7 +358,7 @@ class MangaManager:
             )
             return
 
-        logger.success(f"Got placeholders for '{manga.name}' chapter {chapter.number}")
+        logger.success(f"Got placeholders for '{manga.name}' chapter {chapter.num}")
         chapter.add_images(
             [
                 ChapterImage(number=num, width=placeholder[0], height=placeholder[1])
@@ -391,4 +404,4 @@ class MangaManager:
         manga.add_chapter(chapter)
 
     def save(self):
-        self.repository.save()
+        self.repo.save()

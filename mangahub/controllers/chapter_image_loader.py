@@ -42,8 +42,8 @@ class ChapterImageLoader(QObject):
         self.manga_id = manga_id
         self.chapter = chapter
 
-        for num, img in chapter._images.items():
-            self.urls[img.metadata.url] = f"{manga_id}_{chapter.number}_{num}"
+        for num, img in chapter._images.get_all().items():
+            self.urls[img.metadata.url] = img.name
             self.urls_num[img.metadata.url] = num
 
         self.downloader.download_images(
@@ -62,19 +62,21 @@ class ChapterImageLoader(QObject):
 
             self._emited_metadata.add(url)
             self.placeholder_ready.emit(
-                self.manga_id, self.chapter.number, self.urls_num[url], placeholder
+                self.manga_id, self.chapter.num, self.urls_num[url], placeholder
             )
-            self.chapter._images[self.urls_num[url]].metadata = metadata
+            self.chapter._images.get(self.urls_num[url]).metadata = metadata
 
     def _image_downloaded(self, url: str, name: str, metadata: ImageMetadata):
-        self.chapter._images[self.urls_num[url]].metadata.name = name
+        self.chapter._images.get(self.urls_num[url]).metadata.name = name
         self.image_ready.emit(
             self.manga_id,
-            self.chapter.number,
+            self.chapter.num,
             self.urls_num.pop(url),
             name,
             self.cache.get_image(name),
         )
+        if not self.urls_num:
+            self.finished.emit(1)
 
     def _reset(self):
         self.urls = {}

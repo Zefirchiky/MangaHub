@@ -13,7 +13,7 @@ class NovelFactory:
 
     def create_from_url(self, url: str | URL) -> Novel:
         url = URL(url)
-        site = self.sites_manager.get_site(url=url)
+        site = self.sites_manager.get(url=url)
         name = UrlParser(url).manga_name
         return Novel(
             name=name,

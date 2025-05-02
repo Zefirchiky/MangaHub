@@ -231,6 +231,7 @@ class MM:
 
     @classmethod
     def finish_progress(cls, progress_name: str, wait_after=5000):
+        print(f'{progress_name} is finished')
         cls._instance._finish_progress(progress_name, wait_after)
 
     def _finish_progress(self, progress_name: str, wait_after=5000, is_error=False):
@@ -270,10 +271,10 @@ class MM:
             self.progress_messages[progress_name].set_progress_bar(
                 total, format_=format_
             )
-        pbar = self.progress_messages[progress_name].progress_bar
-        pbar.setValue(cur_value)
-        if total != pbar.maximum():
-            pbar.setMaximum(total)
+        # pbar = self.progress_messages[progress_name].progress_bar
+        # pbar.setValue(cur_value)
+        # if total != pbar.maximum():
+        #     pbar.setMaximum(total)
 
         return self.progress_messages[progress_name]
 

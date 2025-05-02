@@ -1,15 +1,18 @@
+from __future__ import annotations
 from loguru import logger
 from models import URL
 from models.manga import ImageParsingMethod
 from models.sites import Site, SiteChapterPage
-from services.parsers import SitesParser
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import App
 
 
 class SitesManager:
-    def __init__(self, app):
+    def __init__(self, app: App):
         self.app = app
-        self.parser: SitesParser = app.sites_json_parser
-        self.sites = self.parser.get_all_sites()
+        self.repo = app.sites_repo
 
         logger.success("SitesManager initialized")
 
@@ -29,22 +32,20 @@ class SitesManager:
             images_parsing=image_parsing,
             last_chapter_parsing=last_chapter_parsing,
             **kwargs,
-        )
-        self.sites[name] = site
+        ).set_changed()
+        self.repo.add(name, site)
         return site
 
-    def get_all_sites(self) -> dict[str, Site]:
-        if self.sites:
-            return self.sites
-        return self.parser.get_all_sites()
+    def get_all(self) -> dict[str, Site]:
+        return self.repo.get_all()
 
-    def get_site(self, name: str = None, url: str | URL = None) -> Site | None:
+    def get(self, name: str = None, url: str | URL = None) -> Site | None:
         if url:
             url = URL(url)
-            for site in self.sites.values():
+            for site in self.repo.get_all().values():
                 if site["url"] == url.site_url:
                     return site
-        return self.parser.get_site(name)
+        return self.repo.get(name)
 
     def save(self):
-        self.parser.save(self.sites)
+        self.repo.save()

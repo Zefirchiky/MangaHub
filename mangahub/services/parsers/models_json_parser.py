@@ -1,7 +1,8 @@
+from __future__ import annotations
 from pathlib import Path
 from pydantic import BaseModel
+from loguru import logger
 from services.handlers import JsonHandler
-from utils import MM
 
 
 class ModelsJsonParser[KeyType: (str | int | float), ModelType: BaseModel]:
@@ -12,7 +13,10 @@ class ModelsJsonParser[KeyType: (str | int | float), ModelType: BaseModel]:
         self.json_parser = JsonHandler(self.file)
         self._models_collection: dict[KeyType, ModelType] = {}
 
-    def get(self, name: KeyType) -> ModelType:
+    def add(self, name: KeyType, model: ModelType):
+        self._models_collection[name] = model
+    
+    def get(self, name: KeyType) -> ModelType | None:
         if name in self._models_collection.keys():
             return self._models_collection[name]
 
@@ -21,12 +25,16 @@ class ModelsJsonParser[KeyType: (str | int | float), ModelType: BaseModel]:
                 model = self.model.model_validate(data)
                 self._models_collection[name] = model
                 return model
-            raise Exception(
-                f"Model not found: {self.model}({name})\n(file: {self.file}\nkey type: {self.key_type} (.get(str(name)))\nname type: {type(name)})"
+            logger.warning(
+                f"Model not found: {self.model}({name})\nfile: {self.file}\nkey type: {self.key_type}\nname type: {type(name)}"
             )
+            return None
         except KeyError:
-            MM.show_error(f"{model.__name__} {name} not found")
+            logger.error(f"{model.__name__} {name} not found")
             return
+        
+    def pop(self, name: KeyType):
+        return self._models_collection.pop(name)
 
     def get_all(self) -> dict[KeyType, ModelType]:
         for name in self.json_parser.get().keys():
@@ -45,8 +53,9 @@ class ModelsJsonParser[KeyType: (str | int | float), ModelType: BaseModel]:
     def models_collection(self, models_dict: dict[KeyType, ModelType]):
         self._models_collection = models_dict
 
-    def save(self, models_dict: dict[KeyType, ModelType]):
+    def save(self, data: dict[KeyType, ModelType]=None):
+        data = data if data is not None else self._models_collection
         models_list = {
-            name: model.model_dump(mode="json") for name, model in models_dict.items()
+            name: model.model_dump(mode="json") for name, model in data.items()
         }
         self.json_parser.save(models_list)

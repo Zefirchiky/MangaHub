@@ -14,8 +14,8 @@ class MangaState(BaseModel):
     manga_name: str = ""
     chapter_num: int | float = 0
 
-    _manga: Manga | None = PrivateAttr(default=None)
-    _chapter: MangaChapter | None = PrivateAttr(default=None)
+    _manga: Manga = PrivateAttr(default=None)
+    _chapter: MangaChapter = PrivateAttr(default=None)
     _worker: BatchWorker | None = PrivateAttr(default=None)
     _signals: MangaStateSignals = PrivateAttr(default_factory=MangaStateSignals)
 
@@ -26,7 +26,7 @@ class MangaState(BaseModel):
 
     def set_chapter(self, chapter: MangaChapter):
         self._chapter = chapter
-        self.chapter_num = chapter.number
+        self.chapter_num = chapter.num
         self._signals.chapter_changed.emit(chapter)
 
     def set_chapter_num(self, chapter_num: int | float):

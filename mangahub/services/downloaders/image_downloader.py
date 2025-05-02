@@ -18,7 +18,7 @@ class ImageDownloadWorkerSignals(QObject):
     error = Signal(str, Exception)
 
 
-# TODO: Better use of async
+# TODO: Better use of async (reuse of client/session)
 class ImageDownloadWorker(QRunnable):
     """Worker thread for downloading an image without blocking the GUI"""
 
@@ -308,5 +308,5 @@ class ImageDownloader(QObject):
         else:
             for url, name in urls.items():
                 self.download_image(
-                    url, name, update_percentage, convert=convert, emit_finish=True
+                    url, name, update_percentage, convert=convert, emit_finish=False
                 )

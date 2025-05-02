@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from loguru import logger
 from models import URL
-from models.manga import Manga, MangaState
-from services.parsers import StateParser
+from models.manga import MangaState
+from services.repositories import StateRepository
 
 from .manga_manager import MangaManager, SitesManager
-from models.abstract import ChapterNotFoundError
 
 from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from main import App
+    from models.manga import Manga
 
 
 class AppController:
@@ -55,9 +54,9 @@ class AppController:
         return self.manga_manager.get_all_manga()
 
     def create_manga(
-        self, name: str, url: str | URL = "", site="MangaDex", backup_sites=[], **kwargs
+        self, name: str, url: str | URL = "", site="MangaDex", backup_sites=[], overwrite=False, **kwargs
     ):
-        manga = self.manga_manager.create_manga(name, url, site, backup_sites, **kwargs)
+        manga = self.manga_manager.create_manga(name, url, site, backup_sites, overwrite, **kwargs)
         return manga
 
     def remove_manga(self, name: str) -> Manga:
@@ -96,4 +95,4 @@ class AppController:
     def save(self) -> None:
         self.manga_manager.save()
         self.sites_manager.save()
-        StateParser("manga_state.json", MangaState).save(self.state)
+        StateRepository("manga_state.json", MangaState).save(self.state)

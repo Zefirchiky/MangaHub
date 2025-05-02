@@ -1,6 +1,5 @@
 import ctypes
 import sys
-from pathlib import Path
 
 from config import CM
 from controllers import AppController, MangaManager, NovelsManager, SitesManager
@@ -10,9 +9,10 @@ from loguru import logger
 from models.novels import NovelFormatter
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
-from services.handlers import JsonHandler, HtmlHandler
-from services.parsers import SitesParser, UrlParser
-from services.repositories import MangaRepository, NovelsRepository
+from services.handlers import JsonHandler
+from services.parsers import UrlParser
+from services.repositories.manga import MangaRepository
+from services.repositories import NovelsRepository, SitesRepository
 from config import AppConfig
 from utils import MM
 
@@ -40,8 +40,8 @@ class App:
             f"{AppConfig.Dirs.NOVELS_CONF}/global_replace.json"
         ).load()
 
-        self.sites_json_parser = SitesParser(AppConfig.Dirs.SITES_JSON)
-        UrlParser.set_parser(self.sites_json_parser)
+        self.sites_repo = SitesRepository(AppConfig.Dirs.SITES_JSON)
+        UrlParser.set_parser(self.sites_repo)
         self.sites_manager = SitesManager(self)
 
         self.manga_repository = MangaRepository(AppConfig.Dirs.MANGA_JSON)
@@ -52,16 +52,31 @@ class App:
 
         self.app_controller = AppController(self)
 
-        # from models.sites import SiteChapterPage, SiteTitlePage, LastChapterParsingMethod
+        # from models.sites import (
+        #     SiteChapterPage,
+        #     SiteTitlePage,
+        #     LastChapterParsingMethod,
+        # )
         # from models.manga import ImageParsingMethod
-        # self.sites_manager.create_site("AsuraScans", "https://asuracomic.net",
-        #                                    SiteChapterPage(url_format="series/$manga_id$-$num_identifier$/chapter/$chapter_num$"),
-        #                                    ImageParsingMethod().set_regex_from_html('https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp'),
-        #                                    LastChapterParsingMethod(string_format="$manga_id$-$num_identifier$/chapter/$chapter_num$", on_title_page=True),
-        #                                    title_page=SiteTitlePage(url_format="series/$manga_id$-$num_identifier$"),
-        #                                    num_identifier="ffffffff")
 
-        # self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans")
+        # self.sites_manager.create_site(
+        #     "AsuraScans",
+        #     "https://asuracomic.net",
+        #     SiteChapterPage(
+        #         url_format="series/$manga_id$-$num_identifier$/chapter/$chapter_num$"
+        #     ),
+        #     ImageParsingMethod().set_regex_from_html(
+        #         "https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp"
+        #     ),
+        #     LastChapterParsingMethod(
+        #         string_format="$manga_id$-$num_identifier$/chapter/$chapter_num$",
+        #         on_title_page=True,
+        #     ),
+        #     title_page=SiteTitlePage(url_format="series/$manga_id$-$num_identifier$"),
+        #     num_identifier="ffffffff",
+        # )
+
+        # self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans", overwrite=True)
         # self.app_controller.create_manga("Nano Machine", site="AsuraScans")
         # self.app_controller.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.app_controller.create_manga("Dragon-Devouring Mage")
@@ -74,15 +89,16 @@ class App:
         self.test_code()
 
     def test_code(self):
-        from services.downloaders import HtmlDownloader
-        self.jh = JsonHandler('test_json')
-        self.mh = HtmlHandler('test_md')
-        self.d = HtmlDownloader()
-        self.d.finished.connect(lambda url, text: HtmlHandler.fast_save(Path(url.replace('/', '-').replace(':', '-')).resolve(), text))
-        self.d.get_htmls([
-            'https://stackoverflow.com/questions/862412/is-it-possible-to-have-multiple-statements-in-a-python-lambda-expression',
-            'https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRunnable.html#PySide6.QtCore.QRunnable'
-            ])
+        # from services.downloaders import HtmlDownloader
+        # self.jh = JsonHandler('test_json')
+        # self.mh = HtmlHandler('test_md')
+        # self.d = HtmlDownloader()
+        # self.d.finished.connect(lambda url, text: HtmlHandler.fast_save(Path(url.replace('/', '-').replace(':', '-')).resolve(), text))
+        # self.d.get_htmls([
+        #     'https://stackoverflow.com/questions/862412/is-it-possible-to-have-multiple-statements-in-a-python-lambda-expression',
+        #     'https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRunnable.html#PySide6.QtCore.QRunnable'
+        #     ])
+        pass
 
     def run(self):
         self.gui_window.showMaximized()

@@ -1,15 +1,19 @@
+from __future__ import annotations
 import re
 
 from loguru import logger
 from models import URL
-from models.manga import Manga
-from models.sites import Site
-from services.parsers import SitesParser
+from ..repositories.sites_repository import SitesRepository
 from utils import MM
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from models.manga import Manga
+    from models.sites import Site
 
 
 class UrlParser:
-    parser: SitesParser
+    parser: SitesRepository
 
     def __init__(self, url: URL | str):
         if isinstance(url, str):
@@ -19,12 +23,12 @@ class UrlParser:
         self._cached_regex_match = None
 
     @classmethod
-    def set_parser(cls, parser: SitesParser):
+    def set_parser(cls, parser: SitesRepository):
         cls.parser = parser
 
     @property
     def site(self) -> Site | None:
-        for site in self.parser.get_all_sites().values():
+        for site in self.parser.get_all().values():
             if site.url == self.url.site_url:
                 return site
 
