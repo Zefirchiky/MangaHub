@@ -42,7 +42,7 @@ class MangaManager:
             AppConfig.Dirs.IMAGES_CACHE,
             max_ram=AppConfig.Caching.Image.max_ram(),
             max_disc=AppConfig.Caching.Image.max_disc(),
-        )  # TODO: give sizes
+        )
         self.image_downloader = ImageDownloader(
             self.image_cache, AppConfig.ImageDownloading.max_threads()
         )
@@ -381,8 +381,8 @@ class MangaManager:
         return Manga(name, _id, cover, [site.name])
 
     def ensure_cover(self, manga: Manga):
-        if os.path.exists(f"{manga.folder}/cover.jpg"):
-            return "cover.jpg"
+        if (manga.folder / 'cover.jpg').exists():
+            return 'cover.jpg'
 
         if manga.id_dex:
             cover = self.dex_scraper.get_manga_cover(manga.id_dex)
