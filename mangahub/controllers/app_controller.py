@@ -1,19 +1,24 @@
 from __future__ import annotations
 
 from loguru import logger
+from PySide6.QtCore import QObject, Signal
+
 from models import URL
 from models.manga import MangaState
 from services.repositories import StateRepository
 
-from .manga_manager import MangaManager, SitesManager
+from .manga_manager import MangaManager
+from .sites_manager import SitesManager
+from models.manga import Manga
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import App
-    from models.manga import Manga
 
 
-class AppController:
+class AppController(QObject):
+    manga_created = Signal(Manga)
+    
     def __init__(self, app: App):
         super().__init__()
         self.app = app
@@ -30,10 +35,10 @@ class AppController:
         self.manga_changed = self.state._signals.manga_changed
         self.chapter_changed = self.state._signals.chapter_changed
 
-        self.manga_chapter_placeholder_ready = (
-            self.manga_manager.chapter_loader.placeholder_ready
-        )
-        self.manga_chapter_image_ready = self.manga_manager.chapter_loader.image_ready
+        # self.manga_chapter_placeholder_ready = (
+        #     self.manga_manager.chapter_loader.placeholder_ready
+        # )
+        # self.manga_chapter_image_ready = self.manga_manager.chapter_loader.image_ready
 
         logger.success("AppController connections initialized")
 
@@ -48,19 +53,21 @@ class AppController:
         )
 
     def get_manga(self, name: str) -> Manga | None:
-        return self.manga_manager.get_manga(name)
+        return self.manga_manager.repo.get(name)
 
-    def get_all_manga(self) -> dict[str, Manga]:
-        return self.manga_manager.get_all_manga()
+    # def get_all_manga(self) -> dict[str, Manga]:
+    #     return self.manga_manager.get_all_manga()
 
     def create_manga(
         self, name: str, url: str | URL = "", site="MangaDex", backup_sites=[], overwrite=False, **kwargs
     ):
-        manga = self.manga_manager.create_manga(name, url, site, backup_sites, overwrite, **kwargs)
+        manga = self.manga_manager.create(name, site, **kwargs)
+        self.manga_created.emit(manga)
+        # manga = self.manga_manager.create_empty_manga(name, url, site, backup_sites, overwrite, **kwargs)
         return manga
 
     def remove_manga(self, name: str) -> Manga:
-        return self.manga_manager.remove_manga(name)
+        return self.manga_manager.remove(name)
 
     def select_media_chapter(self, name: str, chapter: int | float) -> None:
         self.select_manga(name)

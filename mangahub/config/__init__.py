@@ -1,8 +1,8 @@
-from .app_config import AppConfig
+from .app_config import Config
 from .color_manager import Color, CM
 
 __all__ = [
-    'AppConfig', 
+    'Config', 
 	'Color', 
 	'CM',
 ]

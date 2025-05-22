@@ -1,24 +1,21 @@
 from __future__ import annotations
 from pydantic import field_validator
 
-from ..manga.image_parsing_method import ImageParsingMethod
 from ..tags.tag_model import TagModel
 from ..url import URL
-from .last_chapter_parsing_method import LastChapterParsingMethod
-from .site_chapter_page import SiteChapterPage
-from .site_title_page import SiteTitlePage
 from ..manga.manga import Manga
+from .parsing_methods import MangaParsing, NovelParsing, MangaChapterParsing
 
 
 class Site(TagModel):
     name: str
     url: str | URL
+    manga_parsing: MangaParsing | None = None
+    manga_chapter_parsing: MangaChapterParsing | None = None
+    novel_parsing: NovelParsing | None = None
+    
     num_identifier: str = ""
     language: str = "en"
-    title_page: SiteTitlePage = SiteTitlePage()
-    chapter_page: SiteChapterPage
-    images_parsing: ImageParsingMethod
-    last_chapter_parsing: LastChapterParsingMethod
     manga: dict[str, dict[str, str]] = {}
 
     @field_validator("url")

@@ -7,44 +7,47 @@ from rich import print
 from rich.console import Console
 import rich.traceback
 
-from easy_config_hub import Config, DirectoriesConfig, Setting, Level, SettingType
+from easy_config_hub import Config_, DirectoriesConfig_, Setting, Level, SettingType
 from resources.enums import SU, StorageSize
 
 
-class AppConfig(Config):
+class Config(Config_):
     version = Setting[str]("0.1.0", "Version", level=Level.USER | Level.READ_ONLY)
     dev_mode = Setting[bool](True, "Dev Mode", level=Level.USER)
     debug_mode = Setting[bool](True, "Debug Mode", level=Level.USER_DEV)
 
-    class ImageDownloading(Config):
-        convert_image = Setting[bool](True, "Convert Image")
-        preferable_format = Setting[str]("WEBP", "Converted Images Format")
+    class Downloading(Config_):
+        max_retries = Setting[int](3, "Maximum Download Retries")
+        
+        class Image(Config_):
+            convert_image = Setting[bool](True, "Convert Image")
+            preferable_format = Setting[str]("WEBP", "Converted Images Format")
 
-        max_threads = Setting[int](multiprocessing.cpu_count(), "Max Download Threads")
-        chunk_size = Setting[StorageSize](
-            8 * SU.KB, "Image chunk size", strongly_typed=False
-        )
-        image_update_every = Setting[int](
-            10, "Image Update Percentage", "%"
-        )  # After image downloaded image_update_every% of size, update
+            max_threads = Setting[int](multiprocessing.cpu_count(), "Max Download Threads")
+            chunk_size = Setting[StorageSize](
+                8 * SU.KB, "Image chunk size", strongly_typed=False
+            )
+            image_update_every = Setting[int](
+                10, "Image Update Percentage", "%"
+            )  # After image downloaded image_update_every% of size, update
 
-        PIL_SUPPORTED_EXT = Setting[dict[str, str]](
-            {
-                "JPG": "JPEG",
-                "JPEG": "JPEG",
-                "PNG": "PNG",
-                "GIF": "GIF",
-                "BMP": "BMP",
-                "WEBP": "WEBP",
-                "ICO": "ICO",
-                "TIFF": "TIFF",
-                "TIF": "TIFF",
-            },
-            "Formats that PIL supports",
-        )
+            PIL_SUPPORTED_EXT = Setting[dict[str, str]](
+                {
+                    "JPG": "JPEG",
+                    "JPEG": "JPEG",
+                    "PNG": "PNG",
+                    "GIF": "GIF",
+                    "BMP": "BMP",
+                    "WEBP": "WEBP",
+                    "ICO": "ICO",
+                    "TIFF": "TIFF",
+                    "TIF": "TIFF",
+                },
+                "Formats that PIL supports",
+            )
 
-    class UI(Config):
-        class MangaViewer(Config):
+    class UI(Config_):
+        class MangaViewer(Config_):
             image_loading_intervals = Setting[int](
                 100, "Load Images in UI with Intervals", "ms"
             )
@@ -71,7 +74,7 @@ class AppConfig(Config):
                 type_=SettingType.PERFORMANCE,
             )
 
-    class Scrolling(Config):
+    class Scrolling(Config_):
         step = Setting[int](
             150, "Step", "px", type_=SettingType.COSMETIC | SettingType.QOL
         )
@@ -87,13 +90,13 @@ class AppConfig(Config):
             type_=SettingType.PERFORMANCE,
         )
 
-    class Caching(Config):
-        class Image(Config):
+    class Caching(Config_):
+        class Image(Config_):
             max_ram = Setting[StorageSize](100 * SU.MB, "Max Ram for Images")
             max_disc = Setting[StorageSize](500 * SU.MB, "Max Disc Space for Images")
 
-    class Dirs(DirectoriesConfig):
-        STD_DIR = DirectoriesConfig.STD_DIR
+    class Dirs(DirectoriesConfig_):
+        STD_DIR = DirectoriesConfig_.STD_DIR
 
         """=== CONFIGS ==="""
         CONF = STD_DIR / "config"
@@ -129,7 +132,7 @@ class AppConfig(Config):
 builtins.print = print
 
 logger.add(
-    f"{AppConfig.Dirs.LOG}/latest.log",
+    f"{Config.Dirs.LOG}/latest.log",
     level="DEBUG",
     backtrace=True,
     diagnose=True,
@@ -137,7 +140,7 @@ logger.add(
     mode="w",
 )
 logger.add(
-    f"{AppConfig.Dirs.LOG}/log-{{time}}.log",
+    f"{Config.Dirs.LOG}/log-{{time}}.log",
     level="DEBUG",
     backtrace=False,
     diagnose=False,
@@ -165,15 +168,15 @@ def custom_exception_handler(
     console.print(rich_traceback)
 
     console.print(
-        f"[dim]Full error details logged to {f'{AppConfig.Dirs.LOG}\\latest.log'}[/dim]"
+        f"[dim]Full error details logged to {f'{Config.Dirs.LOG}\\latest.log'}[/dim]"
     )
 
 
 sys.excepthook = custom_exception_handler
 
-print(f"MangaHub v{AppConfig.version()}")
+print(f"MangaHub v{Config.version()}")
 
 try:
-    AppConfig.load(AppConfig.Dirs.CONF_JSON)
+    Config.load(Config.Dirs.CONF_JSON)
 except FileNotFoundError:
     logger.warning("Config file wasn't found. New one will be created.")

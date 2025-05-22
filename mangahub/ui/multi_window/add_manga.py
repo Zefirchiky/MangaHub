@@ -62,7 +62,7 @@ class AddMangaWindow(QMainWindow):
 
         self.add_manga_button = QPushButton("Add Manga")
         self.add_manga_button.clicked.connect(
-            lambda: self.manager.create_manga(
+            lambda: self.manager.create(
                 self.name_input.text(), site=main_site_list.currentText()
             )
         )

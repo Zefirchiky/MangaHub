@@ -21,22 +21,24 @@ Huh?
 
 ## Roadmap
 
+### DONE
+
+- [+] Manga Scraping
+- [+] Manga Reading
+
 ### TOP-PRIORITY
-- Caching
-- Upgrade MangaViewer
 - ASYNC manga creation
-- Make abstracts use generic types
-- ModelJsonParser and repositories
+- Partial image loading
 
 ### TODO
 - FIX THE FUCKING INTERFACE:
     - Fine-tune the Dashboard
     - MediaCard/FullMediaCard
     - Create cool design for Dashboards in fucking Figma
-- Proper manga state saving
+- Caching saving/loading
+- Proper manga state
 - ASYNC
 - State in AppController is shit rn
-- Custom chapters naming
 - Redo UrlParser (apparently, PySide6 has an amazing QUrl, so use it)
 - Manga search
 
@@ -47,8 +49,10 @@ Huh?
 - Build-in notes/to-do
 - Event history
 - Map
-- Saving media (ZIP)
+- Saving media (ZIP, 7Z)
 - Music
+    - Background
+    - Conditional (authors can put start and finish)
 - Easy color themes saving and loading
 - Better image compression (JXL)
 

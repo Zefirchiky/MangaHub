@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from queue import SimpleQueue
 from resources.enums import SU, StorageSize
-from config import AppConfig
+from config import Config
 
 
 class ImageCache:  # TODO: SAVE/LOAD
@@ -40,7 +40,7 @@ class ImageCache:  # TODO: SAVE/LOAD
             self.cur_disc -= size
             os.remove(file)
 
-    def add_image(self, name: str, image: bytes, size_: int):
+    def add(self, name: str, image: bytes, size_: int):
         size: StorageSize = StorageSize(size_)
         if self.max_ram < size:  # If image larger that maximum ram available
             self._free_ram(self.max_ram)  # Free all ram
@@ -74,12 +74,23 @@ class ImageCache:  # TODO: SAVE/LOAD
             self._freed_ram_data_bytes = 0
             self._freed_from_ram = {}
 
-    def get_image(self, name: str) -> bytes:  # TODO: Set image as recently used
-        if image := self._ram_cache.get(name, None):
+    def get(self, name: str, default=None) -> bytes:  # TODO: Set image as recently used
+        if image := self._ram_cache.get(name, default):
             return image[0]
-        elif image := self._disc_cache.get(name, None):
+        elif image := self._disc_cache.get(name, default):
             with open(image[0], "rb") as f:
                 return f.read()  # Possibility of async chunk loading
+        else:
+            raise Exception(f"{name} was not found in cache")
+        
+    def pop(self, name: str, default=None) -> bytes:
+        if image := self._ram_cache.pop(name, default):
+            self.cur_ram -= image[1]
+            return image[0]
+        elif image := self._disc_cache.pop(name, default):
+            self.cur_disc -= image[1]
+            with open(image[0], 'rb') as f:
+                return f.read()
         else:
             raise Exception(f"{name} was not found in cache")
 
@@ -91,7 +102,7 @@ class ImageCache:  # TODO: SAVE/LOAD
     def free_disc(self) -> StorageSize:
         return self.max_disc - self.cur_disc
 
-    def save_image(self, name: str, path: Path = AppConfig.Dirs.IMAGES_CACHE):
+    def save_image(self, name: str, path: Path = Config.Dirs.IMAGES_CACHE):
         path.mkdir(exist_ok=True)
         with open(path / name, "wb") as f:
-            f.write(self.get_image(name))
+            f.write(self.get(name))

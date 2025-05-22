@@ -27,20 +27,19 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
     year: int = 0
     last_updated: str = Field(default_factory=lambda: str(datetime.now))
 
-    site: str = "MangaDex"
-    backup_sites: list[str] = []
+    sites: list[str] = ["MangaDex"]
 
     current_chapter: int | float = 0
     last_read_chapter: int | float = 0
     first_chapter: int | float = 0
-    last_chapter: int | float = 0
+    last_chapter: int | float = -1
     checked_chapters: set[int | float] = Field(default_factory=set)
     
     _chapters_repo: ChaptersRepository = PrivateAttr(default=None)
 
-    def add_backup_site(self, site_name) -> None:
+    def add_site(self, site_name: str, index=-1) -> None:
         self._changed = True
-        self.backup_sites.append(site_name)
+        self.sites.insert(index, site_name)
 
     def add_chapter(self, chapter: ChapterType) -> AbstractMedia:
         self._changed = True
@@ -48,11 +47,12 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
         return self
 
     def get_all_sites(self):
-        sites = self.backup_sites.copy()
-        sites.insert(0, self.site)
+        sites = self.sites.copy()
         return sites
 
     def get_chapter(self, chapter_num: int | float, default_return=None) -> ChapterType:
+        if chapter_num <= 0 or chapter_num >= self.last_chapter:
+            return default_return
         if chapter := self._chapters_repo.get(chapter_num):
             return chapter
         return default_return

@@ -4,7 +4,7 @@ from services.downloaders import ImageDownloader
 from models.images import ImageMetadata, ImageCache
 from models.manga import MangaChapter
 from .placeholder_generator import PlaceholderGenerator
-from config import AppConfig
+from config import Config
 
 
 class ChapterImageLoader(QObject):
@@ -48,7 +48,7 @@ class ChapterImageLoader(QObject):
 
         self.downloader.download_images(
             self.urls,
-            convert=AppConfig.ImageDownloading.convert_image(),
+            convert=Config.Downloading.Image.convert_image(),
             total_bytes=chapter.total_bytes,
         )
 
@@ -73,7 +73,7 @@ class ChapterImageLoader(QObject):
             self.chapter.num,
             self.urls_num.pop(url),
             name,
-            self.cache.get_image(name),
+            self.cache.get(name),
         )
         if not self.urls_num:
             self.finished.emit(1)

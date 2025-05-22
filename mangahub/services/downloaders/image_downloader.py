@@ -7,7 +7,7 @@ from PIL import Image
 from models.images import ImageMetadata, ImageCache
 from utils.image_dimensions import get_dimensions_from_bytes
 
-from config import AppConfig
+from config import Config
 
 
 class ImageDownloadWorkerSignals(QObject):
@@ -38,7 +38,7 @@ class ImageDownloadWorker(QRunnable):
 
         self.url = url
         self.ext = (
-            AppConfig.ImageDownloading.PIL_SUPPORTED_EXT().get(ext.upper()) or "WEBP"
+            Config.Downloading.Image.PIL_SUPPORTED_EXT().get(ext.upper()) or "WEBP"
         )
 
         self.callback = callback
@@ -155,7 +155,7 @@ class ImageDownloader(QObject):
 
         self.pool = QThreadPool()
         if not max_threads:
-            self.pool.setMaxThreadCount(AppConfig.ImageDownloading.max_threads())
+            self.pool.setMaxThreadCount(Config.Downloading.Image.max_threads())
         else:
             self.pool.setMaxThreadCount(max_threads)
 
@@ -209,7 +209,7 @@ class ImageDownloader(QObject):
         self.workers.pop(name)
         if emit_finish and not self.workers:
             self.finished.emit(self.total_bytes)
-        self.cache.add_image(name, image, metadata.size)
+        self.cache.add(name, image, metadata.size)
         self.image_downloaded.emit(url, name, metadata)
 
     def download_metadata(self, url: str, name: str = "", emit_finish=True):
@@ -219,7 +219,7 @@ class ImageDownloader(QObject):
         url = url_.toString()
 
         # Finds or creates name and preferable extension
-        ext = AppConfig.ImageDownloading.preferable_format()
+        ext = Config.Downloading.Image.preferable_format()
         if name:
             if "." in name:
                 name, ext = name.split(".")
@@ -234,7 +234,7 @@ class ImageDownloader(QObject):
             callback=lambda result: self._metadata_downloaded(
                 url, name, result, emit_finish
             ),
-            chunk_size=AppConfig.ImageDownloading.chunk_size().bytes_value,
+            chunk_size=Config.Downloading.Image.chunk_size().bytes_value,
             metadata_only=True,
         )
         self.workers[name] = worker
@@ -254,10 +254,11 @@ class ImageDownloader(QObject):
         url = url_.toString()
 
         # Finds or creates name and preferable extension
-        ext = AppConfig.ImageDownloading.preferable_format()
+        ext = Config.Downloading.Image.preferable_format()
         if name:
             if "." in name:
-                name, ext = name.split(".")
+                s = name.split(".")
+                name, ext = ''.join(s[:-1]), s[-1]
         else:
             name, _ = url.split("/")[-1].rsplit(".", 1)
         name, ext = str(name), str(ext)
@@ -269,7 +270,7 @@ class ImageDownloader(QObject):
             callback=lambda result: self._image_downloaded(
                 url, name, result, emit_finish
             ),
-            chunk_size=AppConfig.ImageDownloading.chunk_size().bytes_value,
+            chunk_size=Config.Downloading.Image.chunk_size().bytes_value,
             update_p=update_percentage,
             convert=convert,
         )
@@ -280,14 +281,13 @@ class ImageDownloader(QObject):
         self,
         urls: dict[str, str],
         update_percentage=10,
-        metadata_only=False,
         convert=True,
         total_bytes=0,
     ):
         """Downloads images async.
 
         Args:
-            urls (dict[str, str]): Dictionary of urls and their preferable names. If extension is not in the name, preferable one will be used (check AppConfig.ImageDownloading.preferable_format)
+            urls (dict[str, str]): Dictionary of urls and their preferable names. If extension is not in the name, preferable one will be used (check AppConfig.Downloading.Image.preferable_format)
             update_percentage (int, optional): ImageDownloader will emit download_progress signal every x%. Defaults to 10.
             metadata_only (bool, optional): Will only download metadata, emits metadata_downloaded. Defaults to False.
         """
@@ -300,13 +300,12 @@ class ImageDownloader(QObject):
         self.counted_urls = set()
         self.current_bytes = 0
         self.percent = 0
-
-        if metadata_only:
-            for url, name in urls.items():
-                self.download_metadata(url, emit_finish=False)
-
-        else:
-            for url, name in urls.items():
-                self.download_image(
-                    url, name, update_percentage, convert=convert, emit_finish=False
-                )
+        
+        for url, name in urls.items():
+            self.download_image(
+                url, name, update_percentage, convert=convert, emit_finish=False
+            )
+                
+    def download_metadatas(self, urls: list[str]):
+        for url in urls:
+            self.download_metadata(url, emit_finish=False)

@@ -39,6 +39,6 @@ class Dashboard(SmoothScrollArea):
             del self.mc_repo[mc.name]
         except IndexError:
             pass
-
+        
     def resizeEvent(self, arg__1):
         return super().resizeEvent(arg__1)

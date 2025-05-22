@@ -46,7 +46,7 @@ class MediaCard(QFrame):
 
         self.name = ""
         self.media: AbstractMedia = None
-        self.is_buttons_connected = False
+        self.is_buttons_connected: list[bool] = [False, False, False]
 
     def set_cover(self, img: ImageWidget.ImageType):
         self.cover.set_image(img)
@@ -61,36 +61,47 @@ class MediaCard(QFrame):
         pass
 
     def _connect_buttons(self):
-        if not self.is_buttons_connected:
-            self.top_button.clicked.connect(
-                lambda: self.chapter_clicked.emit(
-                    self.media.name, self.top_button.chapter.num
+        if not all(self.is_buttons_connected):
+            if self.top_button.chapter and not self.is_buttons_connected[0]:    # If chapter and this button is not connected yet
+                self.top_button.clicked.connect(
+                    lambda: self.chapter_clicked.emit(
+                        self.media.name, self.top_button.chapter.num
+                    )
                 )
-            )
-            self.mid_button.clicked.connect(
-                lambda: self.chapter_clicked.emit(
-                    self.media.name, self.mid_button.chapter.num
+                self.is_buttons_connected[0] = True
+                
+            if self.mid_button.chapter and not self.is_buttons_connected[1]:
+                self.mid_button.clicked.connect(
+                    lambda: self.chapter_clicked.emit(
+                        self.media.name, self.mid_button.chapter.num
+                    )
                 )
-            )
-            self.bot_button.clicked.connect(
-                lambda: self.chapter_clicked.emit(
-                    self.media.name, self.bot_button.chapter.num
+                self.is_buttons_connected[1] = True
+                
+            if self.bot_button.chapter and not self.is_buttons_connected[2]:
+                self.bot_button.clicked.connect(
+                    lambda: self.chapter_clicked.emit(
+                        self.media.name, self.bot_button.chapter.num
+                    )
                 )
-            )
-            self.is_buttons_connected = True
+                self.is_buttons_connected[2] = True
+                
         return self
 
     def set_media(self, media: AbstractMedia):
         self.media = media
-        self.set_cover(media.folder / media.cover)
         self.set_name(media.name)
-        self.top_button.set_chapter(media.get_chapter(media.first_chapter))
-        self.mid_button.set_chapter(media.get_chapter(media.current_chapter))
-        self.bot_button.set_chapter(media.get_chapter(media.last_chapter))
+        if media.cover:
+            self.set_cover(media.folder / media.cover)
+            
+        self.update_buttons()
         self._connect_buttons()
         return self
 
     def update_buttons(self):
-        self.top_button.set_chapter(self.media.get_chapter(self.media.first_chapter))
-        self.mid_button.set_chapter(self.media.get_chapter(self.media.current_chapter))
-        self.bot_button.set_chapter(self.media.get_chapter(self.media.last_chapter))
+        if chap := self.media.get_chapter(self.media.first_chapter):
+            self.top_button.set_chapter(chap)
+        if chap := self.media.get_chapter(self.media.current_chapter):
+            self.mid_button.set_chapter(chap)
+        if self.media.last_chapter != -1 and (chap := self.media.get_chapter(self.media.last_chapter)):
+            self.bot_button.set_chapter(chap)

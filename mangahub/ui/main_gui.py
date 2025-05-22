@@ -11,9 +11,11 @@ from ui.widgets.dashboard import Dashboard, MediaCard
 from ui.widgets.scroll_areas import MangaViewer, NovelViewer
 from ui.widgets.slide_menus import SideMenu
 
+from models.abstract import AbstractMedia
+
 from app_status import AppStatus
 from utils import MM  # TODO
-from config import AppConfig
+from config import Config
 
 from typing import TYPE_CHECKING
 
@@ -28,11 +30,11 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("MangaHub")
         self.setMinimumSize(1200, 800)
-        self.setWindowIcon(QIcon(str(AppConfig.Dirs.RESOURCES / "app_icon.ico")))
+        self.setWindowIcon(QIcon(str(Config.Dirs.RESOURCES / "app_icon.ico")))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         ImageWidget.set_default_placeholder(width=200, height=300)
-        ImageWidget.set_default_error_image(AppConfig.Dirs.IMAGES / "placeholder.jpg")
+        ImageWidget.set_default_error_image(Config.Dirs.IMAGES / "placeholder.jpg")
 
         IconRepo.init_default_icons()
 
@@ -81,7 +83,7 @@ class MainWindow(QMainWindow):
         self.dashboard = Dashboard()
         self.manga_viewer = MangaViewer(self)
         self.novel_viewer = NovelViewer()
-        self.chapter_image_loader = self.manga_manager.chapter_loader
+        # self.chapter_image_loader = self.manga_manager.chapter_loader
 
         self.selection_menu.show()
 
@@ -89,11 +91,8 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(1, self.manga_viewer)
         self.root_layout.insertWidget(2, self.novel_viewer)
 
-        for manga in self.app_controller.get_all_manga().values():
-            mc = MediaCard()
-            mc.set_media(manga)
-            self.dashboard.add_card(mc)
-            mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
+        for manga in self.app_controller.manga_manager.repo.get_all().values():
+            self.create_new_card(manga)
 
         self.current_mc: MediaCard | None = None
 
@@ -104,6 +103,10 @@ class MainWindow(QMainWindow):
 
     def init_connections(self):
         self.app_controller.init_connections()
+        
+        self.manga_manager.cover_downloaded.connect(lambda manga_name, cover: self.dashboard.get_card(manga_name).set_cover(cover))
+        
+        self.app_controller.manga_created.connect(lambda manga: self.dashboard.add_card(self.create_new_card(manga)))
 
         self.app_controller.manga_changed.connect(self.update_current_mc)
         self.app_controller.manga_changed.connect(self.manga_viewer.set_manga)
@@ -124,37 +127,37 @@ class MainWindow(QMainWindow):
         self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
 
         # Connecting download to manga_viewer
-        self.app_controller.manga_chapter_placeholder_ready.connect(
-            lambda manga, chapter, i, pixmap: self.manga_viewer.add_placeholder(
-                i, pixmap
-            )
-        )
-        self.app_controller.manga_chapter_image_ready.connect(
-            lambda manga,
-            chapter,
-            i,
-            name,
-            image: self.manga_viewer.replace_placeholder(i, name)
-        )
+        # self.app_controller.manga_chapter_placeholder_ready.connect(
+        #     lambda manga, chapter, i, pixmap: self.manga_viewer.add_placeholder(
+        #         i, pixmap
+        #     )
+        # )
+        # self.app_controller.manga_chapter_image_ready.connect(
+        #     lambda manga,
+        #     chapter,
+        #     i,
+        #     name,
+        #     image: self.manga_viewer.replace_placeholder(i, name)
+        # )
 
-        self.chapter_image_loader.overall_download_progress.connect(
-            lambda urls_num, percent, current, total: MM.show_progress(
-                f"Images downloading for {self.app_controller.state.manga_name} {self.app_controller.state.chapter_num}",
-                current,
-                total,
-                "Downloading progress",
-                format_="%p% (%v/%t Bytes)",
-            )
-        )  # len(urls), percent, current bytes, total bytes
-        self.chapter_image_loader.finished.connect(
-            lambda: MM.finish_progress(
-                f"Images downloading for {self.app_controller.state.manga_name} {self.app_controller.state.chapter_num}"
-            )
-        )
-        self.chapter_image_loader.finished.connect(self.manga_viewer._on_chapter_loaded)
-        self.chapter_image_loader.finished.connect(
-            lambda: MM.show_success("Images were downloaded successfully")
-        )
+        # self.chapter_image_loader.overall_download_progress.connect(
+        #     lambda urls_num, percent, current, total: MM.show_progress(
+        #         f"Images downloading for {self.app_controller.state.manga_name} {self.app_controller.state.chapter_num}",
+        #         current,
+        #         total,
+        #         "Downloading progress",
+        #         format_="%p% (%v/%t Bytes)",
+        #     )
+        # )  # len(urls), percent, current bytes, total bytes
+        # self.chapter_image_loader.finished.connect(
+        #     lambda: MM.finish_progress(
+        #         f"Images downloading for {self.app_controller.state.manga_name} {self.app_controller.state.chapter_num}"
+        #     )
+        # )
+        # self.chapter_image_loader.finished.connect(self.manga_viewer._on_chapter_loaded)
+        # self.chapter_image_loader.finished.connect(
+        #     lambda: MM.show_success("Images were downloaded successfully")
+        # )
 
         # self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
 
@@ -178,6 +181,13 @@ class MainWindow(QMainWindow):
         self.current_mc = self.dashboard.get_card(self.app_controller.state.manga_name)
         self.current_mc.update_buttons()
 
+    def create_new_card(self, media: AbstractMedia) -> MediaCard:
+        mc = MediaCard()
+        mc.set_media(media)
+        self.dashboard.add_card(mc)
+        mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
+        return mc
+    
     def open_settings(self):
         self.settings_is_opened ^= 1
         if self.settings_is_opened:

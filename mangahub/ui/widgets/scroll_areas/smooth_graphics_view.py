@@ -3,7 +3,7 @@ from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView
 
 from .smooth_scroll_mixin import SmoothScrollMixin
-from config import AppConfig
+from config import Config
 
 
 class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
@@ -21,7 +21,7 @@ class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
         self._scene = QGraphicsScene(self)
         self.setScene(self._scene)
         self.bg_image = QPixmap(
-            str(AppConfig.Dirs.BACKGROUNDS / "manga_viewer.jpg").replace("\\", "/")
+            str(Config.Dirs.BACKGROUNDS / "manga_viewer.jpg").replace("\\", "/")
         )
         self.setBackgroundBrush(self.bg_image)
 

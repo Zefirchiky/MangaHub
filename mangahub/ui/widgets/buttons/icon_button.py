@@ -8,7 +8,7 @@ from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QPushButton
 
 from ..svg_icon import SVGIcon
-from config import AppConfig
+from config import Config
 
 
 class IconTypes(Enum):
@@ -66,7 +66,7 @@ class IconButton(QPushButton):
 
     def set_icon(self, icon: str | Path | IconTypes, color="white") -> IconButton:
         if isinstance(icon, IconTypes):
-            icon = AppConfig.Dirs.ICONS / icon.value  # TODO(?): Use IconRepo
+            icon = Config.Dirs.ICONS / icon.value  # TODO(?): Use IconRepo
         self.setIcon(
             SVGIcon(Path(icon)).set_hover_size_factor(1.2).set_color(color).get_qicon()
         )

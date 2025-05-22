@@ -21,8 +21,7 @@ from models.manga import Manga, MangaChapter
 from .smooth_graphics_view import SmoothGraphicsView
 from resources.enums import StorageSize
 from utils import MM
-from config import AppConfig
-from icecream import ic
+from config import Config
 
 from typing import TYPE_CHECKING
 
@@ -50,7 +49,7 @@ class MangaViewerScene(QGraphicsScene):
         self.width_ = 0
         self._scale = 1.0
 
-        if AppConfig.debug_mode():
+        if Config.debug_mode():
             self._images_debug_text = {}
 
     def add_placeholder(self, index: int, pixmap: QPixmap) -> None:
@@ -60,12 +59,12 @@ class MangaViewerScene(QGraphicsScene):
 
         if not self._placeholder_timer.isActive():
             self._placeholder_timer.start(
-                AppConfig.UI.MangaViewer.placeholder_loading_intervals()
+                Config.UI.MangaViewer.placeholder_loading_intervals()
             )
 
     def _add_placeholder(self) -> bool:
         if not self._placeholder_queue:
-            if not AppConfig.UI.MangaViewer.set_size_with_every_placeholder():
+            if not Config.UI.MangaViewer.set_size_with_every_placeholder():
                 self.setSceneRect(-self.width_ // 2, 0, self.width_, self._cur_y)
             self._placeholder_timer.stop()
             return False
@@ -85,14 +84,14 @@ class MangaViewerScene(QGraphicsScene):
         item.setPos(-width // 2, self._cur_y)
         item.setVisible(False)
 
-        if AppConfig.debug_mode():
+        if Config.debug_mode():
             self._add_images_debug_info(i, self._cur_y + 10, width // 2 + 6, pm)
 
         self._image_items[i] = (item, height, width)
         self.addItem(item)
         self._cur_y += height
         self._cur_index += 1
-        if AppConfig.UI.MangaViewer.set_size_with_every_placeholder():
+        if Config.UI.MangaViewer.set_size_with_every_placeholder():
             self.setSceneRect(-self.width_ // 2, 0, self.width_, self._cur_y)
         return True
 
@@ -284,10 +283,10 @@ class MangaViewer(SmoothGraphicsView):
         viewport_height = self.viewport().height()
 
         self._scene._cull_images(
-            current, viewport_height, AppConfig.UI.MangaViewer.cull_height_multiplier()
+            current, viewport_height, Config.UI.MangaViewer.cull_height_multiplier()
         )
         QTimer.singleShot(
-            AppConfig.UI.MangaViewer.cull_scene_cooldown(),
+            Config.UI.MangaViewer.cull_scene_cooldown(),
             self._cull_cooldown_timer_out,
         )
         self._cull_allowed = False

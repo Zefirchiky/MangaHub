@@ -10,7 +10,7 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from resources.enums import IconsEnum
 from utils import SVGManipulator
-from config import AppConfig
+from config import Config
 
 
 class SVGIcon(QLabel):
@@ -293,10 +293,10 @@ class IconRepo:
         icon_name = icon_name.value if isinstance(icon_name, IconsEnum) else icon_name
         if icon_name not in cls._icons:
             logger.warning(
-                f"Icon {icon_name} not found in the repo. Loading from {AppConfig.Dirs.ICONS}"
+                f"Icon {icon_name} not found in the repo. Loading from {Config.Dirs.ICONS}"
             )
             cls._icons[icon_name] = SVGIcon(
-                svg_path=AppConfig.Dirs.ICONS / f"{icon_name}.svg"
+                svg_path=Config.Dirs.ICONS / f"{icon_name}.svg"
             )
         return cls._icons[icon_name].copy() if copy else cls._icons[icon_name]
 
@@ -311,7 +311,7 @@ class IconRepo:
         SVGIcon._default_size = (32, 32)
 
         for icon in IconsEnum:
-            IconRepo.add_icon(icon, SVGIcon(AppConfig.Dirs.ICONS / f"{icon.value}.svg"))
+            IconRepo.add_icon(icon, SVGIcon(Config.Dirs.ICONS / f"{icon.value}.svg"))
 
         # UTILS
         IconRepo.get(IconRepo.Icons.EYE, False).set_size(20, 20).set_second_icon(

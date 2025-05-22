@@ -9,27 +9,31 @@ from loguru import logger
 from models.novels import NovelFormatter
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
+import PySide6.QtCore
 from services.handlers import JsonHandler
 from services.parsers import UrlParser
 from services.repositories.manga import MangaRepository
-from services.repositories import NovelsRepository, SitesRepository
-from config import AppConfig
+from services.repositories import NovelsRepository
+from config import Config
 from utils import MM
 
 
-logger.info(f"Working directory: {AppConfig.Dirs.STD_DIR}")
+logger.info(f"Working directory: {Config.Dirs.STD_DIR}")
 
 
 class App:
     def __init__(self):
-        logger.debug(f"MangaHub v{AppConfig.version()}")
-        logger.info(f"Starting MangaHub v{AppConfig.version()}")
+        logger.debug(f"MangaHub v{Config.version()}")
+        logger.info(f"Starting MangaHub v{Config.version()}")
 
-        myappid = f"mangahub.{AppConfig.version()}"
+        logger.info(f"PySide6 version: {PySide6.__version__}")
+        logger.info(f"PySide6.QtCore version: {PySide6.QtCore.__version__}")
+        
+        myappid = f"mangahub.{Config.version()}"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         self.gui_app = QApplication(sys.argv)
-        self.gui_app.setWindowIcon(QIcon(f"{AppConfig.Dirs.RESOURCES}/app_icon.ico"))
+        self.gui_app.setWindowIcon(QIcon(f"{Config.Dirs.RESOURCES}/app_icon.ico"))
         self.gui_window = MainWindow(self)
         self.message_manager = MM(self)
         self.color_manager = CM(self)
@@ -37,43 +41,64 @@ class App:
 
         # Set defaults
         NovelFormatter.global_replaces = JsonHandler(
-            f"{AppConfig.Dirs.NOVELS_CONF}/global_replace.json"
+            f"{Config.Dirs.NOVELS_CONF}/global_replace.json"
         ).load()
 
-        self.sites_repo = SitesRepository(AppConfig.Dirs.SITES_JSON)
-        UrlParser.set_parser(self.sites_repo)
-        self.sites_manager = SitesManager(self)
+        self.sites_manager = SitesManager()
 
-        self.manga_repository = MangaRepository(AppConfig.Dirs.MANGA_JSON)
+        self.manga_repository = MangaRepository(Config.Dirs.MANGA_JSON)
         self.manga_manager = MangaManager(self)
 
-        self.novels_repository = NovelsRepository(AppConfig.Dirs.NOVELS_JSON)
+        self.novels_repository = NovelsRepository(Config.Dirs.NOVELS_JSON)
         self.novels_manager = NovelsManager(self)
 
         self.app_controller = AppController(self)
 
-        # from models.sites import (
-        #     SiteChapterPage,
-        #     SiteTitlePage,
-        #     LastChapterParsingMethod,
+        # from models.sites.parsing_methods import (
+        #     MangaParsing,
+        #     NameParsing,
+        #     CoverParsing,
+        #     ChaptersListParsing,
+        #     MangaChapterParsing,
+        #     ImagesParsing
         # )
-        # from models.manga import ImageParsingMethod
 
         # self.sites_manager.create_site(
         #     "AsuraScans",
         #     "https://asuracomic.net",
-        #     SiteChapterPage(
-        #         url_format="series/$manga_id$-$num_identifier$/chapter/$chapter_num$"
+        #     MangaParsing(
+        #         name_parsing=NameParsing(
+        #             path="series/{media_id}-6905f93c",
+        #             name="span",
+        #             class_="text-xl font-bold",
+        #         ),
+        #         cover_parsing=CoverParsing(
+        #             path="series/{media_id}-6905f93c",
+        #             name="img",
+        #             look_for="src",
+        #             class_="rounded mx-auto md:mx-0",
+        #             alt="poster",
+        #         ),
+        #         last_chapter_parsing=ChaptersListParsing(
+        #             path="series/{media_id}-6905f93c",
+        #             name="div",
+        #             class_="pl-4 pr-2 pb-4 overflow-y-auto scrollbar-thumb-themecolor scrollbar-track-transparent scrollbar-thin mr-3 max-h-[20rem] space-y-2.5",
+        #         ).add_parsing_method(
+        #             ChaptersListParsing(
+        #                 name="h3",
+        #                 class_="text-sm text-white font-medium flex flex-row ` ${shouldHighlight(chapter.id) ? '' : 'text-themecolor'}"
+        #             )
+        #         ),
         #     ),
-        #     ImageParsingMethod().set_regex_from_html(
-        #         "https://gg\\.asuracomic\\.net/storage/media/\\d{6}/conversions/\\d{2}-optimized\\.webp"
-        #     ),
-        #     LastChapterParsingMethod(
-        #         string_format="$manga_id$-$num_identifier$/chapter/$chapter_num$",
-        #         on_title_page=True,
-        #     ),
-        #     title_page=SiteTitlePage(url_format="series/$manga_id$-$num_identifier$"),
-        #     num_identifier="ffffffff",
+        #     MangaChapterParsing(
+        #         images_parsing=ImagesParsing(
+        #             path="series/{media_id}-6905f93c/chapter/{chapter_num}",
+        #             name="img",
+        #             class_="object-cover mx-auto",
+        #             alt="chapter page 1",
+        #             decoding="async",
+        #         ),
+        #     )
         # )
 
         # self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans", overwrite=True)
@@ -104,16 +129,16 @@ class App:
         self.gui_window.showMaximized()
         self.gui_window.init()
 
-        MM.show_info(f"Working directory: \n{AppConfig.Dirs.STD_DIR}", 7000)
+        MM.show_info(f"Working directory: \n{Config.Dirs.STD_DIR}", 7000)
         MM.show_progress("lol1", 12, 100, "lol", format_="%p% (%v/%t Bytes)")
 
-        logger.success(f"MangaHub v{AppConfig.version()} initialized")
+        logger.success(f"MangaHub v{Config.version()} initialized")
         self.gui_app.exec()
 
         # AppConfig().save(CONF_FILE)
         logger.success("AppConfig was saved successfully")
 
-        logger.info(f"MangaHub v{AppConfig.version()} finished")
+        logger.info(f"MangaHub v{Config.version()} finished")
 
 
 if __name__ == "__main__":
