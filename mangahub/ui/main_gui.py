@@ -91,7 +91,7 @@ class MainWindow(QMainWindow):
         self.root_layout.insertWidget(1, self.manga_viewer)
         self.root_layout.insertWidget(2, self.novel_viewer)
 
-        for manga in self.app_controller.manga_manager.repo.get_all().values():
+        for manga in self.app_controller.manga_manager.get_all():
             self.create_new_card(manga)
 
         self.current_mc: MediaCard | None = None
@@ -103,10 +103,21 @@ class MainWindow(QMainWindow):
 
     def init_connections(self):
         self.app_controller.init_connections()
-        
-        self.manga_manager.cover_downloaded.connect(lambda manga_name, cover: self.dashboard.get_card(manga_name).set_cover(cover))
-        
-        self.app_controller.manga_created.connect(lambda manga: self.dashboard.add_card(self.create_new_card(manga)))
+
+        self.manga_manager.cover_downloaded.connect(
+            lambda manga_name, cover: self.dashboard.get_card(manga_name).set_cover(
+                cover
+            )
+        )
+        self.manga_manager.chapters_dict_downloaded.connect(
+            lambda manga_name, chapters: self.dashboard.get_card(
+                manga_name
+            ).set_chapter_nums(self.app_controller.get_manga(manga_name))
+        )
+
+        self.app_controller.manga_created.connect(
+            lambda manga: self.dashboard.add_card(self.create_new_card(manga))
+        )
 
         self.app_controller.manga_changed.connect(self.update_current_mc)
         self.app_controller.manga_changed.connect(self.manga_viewer.set_manga)
@@ -187,7 +198,7 @@ class MainWindow(QMainWindow):
         self.dashboard.add_card(mc)
         mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
         return mc
-    
+
     def open_settings(self):
         self.settings_is_opened ^= 1
         if self.settings_is_opened:

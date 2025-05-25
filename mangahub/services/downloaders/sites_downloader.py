@@ -74,6 +74,8 @@ class SitesDownloader(QObject):
             logger.warning(f'Not all urls were downloaded, remaining: {self._urls_downloading}')
 
     def download_title_page(self, url: str):
+        if url in self._urls_downloading:
+            return self.downloader.workers[url]
         self._urls_downloading[url] = SiteUrlTypes.TITLE_PAGE
         return self.downloader.download_html(url)
 

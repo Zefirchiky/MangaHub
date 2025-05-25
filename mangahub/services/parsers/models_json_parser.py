@@ -16,7 +16,7 @@ class ModelsJsonParser[KeyType: (str | int | float), ModelType: BaseModel]:
     def add(self, name: KeyType, model: ModelType):
         self._models_collection[name] = model
     
-    def get(self, name: KeyType) -> ModelType | None:
+    def get(self, name: KeyType, default=None) -> ModelType | None:
         if name in self._models_collection.keys():
             return self._models_collection[name]
 
@@ -28,10 +28,20 @@ class ModelsJsonParser[KeyType: (str | int | float), ModelType: BaseModel]:
             logger.warning(
                 f"Model not found: {self.model}({name})\nfile: {self.file}\nkey type: {self.key_type}\nname type: {type(name)}"
             )
-            return None
+            return default
         except KeyError:
             logger.error(f"{model.__name__} {name} not found")
             return
+        
+    def get_i(self, index: int, default=None) -> ModelType:
+        col_len = len(self._models_collection)
+        if index < 0:
+            index = col_len + index
+        if index < 0 or index >= col_len:
+            if default == 'err':
+                raise IndexError(f'Index is out of range. Index: {index}, max: {col_len}')
+            return default
+        return self._models_collection[list(self._models_collection.keys())[index]]
         
     def pop(self, name: KeyType):
         return self._models_collection.pop(name)
@@ -52,6 +62,12 @@ class ModelsJsonParser[KeyType: (str | int | float), ModelType: BaseModel]:
     @models_collection.setter
     def models_collection(self, models_dict: dict[KeyType, ModelType]):
         self._models_collection = models_dict
+
+    def __len__(self) -> int:
+        return len(self._models_collection)
+    
+    def __str__(self) -> str:
+        return f'ModelsJsonParser: first ell: {self.get_i(0, None)}, _models_collection length: {len(self._models_collection)}'
 
     def save(self, data: dict[KeyType, ModelType]=None):
         data = data if data is not None else self._models_collection

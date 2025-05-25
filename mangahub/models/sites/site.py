@@ -3,7 +3,6 @@ from pydantic import field_validator
 
 from ..tags.tag_model import TagModel
 from ..url import URL
-from ..manga.manga import Manga
 from .parsing_methods import MangaParsing, NovelParsing, MangaChapterParsing
 
 
@@ -24,16 +23,14 @@ class Site(TagModel):
             url = URL(url=url)
         return url
 
-    def add_manga(self, manga: Manga, num_identifier: str = "") -> None:
-        self.manga[manga.name] = {"id": manga.id_}
+    def add_manga(self, manga_name: str, manga_id: str, num_identifier: str = "") -> None:
+        self.manga[manga_name] = {"id": manga_id}
         if num_identifier:
-            self.manga[manga.name]["num_identifier"] = num_identifier
+            self.manga[manga_name]["num_identifier"] = num_identifier
         self.manga = self.manga
         return self.manga
 
-    def remove_manga(self, manga_name: Manga | str) -> None:
-        if isinstance(manga_name, Manga):
-            manga_name = manga_name.name
+    def remove_manga(self, manga_name: str) -> None:
         self.manga.pop(manga_name)
         return self.manga
 

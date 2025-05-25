@@ -41,7 +41,7 @@ class ParsingMethod(BaseModel):
         :param parsing_method: Instance of ParsingMethod
         :return: Self
         """
-        if self.path or self.regex:
+        if self.path or self.regex or self.model_extra:
             self.parsing_methods.append(parsing_method)
             return self
         else:
@@ -58,6 +58,7 @@ class ParsingMethod(BaseModel):
         
         bs_kwargs = self.model_extra if self.model_extra is not None else {}
         
+        tags_found_by_bs = []
         if bs_kwargs:
             try:
                 tags_found_by_bs = soup.find_all(**bs_kwargs)
@@ -145,5 +146,5 @@ class ParsingMethod(BaseModel):
                 else: # 'look_for' for a specific attribute doesn't make sense on the whole doc without a tag context.
                     logger.warning(f"'look_for: {self.look_for}' on whole document without tags is only supported for 'text' or 'html'.")
 
-        logger.debug(f"parse_html for method ({self.model_dump_json(exclude_defaults=True, exclude_none=True, exclude={'parsing_methods'})}) on HTML (len={len(html)}) -> results (len={len(final_results)}): {str(final_results)[:300]}...")
+        # logger.debug(f"parse_html for method ({self.model_dump_json(exclude_defaults=True, exclude_none=True, exclude={'parsing_methods'})}) on HTML (len={len(html)}) -> results (len={len(final_results)}): {str(final_results)[:300]}...")
         return final_results

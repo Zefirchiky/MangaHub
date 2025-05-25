@@ -53,7 +53,7 @@ class AppController(QObject):
         )
 
     def get_manga(self, name: str) -> Manga | None:
-        return self.manga_manager.repo.get(name)
+        return self.manga_manager.get(name)
 
     # def get_all_manga(self) -> dict[str, Manga]:
     #     return self.manga_manager.get_all_manga()
@@ -63,7 +63,6 @@ class AppController(QObject):
     ):
         manga = self.manga_manager.create(name, site, **kwargs)
         self.manga_created.emit(manga)
-        # manga = self.manga_manager.create_empty_manga(name, url, site, backup_sites, overwrite, **kwargs)
         return manga
 
     def remove_manga(self, name: str) -> Manga:

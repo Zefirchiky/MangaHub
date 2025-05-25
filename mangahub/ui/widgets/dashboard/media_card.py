@@ -1,6 +1,7 @@
 from PySide6.QtGui import Qt
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
+from loguru import logger
 
 from ..buttons import ChapterButton
 from ..image import ImageWidget
@@ -62,7 +63,7 @@ class MediaCard(QFrame):
 
     def _connect_buttons(self):
         if not all(self.is_buttons_connected):
-            if self.top_button.chapter and not self.is_buttons_connected[0]:    # If chapter and this button is not connected yet
+            if self.top_button.chapter and not self.is_buttons_connected[0]:    # If chapter exists and this button is not connected yet
                 self.top_button.clicked.connect(
                     lambda: self.chapter_clicked.emit(
                         self.media.name, self.top_button.chapter.num
@@ -97,11 +98,27 @@ class MediaCard(QFrame):
         self.update_buttons()
         self._connect_buttons()
         return self
+    
+    def set_chapter_nums(self, media: AbstractMedia):
+        if chap_1 := media._chapters_repo.get_i(0):
+            self.top_button.set_chapter(chap_1)
+        else:
+            logger.warning(f'No first chapter in {media}')
+            
+        if chap_cur := media._chapters_repo.get(media.current_chapter):
+            self.mid_button.set_chapter(chap_cur)
+        else:
+            logger.warning(f'No current chapter in {media}')
+            
+        if chap_last := media._chapters_repo.get_i(-1):
+            self.bot_button.set_chapter(chap_last)
+        else:
+            logger.warning(f'No last chapter in {media}')
 
     def update_buttons(self):
-        if chap := self.media.get_chapter(self.media.first_chapter):
+        if chap := self.media.get_chapter(0):
             self.top_button.set_chapter(chap)
         if chap := self.media.get_chapter(self.media.current_chapter):
             self.mid_button.set_chapter(chap)
-        if self.media.last_chapter != -1 and (chap := self.media.get_chapter(self.media.last_chapter)):
+        if self.media.get_chapter(len(self.media.chapters) - 1) != -1 and (chap := self.media._chapters_repo.get_i(-1)):
             self.bot_button.set_chapter(chap)

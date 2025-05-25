@@ -10,8 +10,8 @@ from models.novels import NovelFormatter
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 import PySide6.QtCore
+from services.downloaders import DownloadManager
 from services.handlers import JsonHandler
-from services.parsers import UrlParser
 from services.repositories.manga import MangaRepository
 from services.repositories import NovelsRepository
 from config import Config
@@ -45,6 +45,8 @@ class App:
         ).load()
 
         self.sites_manager = SitesManager()
+        
+        self.download_manager = DownloadManager(self)
 
         self.manga_repository = MangaRepository(Config.Dirs.MANGA_JSON)
         self.manga_manager = MangaManager(self)
@@ -54,57 +56,58 @@ class App:
 
         self.app_controller = AppController(self)
 
-        # from models.sites.parsing_methods import (
-        #     MangaParsing,
-        #     NameParsing,
-        #     CoverParsing,
-        #     ChaptersListParsing,
-        #     MangaChapterParsing,
-        #     ImagesParsing
-        # )
+        from models.sites.parsing_methods import (
+            MangaParsing,
+            NameParsing,
+            CoverParsing,
+            ChaptersListParsing,
+            MangaChapterParsing,
+            ImagesParsing
+        )
 
-        # self.sites_manager.create_site(
-        #     "AsuraScans",
-        #     "https://asuracomic.net",
-        #     MangaParsing(
-        #         name_parsing=NameParsing(
-        #             path="series/{media_id}-6905f93c",
-        #             name="span",
-        #             class_="text-xl font-bold",
-        #         ),
-        #         cover_parsing=CoverParsing(
-        #             path="series/{media_id}-6905f93c",
-        #             name="img",
-        #             look_for="src",
-        #             class_="rounded mx-auto md:mx-0",
-        #             alt="poster",
-        #         ),
-        #         last_chapter_parsing=ChaptersListParsing(
-        #             path="series/{media_id}-6905f93c",
-        #             name="div",
-        #             class_="pl-4 pr-2 pb-4 overflow-y-auto scrollbar-thumb-themecolor scrollbar-track-transparent scrollbar-thin mr-3 max-h-[20rem] space-y-2.5",
-        #         ).add_parsing_method(
-        #             ChaptersListParsing(
-        #                 name="h3",
-        #                 class_="text-sm text-white font-medium flex flex-row ` ${shouldHighlight(chapter.id) ? '' : 'text-themecolor'}"
-        #             )
-        #         ),
-        #     ),
-        #     MangaChapterParsing(
-        #         images_parsing=ImagesParsing(
-        #             path="series/{media_id}-6905f93c/chapter/{chapter_num}",
-        #             name="img",
-        #             class_="object-cover mx-auto",
-        #             alt="chapter page 1",
-        #             decoding="async",
-        #         ),
-        #     )
-        # )
+        self.sites_manager.create_site(
+            "AsuraScans",
+            "https://asuracomic.net",
+            MangaParsing(
+                name_parsing=NameParsing(
+                    path="series/{media_id}-6905f93c",
+                    name="span",
+                    class_="text-xl font-bold",
+                ),
+                cover_parsing=CoverParsing(
+                    path="series/{media_id}-6905f93c",
+                    name="img",
+                    look_for="src",
+                    class_="rounded mx-auto md:mx-0",
+                    alt="poster"
+                ),
+                last_chapter_parsing=ChaptersListParsing(
+                    path="series/{media_id}-6905f93c",
+                    name="div",
+                    class_="pl-4 pr-2 pb-4 overflow-y-auto scrollbar-thumb-themecolor scrollbar-track-transparent scrollbar-thin mr-3 max-h-[20rem] space-y-2.5"
+                ).add_parsing_method(
+                    ChaptersListParsing(
+                        regex=r'/chapter/(\d+)'
+                    )
+                ),
+            ),
+            MangaChapterParsing(
+                images_parsing=ImagesParsing(
+                    path="series/{media_id}-6905f93c/chapter/{chapter_num}",
+                    name="img",
+                    class_="object-cover mx-auto",
+                    alt="chapter page 1",
+                    decoding="async",
+                ),
+            )
+        )
 
-        # self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans", overwrite=True)
+        self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans", overwrite=True)
+        self.app_controller.create_manga("Return From The Abyss", site="AsuraScans")
+        # self.app_controller.create_manga("The Extra's Academy Survival Guide", site="AsuraScans")
         # self.app_controller.create_manga("Nano Machine", site="AsuraScans")
         # self.app_controller.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
-        # self.app_controller.create_manga("Dragon-Devouring Mage")
+        # self.app_controller.create_manga("Dragon-Devouring Mage", site="AsuraScans")
         # self.app_controller.create_manga("Hero? I Quit A Long Time Ago")
         # self.app_controller.remove_manga('Dragon-Devouring Mage')
         # self.app_controller.remove_manga('return of the disaster class hero')

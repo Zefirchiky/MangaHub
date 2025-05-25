@@ -100,9 +100,19 @@ class SitesManager:
                 elif isinstance(parsing, CoverParsing):
                     self.manga_signals.cover_url_downloaded.emit(manga.name, result[0])
                 elif isinstance(parsing, ChaptersListParsing):
-                    self.manga_signals.chapters_list.emit(manga.name, result)
+                    self.manga_signals.chapters_list.emit(manga.name, result[0])
                 elif isinstance(parsing, ImagesParsing):
                     self.manga_chapter_signals.image_urls.emit(manga.name, chapter.num, result)
+    
+    def download_manga_cover(self, manga: Manga):
+        site = self.get(manga.sites[0])
+        if not site:
+            logger.warning(f'No site with name {manga.sites[0]}')
+            return
+        
+        url = f'{site.url}/{UrlParser.fill_media_url(site.manga_parsing.cover_parsing.path, manga)}'
+        self._manga_downloading[url] = (site.manga_parsing.cover_parsing.path, site, manga, DownloadTypes.MANGA)
+        self.downloader.download_title_page(url)
     
     def download_manga_details(self, manga: Manga):
         site = self.get(manga.sites[0])

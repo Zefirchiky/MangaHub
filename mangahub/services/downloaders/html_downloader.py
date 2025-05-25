@@ -50,7 +50,7 @@ class HtmlDownloader(Singleton):
         self.workers: dict[str, QRunnable] = {}
         
         self.worker_finished.connect(self._worker_finished)
-    
+
     @Slot(str, str)
     def _worker_finished(self, url, result):
         self.signals.downloaded.emit(url, result)

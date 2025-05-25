@@ -1,11 +1,18 @@
+from __future__ import annotations
 from PySide6.QtCore import Signal, QObject
 from loguru import logger
 
+from models.abstract import AbstractMedia
+from models.manga import Manga
 from models.images import ImageCache
 from models import URL
 from .image_downloader import ImageDownloader
 from .html_downloader import HtmlDownloader
 from config import Config
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import App
 
 
 class DownloadManager(QObject):
@@ -20,11 +27,15 @@ class DownloadManager(QObject):
     all_html_downloaded = Signal()
     cover_downloaded = Signal(str, bytes)   # manga_name, image
     
-    def __init__(self):
+    manga_details_downloaded = Signal(str)
+    
+    def __init__(self, app: App):
         super().__init__()
         self.images_cache = ImageCache(Config.Dirs.IMAGES_CACHE, Config.Caching.Image.max_ram(), Config.Caching.Image.max_disc())
         self.image_downloader = ImageDownloader(self.images_cache)
         self.html_downloader = HtmlDownloader()
+        
+        self.sites_manager = app.sites_manager
         
         self.image_downloader.image_downloaded.connect(self._image_downloaded)
         
@@ -37,15 +48,22 @@ class DownloadManager(QObject):
     def _url_from_url(self, url: str | URL) -> str:
         return url if isinstance(url, str) else url.url
     
-    def download_cover(self, manga_name: str, url: str):
-        if not manga_name:
+    def download_cover(self, media: AbstractMedia):
+        if isinstance(media, Manga):
+            if media.cover:
+                self._download_cover(media.name, media.cover)
+            else:
+                self.sites_manager.download_manga_cover(media)
+        
+    def _download_cover(self, media_name: str, url: str):
+        if not media_name:
             logger.error('DownloadManager.download_cover did not received manga_name')
             return
         if not url:
             logger.error('DownloadManager.download_cover did not received url')
             return
         self.image_downloader.download_image(url, f'cover-{url}')
-        self._cover_downloads[url] = manga_name
+        self._cover_downloads[url] = media_name
     
     def download_image(self, url: str | URL, name=''):
         if not name:

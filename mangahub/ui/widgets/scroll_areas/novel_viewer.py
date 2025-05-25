@@ -15,7 +15,7 @@ class NovelViewer(SmoothScrollArea):
                             #NovelViewer {{
                                 background: url({str(Config.Dirs.BACKGROUNDS).replace("\\", "/")}/novel_viewer.jpg) repeat;
                             }}
-                           """)
+                        """)
 
         self.text = QTextBrowser()
         self.text.setFixedWidth(1000)

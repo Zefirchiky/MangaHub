@@ -44,7 +44,7 @@ class ImageDownloadWorker(QRunnable):
             # Handle exceptions and pass to callback
             self.callback((None, str(e)))
     
-    async def _download_image(self) -> Path | None, dict:
+    async def _download_image(self) -> tuple[Path | None, dict]:
         """Download image or just its metadata based on metadata_only flag"""
         try:
             async with aiohttp.ClientSession() as session:
@@ -90,7 +90,7 @@ class ImageDownloadWorker(QRunnable):
 class ImageDownloader(QObject):
     """Manages parallel downloading of images"""
     
-    metadata_ready = Signal(str, dict)  # url, metadata
+    metadata_ready = Signal(str, object)  # url, metadata
     image_downloaded = Signal(str, Path)  # url, local path
     download_error = Signal(str, str)    # url, error message
     download_progress = Signal(str, int, int)  # url, bytes downloaded, total bytes

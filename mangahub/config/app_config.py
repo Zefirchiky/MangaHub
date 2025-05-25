@@ -94,6 +94,12 @@ class Config(Config_):
         class Image(Config_):
             max_ram = Setting[StorageSize](100 * SU.MB, "Max Ram for Images")
             max_disc = Setting[StorageSize](500 * SU.MB, "Max Disc Space for Images")
+            
+    class UrlParsing(Config_):
+        replace_symbols = Setting[dict[str, str]]({
+            ' ': '-',
+            "'": '',
+        })
 
     class Dirs(DirectoriesConfig_):
         STD_DIR = DirectoriesConfig_.STD_DIR

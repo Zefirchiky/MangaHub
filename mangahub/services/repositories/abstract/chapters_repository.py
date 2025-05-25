@@ -13,7 +13,7 @@ class ChaptersRepository[ChapterType: AbstractChapter](TagModelsJsonParser[int, 
         
     def save(self):
         for chapter in self._models_collection.values():
-            if repo := chapter.get_data_repo():
+            if (repo := chapter.get_data_repo()) is not None:
                 repo.save()
             else:
                 logger.warning(f'{chapter} does not have a repo (from chapter.get_data_repo()) when trying to save')
