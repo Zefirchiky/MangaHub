@@ -3,8 +3,8 @@ from .models_json_parser import ModelsJsonParser
 from models.tags import TagModel
 
 
-class TagModelsJsonParser[KeyType: (str | int | float), ModelType: TagModel](ModelsJsonParser[KeyType, ModelType]):
-    def __init__(self, file: Path | str, model: ModelType, key_type: KeyType):
+class TagModelsJsonParser[KT: (str | int | float), MT: TagModel](ModelsJsonParser[KT, MT]):
+    def __init__(self, file: Path | str, model: MT, key_type: KT):
         super().__init__(file, model, key_type)
         
     def save(self, data=None):

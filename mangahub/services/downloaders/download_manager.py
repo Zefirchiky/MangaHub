@@ -3,8 +3,8 @@ from PySide6.QtCore import Signal, QObject
 from loguru import logger
 
 from models.abstract import AbstractMedia
-from models.manga import Manga
-from models.images import ImageCache
+from models.manga import Manga, MangaChapter
+from models.images import ImageCache, ImageMetadata
 from models import URL
 from .image_downloader import ImageDownloader
 from .html_downloader import HtmlDownloader
@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 
 
 class DownloadManager(QObject):
-    image_downloaded = ImageDownloader.image_downloaded # url, name.ext, metadata
-    image_metadata_downloaded = ImageDownloader.metadata_downloaded   # url, metadata
+    image_downloaded = Signal(str, float, int, str) # manga id, chapter num, image num, name
+    image_metadata_downloaded = Signal(str, float, int, ImageMetadata)   # manga id, chapter num, image num, metadata
     overall_image_download_progress = ImageDownloader.overall_download_progress  # len(urls), percent, current bytes, total bytes
     image_download_progress = ImageDownloader.download_progress
     image_download_error = ImageDownloader.download_error
@@ -25,7 +25,7 @@ class DownloadManager(QObject):
     
     html_downloaded = HtmlDownloader.signals.downloaded   # url, content
     all_html_downloaded = Signal()
-    cover_downloaded = Signal(str, bytes)   # manga_name, image
+    cover_downloaded = Signal(str, bytes)   # manga_id, image
     
     manga_details_downloaded = Signal(str)
     
@@ -36,14 +36,14 @@ class DownloadManager(QObject):
         self.html_downloader = HtmlDownloader()
         
         self.sites_manager = app.sites_manager
+        self.chapter_images_urls_downloaded = self.sites_manager.manga_chapter_signals.image_urls   # manga id, chapter num, image
         
+        self.image_downloader.metadata_downloaded.connect(self._image_metadata_downloaded)
         self.image_downloader.image_downloaded.connect(self._image_downloaded)
         
         self.queue: dict[str, dict[str, list[URL]]] = {}
         self._cover_downloads: dict[str, str] = {}
-        
-    def _init_connections(self):
-        self.html_downloaded.connect(self._on_html_downloaded)
+        self._image_urls: dict[str, tuple[str, float, int]] = {}
     
     def _url_from_url(self, url: str | URL) -> str:
         return url if isinstance(url, str) else url.url
@@ -51,35 +51,30 @@ class DownloadManager(QObject):
     def download_cover(self, media: AbstractMedia):
         if isinstance(media, Manga):
             if media.cover:
-                self._download_cover(media.name, media.cover)
+                self._download_cover(media.id_, media.cover)
             else:
-                self.sites_manager.download_manga_cover(media)
+                self.sites_manager.download_manga_cover(media)  # TODO: It should just be generalized
         
-    def _download_cover(self, media_name: str, url: str):
-        if not media_name:
-            logger.error('DownloadManager.download_cover did not received manga_name')
+    def _download_cover(self, media_id: str, url: str):
+        if not media_id:
+            logger.error('DownloadManager.download_cover did not received manga_id')
             return
         if not url:
             logger.error('DownloadManager.download_cover did not received url')
             return
-        self.image_downloader.download_image(url, f'cover-{url}')
-        self._cover_downloads[url] = media_name
-    
-    def download_image(self, url: str | URL, name=''):
-        if not name:
-            name = self._url_from_url(url)
-        self.image_downloader.download_image(url, name)
+        self.image_downloader.download_image(url, f'cover_{media_id}')
+        self._cover_downloads[url] = media_id
         
-    def download_images(self, urls: dict[str | URL, str]):
-        for url, name in urls.items():
-            if not name:
-                urls[url] = self._url_from_url(url)
-        self.image_downloader.download_images(urls)
+    def download_manga_chapter_details(self, manga: Manga, chapter: MangaChapter):
+        self.sites_manager.download_manga_chapter_details(manga, chapter)
         
-    def download_images_metadata(self, urls: list[str | URL]):
-        for i, url in enumerate(urls):
-            urls[i] = self._url_from_url(url)
+    def download_manga_chapter_images(self, manga_id: str, chapter: MangaChapter):
+        urls = [image.metadata.url for image in chapter.get_data_repo().get_all().values()]
+        name_urls = {url: f'chap-image_{manga_id}_{chapter.num}_{i}' for i, url in enumerate(urls)}
+        for num, image in chapter.get_data_repo().get_all().items():
+            self._image_urls[image.metadata.url] = (manga_id, chapter.num, num)
         self.image_downloader.download_metadatas(urls)
+        self.image_downloader.download_images(name_urls)
         
     def download_html(self, name: str, url: str | URL):
         url = self._url_from_url(url)
@@ -95,13 +90,22 @@ class DownloadManager(QObject):
             urls[i] = self._url_from_url(url)
         return self.html_downloader.download_htmls(urls)
     
-    def _image_downloaded(self, url: str, name: str, metadata: str):
+    def _image_metadata_downloaded(self, url: str, metadata: ImageMetadata):
+        manga_id, chapter_num, num = self._image_urls.get(url)
+        self.image_metadata_downloaded.emit(manga_id, chapter_num, num, metadata)
+    
+    def _image_downloaded(self, url: str, name: str, metadata):
         if name.startswith('cover'):
             self.cover_downloaded.emit(self._cover_downloads.pop(url), self.images_cache.pop(name))
+        elif name.startswith('chap-image'):
+            manga_id, chapter_num, num = self._image_urls.pop(url)
+            self.image_downloaded.emit(manga_id, chapter_num, num, name)
+        else:
+            logger.warning(f'Unknown image was downloaded: {url} ({name}, {metadata})')
     
     def start(self, name: str):
         if content := self.queue.pop(name, None):
-            for type_, urls in content:
+            for type_, urls in content.items():
                 match type_:
                     case 'html':
                         self.html_downloader.download_htmls(urls)

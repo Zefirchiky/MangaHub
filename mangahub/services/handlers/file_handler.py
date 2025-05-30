@@ -3,7 +3,7 @@ from pathlib import Path
 from loguru import logger
 
 
-class FileHandler[LoadValue, SaveValue](ABC):
+class FileHandler[LV, SV](ABC):
     def __init__(self, file: Path | str, ext: str=''):
         """
         Initialize the FileHandler with a file and an extension.
@@ -51,7 +51,7 @@ class FileHandler[LoadValue, SaveValue](ABC):
             pass
 
     @abstractmethod
-    def load(self) -> LoadValue:
+    def load(self) -> LV:
         """
         Abstract method to load data from the file.
 
@@ -66,7 +66,7 @@ class FileHandler[LoadValue, SaveValue](ABC):
 
         pass
     
-    def get(self) -> LoadValue:
+    def get(self) -> LV:
         """
         Get the data from the file.
 
@@ -80,7 +80,7 @@ class FileHandler[LoadValue, SaveValue](ABC):
         return self.data
 
     @abstractmethod
-    def save(self, data: SaveValue):
+    def save(self, data: SV):
         """
         Abstract method to save data to the file.
 
@@ -95,7 +95,7 @@ class FileHandler[LoadValue, SaveValue](ABC):
         pass
     
     @classmethod
-    def fast_load(cls, file: Path | str) -> LoadValue:
+    def fast_load(cls, file: Path | str) -> LV:
         """
         Load data from a file using a single call.
 
@@ -113,7 +113,7 @@ class FileHandler[LoadValue, SaveValue](ABC):
         return cls(file).load()
     
     @classmethod
-    def fast_save(cls, file: Path | str, data: SaveValue):
+    def fast_save(cls, file: Path | str, data: SV):
         """
         Save data to a file using a single call.
 
@@ -129,3 +129,7 @@ class FileHandler[LoadValue, SaveValue](ABC):
         """
         
         cls(file).save(data)
+        
+    
+    def __len__(self) -> int:
+        return len(self.get())

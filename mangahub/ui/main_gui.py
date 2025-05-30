@@ -83,7 +83,6 @@ class MainWindow(QMainWindow):
         self.dashboard = Dashboard()
         self.manga_viewer = MangaViewer(self)
         self.novel_viewer = NovelViewer()
-        # self.chapter_image_loader = self.manga_manager.chapter_loader
 
         self.selection_menu.show()
 
@@ -105,14 +104,14 @@ class MainWindow(QMainWindow):
         self.app_controller.init_connections()
 
         self.manga_manager.cover_downloaded.connect(
-            lambda manga_name, cover: self.dashboard.get_card(manga_name).set_cover(
+            lambda manga_id, cover: self.dashboard.get_card(manga_id).set_cover(
                 cover
             )
         )
         self.manga_manager.chapters_dict_downloaded.connect(
-            lambda manga_name, chapters: self.dashboard.get_card(
-                manga_name
-            ).set_chapter_nums(self.app_controller.get_manga(manga_name))
+            lambda manga_id: self.dashboard.get_card(
+                manga_id
+            ).set_chapter_nums()
         )
 
         self.app_controller.manga_created.connect(
@@ -122,8 +121,8 @@ class MainWindow(QMainWindow):
         self.app_controller.manga_changed.connect(self.update_current_mc)
         self.app_controller.manga_changed.connect(self.manga_viewer.set_manga)
 
-        self.app_controller.chapter_changed.connect(self.show_manga)
         self.app_controller.chapter_changed.connect(self.update_current_mc)
+        self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
 
         # Setting chapter
         self.manga_viewer.close_button.clicked.connect(
@@ -135,62 +134,20 @@ class MainWindow(QMainWindow):
         self.manga_viewer.prev_button.clicked.connect(self.app_controller.prev_chapter)
         self.manga_viewer.next_button.clicked.connect(self.app_controller.next_chapter)
 
-        self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
 
-        # Connecting download to manga_viewer
-        # self.app_controller.manga_chapter_placeholder_ready.connect(
-        #     lambda manga, chapter, i, pixmap: self.manga_viewer.add_placeholder(
-        #         i, pixmap
-        #     )
-        # )
-        # self.app_controller.manga_chapter_image_ready.connect(
-        #     lambda manga,
-        #     chapter,
-        #     i,
-        #     name,
-        #     image: self.manga_viewer.replace_placeholder(i, name)
-        # )
-
-        # self.chapter_image_loader.overall_download_progress.connect(
-        #     lambda urls_num, percent, current, total: MM.show_progress(
-        #         f"Images downloading for {self.app_controller.state.manga_name} {self.app_controller.state.chapter_num}",
-        #         current,
-        #         total,
-        #         "Downloading progress",
-        #         format_="%p% (%v/%t Bytes)",
-        #     )
-        # )  # len(urls), percent, current bytes, total bytes
-        # self.chapter_image_loader.finished.connect(
-        #     lambda: MM.finish_progress(
-        #         f"Images downloading for {self.app_controller.state.manga_name} {self.app_controller.state.chapter_num}"
-        #     )
-        # )
-        # self.chapter_image_loader.finished.connect(self.manga_viewer._on_chapter_loaded)
-        # self.chapter_image_loader.finished.connect(
-        #     lambda: MM.show_success("Images were downloaded successfully")
-        # )
-
-        # self.manga_dashboard.add_manga_button.clicked.connect(self.add_manga)
+        # Chapters loading
+        self.app_controller.manga_signals.chapter_started_loading.connect(self.manga_viewer.clear)
+        self.app_controller.manga_signals.chapter_started_loading.connect(lambda: self.root_layout.setCurrentIndex(1))
+        
+        # manga
+        self.app_controller.manga_signals.image_meta_loaded.connect(lambda i, meta: self.manga_viewer.add_placeholder(i, meta.width, meta.height))
+        self.app_controller.manga_signals.image_loaded.connect(self.manga_viewer.replace_placeholder)
 
         logger.success("MainWindow connections initialized")
 
-    def show_manga(self):
-        self.manga_viewer.clear()
-
-        manga, chapter = (
-            self.app_controller.state._manga,
-            self.app_controller.state._chapter,
-        )
-
-        self.app_controller.manga_manager.chapter_loader.load_chapter(
-            manga.id_, chapter
-        )
-
-        self.root_layout.setCurrentIndex(1)
-
     def update_current_mc(self):  # TODO(?): possibly another state, just for gui
-        self.current_mc = self.dashboard.get_card(self.app_controller.state.manga_name)
-        self.current_mc.update_buttons()
+        self.current_mc = self.dashboard.get_card(self.app_controller.state.manga_id)
+        self.current_mc.set_chapter_nums()
 
     def create_new_card(self, media: AbstractMedia) -> MediaCard:
         mc = MediaCard()

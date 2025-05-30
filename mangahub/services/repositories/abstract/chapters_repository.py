@@ -7,9 +7,9 @@ if TYPE_CHECKING:
     from models.abstract import AbstractChapter
 
 
-class ChaptersRepository[ChapterType: AbstractChapter](TagModelsJsonParser[int, ChapterType]):
-    def __init__(self, file: Path | str, model: ChapterType):
-        super().__init__(file, model, int)
+class ChaptersRepository[CP: AbstractChapter](TagModelsJsonParser[float, CP]):
+    def __init__(self, file: Path | str, model: CP):
+        super().__init__(file, model, float)
         
     def save(self):
         for chapter in self._models_collection.values():

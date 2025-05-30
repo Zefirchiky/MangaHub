@@ -3,7 +3,6 @@ from .parsing_method import ParsingMethod
 from .name_parsing import NameParsing
 from .cover_parsing import CoverParsing
 from .last_chapter_parsing import ChaptersListParsing
-from .images_parsing import ImagesParsing
 
 
 class MangaParsing(BaseModel):

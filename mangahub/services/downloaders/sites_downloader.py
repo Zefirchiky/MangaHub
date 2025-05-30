@@ -4,8 +4,6 @@ from loguru import logger
 
 from services.downloaders.html_downloader import HtmlDownloaderWorker
 from ..parsers import UrlParser
-from models.sites import Site
-from models.abstract import AbstractMedia
 from .html_downloader import HtmlDownloader
 from config import Config
 
@@ -79,9 +77,8 @@ class SitesDownloader(QObject):
         self._urls_downloading[url] = SiteUrlTypes.TITLE_PAGE
         return self.downloader.download_html(url)
 
-    def download_chapter_page(self, site: Site, media: AbstractMedia, num: int) -> HtmlDownloaderWorker:
-        url = UrlParser.get_chapter_url(
-            site.chapter_page.url_format, media.id_, num
-        )
+    def download_chapter_page(self, url: str) -> HtmlDownloaderWorker:
+        if url in self._urls_downloading:
+            return self.downloader.workers[url]
         self._urls_downloading[url] = SiteUrlTypes.CHAPTER_PAGE
         return self.downloader.download_html(url)

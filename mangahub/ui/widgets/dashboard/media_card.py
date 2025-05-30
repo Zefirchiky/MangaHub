@@ -66,7 +66,7 @@ class MediaCard(QFrame):
             if self.top_button.chapter and not self.is_buttons_connected[0]:    # If chapter exists and this button is not connected yet
                 self.top_button.clicked.connect(
                     lambda: self.chapter_clicked.emit(
-                        self.media.name, self.top_button.chapter.num
+                        self.media.id_, self.top_button.chapter.num
                     )
                 )
                 self.is_buttons_connected[0] = True
@@ -74,7 +74,7 @@ class MediaCard(QFrame):
             if self.mid_button.chapter and not self.is_buttons_connected[1]:
                 self.mid_button.clicked.connect(
                     lambda: self.chapter_clicked.emit(
-                        self.media.name, self.mid_button.chapter.num
+                        self.media.id_, self.mid_button.chapter.num
                     )
                 )
                 self.is_buttons_connected[1] = True
@@ -82,7 +82,7 @@ class MediaCard(QFrame):
             if self.bot_button.chapter and not self.is_buttons_connected[2]:
                 self.bot_button.clicked.connect(
                     lambda: self.chapter_clicked.emit(
-                        self.media.name, self.bot_button.chapter.num
+                        self.media.id_, self.bot_button.chapter.num
                     )
                 )
                 self.is_buttons_connected[2] = True
@@ -91,34 +91,27 @@ class MediaCard(QFrame):
 
     def set_media(self, media: AbstractMedia):
         self.media = media
-        self.set_name(media.name)
+        self.set_name(media.id_)
         if media.cover:
-            self.set_cover(media.folder / media.cover)
+            self.set_cover(media.folder / 'cover.webp')
             
-        self.update_buttons()
-        self._connect_buttons()
+        self.set_chapter_nums()
         return self
     
-    def set_chapter_nums(self, media: AbstractMedia):
-        if chap_1 := media._chapters_repo.get_i(0):
+    def set_chapter_nums(self):
+        if chap_1 := self.media._chapters_repo.get_i(0):
             self.top_button.set_chapter(chap_1)
         else:
-            logger.warning(f'No first chapter in {media}')
+            logger.warning(f'No first chapter in {self.media}')
             
-        if chap_cur := media._chapters_repo.get(media.current_chapter):
+        if chap_cur := self.media.get_chapter(self.media.current_chapter):
             self.mid_button.set_chapter(chap_cur)
         else:
-            logger.warning(f'No current chapter in {media}')
+            logger.warning(f'No current chapter in {self.media}')
             
-        if chap_last := media._chapters_repo.get_i(-1):
+        if chap_last := self.media._chapters_repo.get_i(-1):
             self.bot_button.set_chapter(chap_last)
         else:
-            logger.warning(f'No last chapter in {media}')
-
-    def update_buttons(self):
-        if chap := self.media.get_chapter(0):
-            self.top_button.set_chapter(chap)
-        if chap := self.media.get_chapter(self.media.current_chapter):
-            self.mid_button.set_chapter(chap)
-        if self.media.get_chapter(len(self.media.chapters) - 1) != -1 and (chap := self.media._chapters_repo.get_i(-1)):
-            self.bot_button.set_chapter(chap)
+            logger.warning(f'No last chapter in {self.media}')
+            
+        self._connect_buttons()

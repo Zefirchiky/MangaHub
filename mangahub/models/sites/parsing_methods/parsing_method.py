@@ -29,7 +29,7 @@ class ParsingMethod(BaseModel):
     )
     
     path: str = ''
-    regex: str = ''
+    regex: str = r''
     look_for: str = ''
     
     parsing_methods: list[ParsingMethod] = []

@@ -18,6 +18,7 @@ class MediaRepository[MediaType: AbstractMedia, ChapterType: AbstractChapter, Ch
         media = super().get(name)
         if media and not media._chapters_repo:
             media._chapters_repo = self.chapter_repository_model(Path(media.folder) / 'chapters.json')
+            
         return media
     
     def save(self):

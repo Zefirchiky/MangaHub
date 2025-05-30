@@ -83,4 +83,4 @@ class AddMangaWindow(QMainWindow):
         if URL.is_url(text):
             url = URL(url=text)
             if not self.name_input.text():
-                self.name_input.setText(UrlParser(url).manga_name)
+                self.name_input.setText(UrlParser(url).manga_id)

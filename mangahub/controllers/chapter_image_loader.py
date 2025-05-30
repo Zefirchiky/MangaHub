@@ -3,7 +3,7 @@ from PySide6.QtGui import QPixmap
 from services.downloaders import ImageDownloader
 from models.images import ImageMetadata, ImageCache
 from models.manga import MangaChapter
-from .placeholder_generator import PlaceholderGenerator
+from utils.placeholder_generator import PlaceholderGenerator
 from config import Config
 
 

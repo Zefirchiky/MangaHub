@@ -2,13 +2,13 @@ from pydantic import BaseModel
 from services.handlers import JsonHandler
 
 
-class ModelJsonParser[ModelType: BaseModel]:
-    def __init__(self, file, model: ModelType):
+class ModelJsonParser[MT: BaseModel]:
+    def __init__(self, file, model: MT):
         self.model = model
         self.json_parser = JsonHandler(file)
 
-    def get(self) -> ModelType:
+    def get(self) -> MT:
         return self.model.model_validate(self.json_parser.get())
 
-    def save(self, model: ModelType) -> None:
+    def save(self, model: MT) -> None:
         self.json_parser.save(model.model_dump())

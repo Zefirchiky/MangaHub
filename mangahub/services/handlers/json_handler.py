@@ -1,3 +1,4 @@
+# import orjson as json     # Maybe
 import ujson as json
 from pathlib import Path
 
@@ -14,7 +15,7 @@ class JsonHandler(FileHandler[dict, dict]):
     
     def load(self) -> dict:
         with self.file.open("r") as f:
-            return json.load(f)
+            return json.loads(f.read())
 
     def save(self, data):
         with self.file.open("w") as f:

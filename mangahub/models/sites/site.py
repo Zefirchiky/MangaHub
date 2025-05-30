@@ -15,7 +15,7 @@ class Site(TagModel):
     
     num_identifier: str = ""
     language: str = "en"
-    manga: dict[str, dict[str, str]] = {}
+    manga: list[str] = []
 
     @field_validator("url")
     def validate_url(cls, url: str | URL) -> URL:
@@ -23,16 +23,11 @@ class Site(TagModel):
             url = URL(url=url)
         return url
 
-    def add_manga(self, manga_name: str, manga_id: str, num_identifier: str = "") -> None:
-        self.manga[manga_name] = {"id": manga_id}
-        if num_identifier:
-            self.manga[manga_name]["num_identifier"] = num_identifier
+    def add_manga(self, manga_id: str) -> None:
+        self.manga.append(manga_id)
         self.manga = self.manga
         return self.manga
 
-    def remove_manga(self, manga_name: str) -> None:
-        self.manga.pop(manga_name)
+    def remove_manga(self, manga_id: str) -> None:
+        self.manga.pop(manga_id)
         return self.manga
-
-    def get_manga_identifier(self, manga_name: str) -> str:
-        return self.manga.get(manga_name, {}).get("num_identifier")

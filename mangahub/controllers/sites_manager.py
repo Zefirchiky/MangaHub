@@ -16,14 +16,14 @@ class DownloadTypes(Enum):
     MANGA = auto()
     MANGA_CHAPTER = auto()
 
-class MangaSignals(QObject):    # manga name, content
+class MangaSignals(QObject):    # manga id, content
     name = Signal(str, str)
     cover_url_downloaded = Signal(str, str)
     chapters_list = Signal(str, list)
     
-class MangaChapterSignals(QObject): # manga name, chapter num, content
-    name = Signal(str, int, str)
-    image_urls = Signal(str, int, list[str])
+class MangaChapterSignals(QObject): # manga id, chapter num, content
+    name = Signal(str, float, str)
+    image_urls = Signal(str, float, list)
     
 
 class SitesManager:
@@ -38,7 +38,7 @@ class SitesManager:
         self.downloader.downloader.signals.downloaded.connect(self._url_downloaded)
         
         self._manga_downloading: dict[str, tuple[str, Site, Manga, DownloadTypes]] = {}
-        self._manga_chapter_downloading: dict[str, tuple[str, Site, Manga, MangaChapter, DownloadTypes]] = {}
+        self._manga_chapter_downloading: dict[str, tuple[str, Site, Manga, float, DownloadTypes]] = {}
         
         logger.success("SitesManager initialized")
 
@@ -75,7 +75,7 @@ class SitesManager:
         if url in self._manga_downloading:
             path, site, manga, download_type = self._manga_downloading.get(url)
         elif url in self._manga_chapter_downloading:
-            path, site, manga, chapter, download_type = self._manga_chapter_downloading.get(url)
+            path, site, manga, chapter_num, download_type = self._manga_chapter_downloading.get(url)
         else:
             logger.warning(f'Unknown url was downloaded: {url}')
             return None
@@ -94,15 +94,35 @@ class SitesManager:
                 if isinstance(parsing, NameParsing):
                     match download_type:
                         case DownloadTypes.MANGA:
-                            self.manga_signals.name.emit(manga.name, result)
+                            self.manga_signals.name.emit(manga.id_, result[0])
                         case DownloadTypes.MANGA_CHAPTER:
-                            self.manga_chapter_signals.name.emit(manga.name, chapter.num, result)
+                            self.manga_chapter_signals.name.emit(manga.id_, chapter_num, result[0])
                 elif isinstance(parsing, CoverParsing):
-                    self.manga_signals.cover_url_downloaded.emit(manga.name, result[0])
+                    self.manga_signals.cover_url_downloaded.emit(manga.id_, result[0])
                 elif isinstance(parsing, ChaptersListParsing):
-                    self.manga_signals.chapters_list.emit(manga.name, result[0])
+                    self.manga_signals.chapters_list.emit(manga.id_, result[0])
                 elif isinstance(parsing, ImagesParsing):
-                    self.manga_chapter_signals.image_urls.emit(manga.name, chapter.num, result)
+                    self.manga_chapter_signals.image_urls.emit(manga.id_, chapter_num, result[0])
+                    
+        for parsing in site.manga_chapter_parsing.get_parsing_methods():
+            if parsing.path == path:
+                result = parsing.parse_html(content)
+                if not result:
+                    logger.warning(f'Parsing {parsing.path} returned None')
+                    return
+                
+                if isinstance(parsing, NameParsing):
+                    match download_type:
+                        case DownloadTypes.MANGA:
+                            self.manga_signals.name.emit(manga.id_, result[0])
+                        case DownloadTypes.MANGA_CHAPTER:
+                            self.manga_chapter_signals.name.emit(manga.id_, chapter_num, result[0])
+                elif isinstance(parsing, CoverParsing):
+                    self.manga_signals.cover_url_downloaded.emit(manga.id_, result[0])
+                elif isinstance(parsing, ChaptersListParsing):
+                    self.manga_signals.chapters_list.emit(manga.id_, result[0])
+                elif isinstance(parsing, ImagesParsing):
+                    self.manga_chapter_signals.image_urls.emit(manga.id_, chapter_num, list(dict.fromkeys(result)))
     
     def download_manga_cover(self, manga: Manga):
         site = self.get(manga.sites[0])
@@ -131,8 +151,22 @@ class SitesManager:
             self._manga_downloading[url] = (path, site, manga, DownloadTypes.MANGA)
             self.downloader.download_title_page(url)   #TODO: different sites retry
     
-    def download_manga_chapter_image_urls(self, manga: Manga, num: int):
-        self.downloader.download_chapter_page(self.get(manga.sites[0]), manga, num)
+    def download_manga_chapter_details(self, manga: Manga, num: int):
+        site = self.get(manga.sites[0])
+        to_parse = []
+        for parsing in site.manga_chapter_parsing.get_parsing_methods():
+            if parsing.path not in to_parse:
+                to_parse.append(parsing.path)
+        
+        urls = []
+        for path in to_parse:
+            urls.append(UrlParser.fill_chapter_url(
+                f'{site.url}/{path}', manga.id_, num
+            ))
+        
+        for url, path in zip(urls, to_parse):
+            self._manga_chapter_downloading[url] = (path, site, manga, num, DownloadTypes.MANGA_CHAPTER)
+            self.downloader.download_chapter_page(url) #TODO: different sites retry
 
     def save(self):
         self.repo.save()

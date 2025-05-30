@@ -17,10 +17,11 @@ from loguru import logger
 
 from ui.widgets.svg_icon import IconRepo
 from ui.widgets.buttons import IconButton
+from models.images import ImageMetadata
 from models.manga import Manga, MangaChapter
 from .smooth_graphics_view import SmoothGraphicsView
 from resources.enums import StorageSize
-from utils import MM
+from utils import MM, PlaceholderGenerator
 from config import Config
 
 from typing import TYPE_CHECKING
@@ -52,19 +53,19 @@ class MangaViewerScene(QGraphicsScene):
         if Config.debug_mode():
             self._images_debug_text = {}
 
-    def add_placeholder(self, index: int, pixmap: QPixmap) -> None:
+    def add_placeholder(self, index: int, width: int, height: int) -> None:
         heapq.heappush(
-            self._placeholder_queue, (index, pixmap.width(), pixmap.height())
+            self._placeholder_queue, (index, width, height)
         )
 
         if not self._placeholder_timer.isActive():
             self._placeholder_timer.start(
-                Config.UI.MangaViewer.placeholder_loading_intervals()
+                Config.Performance.MangaViewer.placeholder_loading_intervals()
             )
 
     def _add_placeholder(self) -> bool:
         if not self._placeholder_queue:
-            if not Config.UI.MangaViewer.set_size_with_every_placeholder():
+            if not Config.Performance.MangaViewer.set_size_with_every_placeholder():
                 self.setSceneRect(-self.width_ // 2, 0, self.width_, self._cur_y)
             self._placeholder_timer.stop()
             return False
@@ -91,7 +92,7 @@ class MangaViewerScene(QGraphicsScene):
         self.addItem(item)
         self._cur_y += height
         self._cur_index += 1
-        if Config.UI.MangaViewer.set_size_with_every_placeholder():
+        if Config.Performance.MangaViewer.set_size_with_every_placeholder():
             self.setSceneRect(-self.width_ // 2, 0, self.width_, self._cur_y)
         return True
 
@@ -196,6 +197,7 @@ class MangaViewer(SmoothGraphicsView):
         self._setup_ui()
         self.manga = None
         self.chapter = None
+        self._image_cache = self.parent_.app_controller.manga_manager.images_cache
         self._image_indexes_names = {}
         self._indexes_cull = set()
 
@@ -221,15 +223,15 @@ class MangaViewer(SmoothGraphicsView):
         self.manga = manga
         self.chapter_selection.clear()
         self.chapter_selection.addItems(
-            [f"Chapter {i}" for i in range(1, int(manga.last_chapter + 1))]
+            [f"Chapter {i}" for i in manga._chapters_repo.get_all()]
         )
 
     def set_chapter(self, chapter: MangaChapter):
         self.chapter = chapter
         self.chapter_selection.setCurrentIndex(int(chapter.num - 1))
 
-    def add_placeholder(self, index: int, pixmap: QPixmap):
-        self._scene.add_placeholder(index, pixmap)
+    def add_placeholder(self, index: int, width: int, height: int):
+        self._scene.add_placeholder(index, width, height)
         if index < 5:
             self._indexes_cull.add(index)
         if len(self._indexes_cull) == 5 and not index > 5:
@@ -238,19 +240,19 @@ class MangaViewer(SmoothGraphicsView):
     def replace_placeholder(self, index: int, name: str):
         self._image_indexes_names[index] = name
         img = QPixmap()
-        img.loadFromData(self.parent_.app_controller.manga_manager.get_image(name))
+        img.loadFromData(self._image_cache.get(name))
         self._scene.replace_placeholder(index, img)
 
     def _on_images_request(self, indexes: set[int]):
         for i in indexes:
             try:
-                image_bytes = self.parent_.app_controller.manga_manager.get_image(
+                image_bytes = self._image_cache.get(
                     self._image_indexes_names.get(i, "")
                 )
                 image = QPixmap()
                 image.loadFromData(image_bytes)
             except Exception:
-                image = self.parent_.app_controller.manga_manager.get_placeholder(
+                image = PlaceholderGenerator.static(
                     self.manga, self.chapter, i
                 )  # type: ignore
 
@@ -283,10 +285,10 @@ class MangaViewer(SmoothGraphicsView):
         viewport_height = self.viewport().height()
 
         self._scene._cull_images(
-            current, viewport_height, Config.UI.MangaViewer.cull_height_multiplier()
+            current, viewport_height, Config.Performance.MangaViewer.cull_height_multiplier()
         )
         QTimer.singleShot(
-            Config.UI.MangaViewer.cull_scene_cooldown(),
+            Config.Performance.MangaViewer.cull_scene_cooldown(),
             self._cull_cooldown_timer_out,
         )
         self._cull_allowed = False

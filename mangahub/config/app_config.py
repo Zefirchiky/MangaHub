@@ -19,6 +19,9 @@ class Config(Config_):
     class Downloading(Config_):
         max_retries = Setting[int](3, "Maximum Download Retries")
         
+        class Chapter(Config_):
+            time_wait_before_loading = Setting[int](300, "Time to Wait before Attempting to Download Chapter", 'ms')
+        
         class Image(Config_):
             convert_image = Setting[bool](True, "Convert Image")
             preferable_format = Setting[str]("WEBP", "Converted Images Format")
@@ -47,18 +50,36 @@ class Config(Config_):
             )
 
     class UI(Config_):
+        class Scrolling(Config_):
+            step = Setting[int](
+                150, "Step", "px", type_=SettingType.COSMETIC | SettingType.QOL
+            )
+            step_duration = Setting[int](
+                200, "Step Duration", "ms", type_=SettingType.COSMETIC | SettingType.QOL
+            )
+            alt_multiplier = Setting[int](8, "Alt Step Multiplier", type_=SettingType.QOL)
+
+            scale_multiplier = Setting[float](
+                1.5,
+                "Step Scale Multiplier",
+                level=Level.DEVELOPER,
+                type_=SettingType.PERFORMANCE,
+            )
+            
+    class Performance(Config_):
         class MangaViewer(Config_):
             image_loading_intervals = Setting[int](
                 100, "Load Images in UI with Intervals", "ms"
             )
             placeholder_loading_intervals = Setting[int](
-                5, "Load Placeholders in UI with Intervals", "ms"
+                10, "Load Placeholders in UI with Intervals", "ms"
             )
 
             set_size_with_every_placeholder = Setting[bool](
                 True,
                 "Set MangaViewer's Scene Size with Every Placeholder Added",
                 level=Level.USER | Level.ADVANCED,
+                type_=SettingType.PERFORMANCE | SettingType.COSMETIC,
             )
             cull_height_multiplier = Setting[float](
                 2.0,
@@ -73,33 +94,19 @@ class Config(Config_):
                 level=Level.USER | Level.ADVANCED,
                 type_=SettingType.PERFORMANCE,
             )
-
-    class Scrolling(Config_):
-        step = Setting[int](
-            150, "Step", "px", type_=SettingType.COSMETIC | SettingType.QOL
-        )
-        step_duration = Setting[int](
-            200, "Step Duration", "ms", type_=SettingType.COSMETIC | SettingType.QOL
-        )
-        alt_multiplier = Setting[int](8, "Alt Step Multiplier", type_=SettingType.QOL)
-
-        scale_multiplier = Setting[float](
-            1.5,
-            "Step Scale Multiplier",
-            level=Level.DEVELOPER,
-            type_=SettingType.PERFORMANCE,
-        )
+            
 
     class Caching(Config_):
         class Image(Config_):
             max_ram = Setting[StorageSize](100 * SU.MB, "Max Ram for Images")
             max_disc = Setting[StorageSize](500 * SU.MB, "Max Disc Space for Images")
             
-    class UrlParsing(Config_):
-        replace_symbols = Setting[dict[str, str]]({
-            ' ': '-',
-            "'": '',
-        })
+    class DataProcessing(Config_):
+        class UrlParsing(Config_):
+            replace_symbols = Setting[dict[str, str]]({
+                ' ': '-',
+                "'": '',
+            })
 
     class Dirs(DirectoriesConfig_):
         STD_DIR = DirectoriesConfig_.STD_DIR

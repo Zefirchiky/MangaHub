@@ -1,22 +1,30 @@
 from __future__ import annotations
 
 from loguru import logger
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QTimer
 
 from models import URL
-from models.manga import MangaState
+from models.images import ImageMetadata
+from models.manga import MangaState, MangaChapter
 from services.repositories import StateRepository
 
 from .manga_manager import MangaManager
 from .sites_manager import SitesManager
 from models.manga import Manga
+from config import Config
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import App
 
 
+class MangaSignals(QObject):
+    chapter_started_loading = Signal(str, MangaChapter) # manga.id_
+    image_meta_loaded = Signal(int, ImageMetadata)      # i, metadata
+    image_loaded = Signal(int, str)                     # i, name
+
 class AppController(QObject):
+    manga_signals = MangaSignals()
     manga_created = Signal(Manga)
     
     def __init__(self, app: App):
@@ -28,12 +36,17 @@ class AppController(QObject):
 
         self.manager = self.manga_manager  # TODO
         self.state = MangaState()
+        
+        self.chapter_load_timer = QTimer()
 
         logger.success("AppController initialized")
 
     def init_connections(self):
         self.manga_changed = self.state._signals.manga_changed
         self.chapter_changed = self.state._signals.chapter_changed
+        
+        self.manga_manager.image_meta_loaded.connect(self.manga_signals.image_meta_loaded.emit)
+        self.manga_manager.image_loaded.connect(self.manga_signals.image_loaded.emit)
 
         # self.manga_chapter_placeholder_ready = (
         #     self.manga_manager.chapter_loader.placeholder_ready
@@ -55,13 +68,10 @@ class AppController(QObject):
     def get_manga(self, name: str) -> Manga | None:
         return self.manga_manager.get(name)
 
-    # def get_all_manga(self) -> dict[str, Manga]:
-    #     return self.manga_manager.get_all_manga()
-
     def create_manga(
-        self, name: str, url: str | URL = "", site="MangaDex", backup_sites=[], overwrite=False, **kwargs
+        self, name: str, url: str | URL = "", site="MangaDex", sites=[], overwrite=False, **kwargs
     ):
-        manga = self.manga_manager.create(name, site, **kwargs)
+        manga = self.manga_manager.create(name, site, overwrite=overwrite, **kwargs)
         self.manga_created.emit(manga)
         return manga
 
@@ -74,21 +84,23 @@ class AppController(QObject):
 
     def select_manga(self, name: str) -> None:
         self.manager = self.manga_manager
-        manga = self.manager.get_manga(name)
+        manga = self.manager.get(name)
         self.state.set_manga(manga)
-
+    
     def set_chapter(self, number: float):
-        self.state.set_chapter_num(number)
-        if not (chapter := self.state._manga.get_chapter(self.state.chapter_num)):
-            chapter = self.manager.get_chapter(
-                self.state._manga, self.state.chapter_num
-            )
-        chapter.set_is_read(True)
-
-        self.state._manga.add_chapter(chapter)
-        self.state._manga.check_chapter(self.state.chapter_num)
-        self.state._manga.current_chapter = self.state.chapter_num
-        self.state.set_chapter(chapter)
+        self.chapter_load_timer.stop()
+        self.chapter_load_timer.singleShot(Config.Downloading.Chapter.time_wait_before_loading(), lambda: self._set_chapter(number))
+        
+    def _set_chapter(self, number: float):
+        self.state.set_chapter(number)
+        self.state._chapter.set_is_read()
+        self.load_chapter()
+        
+    def load_chapter(self):
+        if isinstance(self.manager, MangaManager):
+            self.manga_signals.chapter_started_loading.emit(self.state.get_media(), self.state._chapter)
+        self.manager.load_chapter(self.state.get_media(), self.state.chapter_num)
+        
 
     def next_chapter(self) -> None:
         if not self.state.is_last():

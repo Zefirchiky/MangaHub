@@ -72,6 +72,7 @@ class App:
                 name_parsing=NameParsing(
                     path="series/{media_id}-6905f93c",
                     name="span",
+                    look_for='text',
                     class_="text-xl font-bold",
                 ),
                 cover_parsing=CoverParsing(
@@ -94,16 +95,14 @@ class App:
             MangaChapterParsing(
                 images_parsing=ImagesParsing(
                     path="series/{media_id}-6905f93c/chapter/{chapter_num}",
-                    name="img",
-                    class_="object-cover mx-auto",
-                    alt="chapter page 1",
-                    decoding="async",
+                    name="script",
+                    regex=r"https://gg\.asuracomic\.net/storage/media/\d+/conversions/\d+-optimized.webp",
                 ),
             )
         )
 
-        self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans", overwrite=True)
-        self.app_controller.create_manga("Return From The Abyss", site="AsuraScans")
+        # self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans", overwrite=True)
+        self.app_controller.create_manga("Return From The Abyss", site="AsuraScans", overwrite=True)
         # self.app_controller.create_manga("The Extra's Academy Survival Guide", site="AsuraScans")
         # self.app_controller.create_manga("Nano Machine", site="AsuraScans")
         # self.app_controller.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
