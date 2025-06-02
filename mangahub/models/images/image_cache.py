@@ -80,8 +80,8 @@ class ImageCache:  # TODO: SAVE/LOAD
         elif image := self._disc_cache.get(name, default):
             with open(image[0], "rb") as f:
                 return f.read()  # Possibility of async chunk loading
-        # else:
-        #     raise Exception(f"{name} was not found in cache")
+        else:
+            raise Exception(f"{name} was not found in cache")
         
     def pop(self, name: str, default=None) -> bytes:
         if image := self._ram_cache.pop(name, default):

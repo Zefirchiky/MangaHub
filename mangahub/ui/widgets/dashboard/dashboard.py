@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QHBoxLayout
 
 from ..flow_layout import FlowLayout
 from ..scroll_areas import SmoothScrollArea
@@ -11,7 +11,10 @@ class Dashboard(SmoothScrollArea):
         super().__init__(parent)
         self.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
+        self.top_layout = QHBoxLayout()
+        
         self.root_layout = FlowLayout(spacing=10)
+        self.root_layout.addChildLayout(self.top_layout)
         self.root = QWidget()
         self.root.setContentsMargins(10, 10, 10, 10)
         self.root.setLayout(self.root_layout)

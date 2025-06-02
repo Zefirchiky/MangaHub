@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ui.widgets import IconRepo
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 
 
 class AddMangaWindow(QMainWindow):
-    def __init__(self, app_controller: "AppController", parent=None):
+    def __init__(self, app_controller: AppController, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Manga")
         self.setFixedWidth(300)
@@ -42,10 +43,10 @@ class AddMangaWindow(QMainWindow):
         self.url_input.textChanged.connect(self.url_handler)
 
         # sites manga can be found on
-        sites_label = QLabel("Site name:")
+        self.sites_label = QLabel("Site name:")
 
-        main_site_list = QComboBox()
-        main_site_list.addItems(list(self.sites_manager.get_all().keys()))
+        self.main_site_list = QComboBox()
+        self.main_site_list.addItems(list(self.sites_manager.get_all().keys()))
 
         sites_list = QComboBox()
 
@@ -57,21 +58,17 @@ class AddMangaWindow(QMainWindow):
         sites_add_button.setIconSize(QSize(16, 16))
 
         sites_layout = QVBoxLayout()
-        sites_layout.addWidget(main_site_list)
+        sites_layout.addWidget(self.main_site_list)
         sites_layout.addWidget(sites_add_button)
 
         self.add_manga_button = QPushButton("Add Manga")
-        self.add_manga_button.clicked.connect(
-            lambda: self.manager.create(
-                self.name_input.text(), site=main_site_list.currentText()
-            )
-        )
+        self.add_manga_button.clicked.connect(lambda: self.hide())
 
         # root layout
         root_layout = QFormLayout()
         root_layout.addRow(name_label, self.name_input)
         root_layout.addRow(url_label, self.url_input)
-        root_layout.addRow(sites_label, sites_layout)
+        root_layout.addRow(self.sites_label, sites_layout)
         root_layout.addWidget(self.add_manga_button)
 
         root = QWidget()

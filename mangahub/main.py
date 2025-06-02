@@ -56,53 +56,53 @@ class App:
 
         self.app_controller = AppController(self)
 
-        from models.sites.parsing_methods import (
-            MangaParsing,
-            NameParsing,
-            CoverParsing,
-            ChaptersListParsing,
-            MangaChapterParsing,
-            ImagesParsing
-        )
+        # from models.sites.parsing_methods import (
+        #     MangaParsing,
+        #     NameParsing,
+        #     CoverParsing,
+        #     ChaptersListParsing,
+        #     MangaChapterParsing,
+        #     ImagesParsing
+        # )
 
-        self.sites_manager.create_site(
-            "AsuraScans",
-            "https://asuracomic.net",
-            MangaParsing(
-                name_parsing=NameParsing(
-                    path="series/{media_id}-6905f93c",
-                    name="span",
-                    look_for='text',
-                    class_="text-xl font-bold",
-                ),
-                cover_parsing=CoverParsing(
-                    path="series/{media_id}-6905f93c",
-                    name="img",
-                    look_for="src",
-                    class_="rounded mx-auto md:mx-0",
-                    alt="poster"
-                ),
-                last_chapter_parsing=ChaptersListParsing(
-                    path="series/{media_id}-6905f93c",
-                    name="div",
-                    class_="pl-4 pr-2 pb-4 overflow-y-auto scrollbar-thumb-themecolor scrollbar-track-transparent scrollbar-thin mr-3 max-h-[20rem] space-y-2.5"
-                ).add_parsing_method(
-                    ChaptersListParsing(
-                        regex=r'/chapter/(\d+)'
-                    )
-                ),
-            ),
-            MangaChapterParsing(
-                images_parsing=ImagesParsing(
-                    path="series/{media_id}-6905f93c/chapter/{chapter_num}",
-                    name="script",
-                    regex=r"https://gg\.asuracomic\.net/storage/media/\d+/conversions/\d+-optimized.webp",
-                ),
-            )
-        )
+        # self.sites_manager.create_site(
+        #     "AsuraScans",
+        #     "https://asuracomic.net",
+        #     MangaParsing(
+        #         name_parsing=NameParsing(
+        #             path="series/{media_id}-6905f93c",
+        #             name="span",
+        #             look_for='text',
+        #             class_="text-xl font-bold",
+        #         ),
+        #         cover_parsing=CoverParsing(
+        #             path="series/{media_id}-6905f93c",
+        #             name="img",
+        #             look_for="src",
+        #             class_="rounded mx-auto md:mx-0",
+        #             alt="poster"
+        #         ),
+        #         last_chapter_parsing=ChaptersListParsing(
+        #             path="series/{media_id}-6905f93c",
+        #             name="div",
+        #             class_="pl-4 pr-2 pb-4 overflow-y-auto scrollbar-thumb-themecolor scrollbar-track-transparent scrollbar-thin mr-3 max-h-[20rem] space-y-2.5"
+        #         ).add_parsing_method(
+        #             ChaptersListParsing(
+        #                 regex=r'/chapter/(\d+)'
+        #             )
+        #         ),
+        #     ),
+        #     MangaChapterParsing(
+        #         images_parsing=ImagesParsing(
+        #             path="series/{media_id}-6905f93c/chapter/{chapter_num}",
+        #             name="script",
+        #             regex=r"https://gg\.asuracomic\.net/storage/media/\d+/conversions/\d+-optimized.webp",
+        #         ),
+        #     )
+        # )
 
+        # self.app_controller.create_manga("Return From The Abyss", site="AsuraScans", overwrite=True)
         # self.app_controller.create_manga("Boundless Necromancer", site="AsuraScans", overwrite=True)
-        self.app_controller.create_manga("Return From The Abyss", site="AsuraScans", overwrite=True)
         # self.app_controller.create_manga("The Extra's Academy Survival Guide", site="AsuraScans")
         # self.app_controller.create_manga("Nano Machine", site="AsuraScans")
         # self.app_controller.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")

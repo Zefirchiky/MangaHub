@@ -22,7 +22,7 @@ class AbstractChapterSignals(QObject):
 
 class AbstractChapter(ABC, TagModel):
     
-    num: int | float
+    num: float
     folder: Path
     name: str = ""
     upload_date: str = ""

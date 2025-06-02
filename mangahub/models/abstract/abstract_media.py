@@ -55,13 +55,13 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
             return chapter
         return default_return
 
-    def check_chapter(self, chapter_num: int | float) -> None:
+    def check_chapter(self, chapter_num: float) -> None:
         self._changed = True
         if chapter_num > self.last_read_chapter:
             self.last_read_chapter = chapter_num
         self.checked_chapters.add(chapter_num)
 
-    def uncheck_chapter(self, chapter_num: int | float) -> None:
+    def uncheck_chapter(self, chapter_num: float) -> None:
         self._changed = True
         self.checked_chapters.remove(chapter_num)
 

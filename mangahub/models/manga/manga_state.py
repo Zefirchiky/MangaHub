@@ -32,7 +32,7 @@ class MangaState(BaseModel):
         self._chapter = self._manga.get_chapter(chapter)
         self._signals.chapter_changed.emit(self._chapter)
 
-    def set_chapter_num(self, chapter_num: int | float):
+    def set_chapter_num(self, chapter_num: float):
         self.chapter_num = chapter_num
         self._signals.chapter_num_changed.emit(chapter_num)
 
@@ -43,4 +43,4 @@ class MangaState(BaseModel):
         return self.chapter_num <= 1
 
     def is_last(self):
-        return self.chapter_num >= self._manga.last_chapter
+        return self.chapter_num >= self._manga._chapters_repo.get_i(-1).num

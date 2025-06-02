@@ -5,7 +5,7 @@ from .novel_chapter import NovelChapter
 
 
 class Novel(AbstractMedia[NovelChapter]):
-    _chapters_data: dict[int | float, NovelChapter] = PrivateAttr(default_factory=dict)
+    _chapters_data: dict[float, NovelChapter] = PrivateAttr(default_factory=dict)
 
     @property
     def text(self) -> str:

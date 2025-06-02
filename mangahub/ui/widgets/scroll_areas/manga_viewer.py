@@ -54,9 +54,7 @@ class MangaViewerScene(QGraphicsScene):
             self._images_debug_text = {}
 
     def add_placeholder(self, index: int, width: int, height: int) -> None:
-        heapq.heappush(
-            self._placeholder_queue, (index, width, height)
-        )
+        heapq.heappush(self._placeholder_queue, (index, width, height))
 
         if not self._placeholder_timer.isActive():
             self._placeholder_timer.start(
@@ -156,9 +154,9 @@ class MangaViewerScene(QGraphicsScene):
             image,
             height,
             _,
-        ) in self._image_items.items():  # TODO: Binary tree will do better for this
+        ) in self._image_items.items():  # TODO: Binary tree
             if cur_y != -1:
-                if cur_y + height > y2:  # If current image is out of bounds
+                if cur_y > y2:  # If current image is out of bounds
                     return indexes
 
                 cur_y += height
@@ -171,7 +169,7 @@ class MangaViewerScene(QGraphicsScene):
 
         return indexes
 
-    def _is_image_in_range(self, i, y1, y2):
+    def _is_image_in_range(self, i, y1, y2):  # y1 - upper bound, y2 - lower
         item, height, _ = self._image_items[i]
         if item.y() + height > y1 and item.y() < y2:
             return True
@@ -252,8 +250,9 @@ class MangaViewer(SmoothGraphicsView):
                 image = QPixmap()
                 image.loadFromData(image_bytes)
             except Exception:
+                meta = self.chapter.get_data_repo().get(i).metadata
                 image = PlaceholderGenerator.static(
-                    self.manga, self.chapter, i
+                    meta.width, meta.height, f"Num {i}\n{meta.width}x{meta.height}"
                 )  # type: ignore
 
             self._scene.set_image(i, image)
@@ -271,7 +270,7 @@ class MangaViewer(SmoothGraphicsView):
             self._cull_scene()
             self._cull_queued = False
 
-    def _cull_scene(self):
+    def _cull_scene(self):  # TODO: Doesn't work properly on large images
         if not self.chapter:
             return
 
@@ -285,7 +284,9 @@ class MangaViewer(SmoothGraphicsView):
         viewport_height = self.viewport().height()
 
         self._scene._cull_images(
-            current, viewport_height, Config.Performance.MangaViewer.cull_height_multiplier()
+            current,
+            viewport_height,
+            Config.Performance.MangaViewer.cull_height_multiplier(),
         )
         QTimer.singleShot(
             Config.Performance.MangaViewer.cull_scene_cooldown(),

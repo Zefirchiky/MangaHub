@@ -17,13 +17,14 @@ class ModelsJsonParser[KT, MT: BaseModel]:
         self._models_collection[name] = model
     
     def get(self, name: KT, default=None) -> MT | None:
+        name = self.key_type(name)
         if name in self._models_collection.keys():
             return self._models_collection[name]
 
         try:
             if data := self.json_parser.get().get(str(name)):
                 model = self.model.model_validate(data)
-                self._models_collection[name] = model
+                self._models_collection[self.key_type(name)] = model
                 return model
             logger.warning(
                 f"Model not found: {self.model}({name})\nfile: {self.file}\nkey type: {self.key_type}\nname type: {type(name)}"
@@ -34,8 +35,7 @@ class ModelsJsonParser[KT, MT: BaseModel]:
             return
         
     def get_i(self, index: int, default=None) -> MT:
-        if not self.json_parser.data:
-            self._models_collection.update(self.json_parser.get())
+        self.get_all()
         col_len = len(self)
         if index < 0:
             index = col_len + index
@@ -43,14 +43,13 @@ class ModelsJsonParser[KT, MT: BaseModel]:
             if default == 'err':
                 raise IndexError(f'Index is out of range. Index: {index}, max: {col_len}')
             return default
-        return self.get((list(self.json_parser.data.keys()) + list(self._models_collection.keys()))[index])
+        return self.get(list(self._models_collection.keys())[index])
         
     def pop(self, name: KT):
         return self._models_collection.pop(name)
 
     def get_all(self) -> dict[KT, MT]:
         for name in self.json_parser.get().keys():
-            name = self.key_type(name)
             self.get(name)
 
         return self._models_collection
@@ -66,14 +65,14 @@ class ModelsJsonParser[KT, MT: BaseModel]:
         self._models_collection = models_dict
 
     def __len__(self) -> int:
-        return len(self.json_parser) + len(self._models_collection)
+        return len(self.get_all())
     
     def __str__(self) -> str:
         return f'ModelsJsonParser: first ell: {self.get_i(0, None)}, _models_collection length: {len(self.json_parser)}'
 
-    def save(self, data: dict[KT, MT]=None):
-        data = data if data is not None else self._models_collection
+    def save(self):
+        data = self.get_all()
         models_list = {
-            name: model.model_dump(mode="json") for name, model in data.items()
+            str(self.key_type(name)): model.model_dump(mode="json") for name, model in data.items()
         }
         self.json_parser.save(models_list)

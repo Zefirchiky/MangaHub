@@ -30,7 +30,7 @@ class NovelsManager:
     def get_all_novels(self) -> dict[str, Novel]:
         return self._ensure_novels_essential_data(self.repository.get_all())
 
-    def get_chapter(self, novel: Novel, num: float | int) -> NovelChapter | None:
+    def get_chapter(self, novel: Novel, num: int) -> NovelChapter | None:
         return novel._chapters_data.get(num)
 
     def create_novel(self, name: str) -> Novel:

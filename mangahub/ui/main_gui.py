@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QPoint, Qt, QTimer
 from PySide6.QtGui import QCursor, QIcon
-from PySide6.QtWidgets import QMainWindow, QStackedLayout, QWidget
+from PySide6.QtWidgets import QMainWindow, QStackedLayout, QWidget, QPushButton
 from loguru import logger
 
 from ui.multi_window import AddMangaWindow, SettingsWindow
@@ -79,11 +79,15 @@ class MainWindow(QMainWindow):
 
         self.selection_menu = SelectionMenu(self)
         self.settings_window = SettingsWindow()
-        self.add_manga_window = AddMangaWindow(self.app_controller)
         self.dashboard = Dashboard()
         self.manga_viewer = MangaViewer(self)
         self.novel_viewer = NovelViewer()
-
+        
+        self.add_manga_window = AddMangaWindow(self.app_controller)
+        self.add_manga_button = QPushButton("Add Manga")
+        self.dashboard.top_layout.addWidget(self.add_manga_button)
+        self.add_manga_button.clicked.connect(self.add_manga)
+        
         self.selection_menu.show()
 
         self.root_layout.insertWidget(0, self.dashboard)
@@ -142,6 +146,13 @@ class MainWindow(QMainWindow):
         # manga
         self.app_controller.manga_signals.image_meta_loaded.connect(lambda i, meta: self.manga_viewer.add_placeholder(i, meta.width, meta.height))
         self.app_controller.manga_signals.image_loaded.connect(self.manga_viewer.replace_placeholder)
+        
+        self.add_manga_window.add_manga_button.clicked.connect(
+            lambda: self.app_controller.create_manga(
+                name=self.add_manga_window.name_input.text(),
+                site=self.add_manga_window.main_site_list.currentText()
+            )
+        )
 
         logger.success("MainWindow connections initialized")
 
@@ -165,11 +176,7 @@ class MainWindow(QMainWindow):
 
     def add_manga(self):
         self.add_manga_window.show()
-        self.add_manga_window.add_manga_button.clicked.connect(
-            lambda _: self.dashboard.add_card(
-                self.manga_manager.get_manga(self.add_manga_window.name_input.text())
-            )
-        )
+
 
     def check_mouse_position(self):
         cursor_pos = QCursor.pos()

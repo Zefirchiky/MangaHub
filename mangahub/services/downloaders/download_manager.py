@@ -73,7 +73,6 @@ class DownloadManager(QObject):
         name_urls = {url: f'chap-image_{manga_id}_{chapter.num}_{i}' for i, url in enumerate(urls)}
         for num, image in chapter.get_data_repo().get_all().items():
             self._image_urls[image.metadata.url] = (manga_id, chapter.num, num)
-        self.image_downloader.download_metadatas(urls)
         self.image_downloader.download_images(name_urls)
         
     def download_html(self, name: str, url: str | URL):
