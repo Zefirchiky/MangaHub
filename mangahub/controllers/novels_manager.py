@@ -1,7 +1,7 @@
 from __future__ import annotations
 from loguru import logger
 from models.novels import Novel, NovelChapter
-from services.repositories import NovelsRepository
+from services.repositories.novels import NovelsRepository
 from services.scrapers import NovelsSiteScraper
 from utils import MM
 

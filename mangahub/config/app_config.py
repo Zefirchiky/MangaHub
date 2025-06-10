@@ -133,6 +133,8 @@ class Config(Config_):
         NOVELS_JSON = DATA / "novels.json"
         MANGA_JSON = DATA / "manga.json"
         SITES_JSON = DATA / "sites.json"
+        
+        NOVEL_DRAFT = NOVELS / "draft.md"
 
         """=== RESOURCES ==="""
         RESOURCES = STD_DIR / "resources"

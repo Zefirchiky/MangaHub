@@ -2,7 +2,7 @@ import re
 
 from .novel_chapter import NovelChapter
 from .novel_paragraph import NovelParagraph
-from .paragraph import Dialog, Narration, Thought, UnclearReference
+# from .novel_sentence import Dialog, Narration, Thought, UnclearReference
 
 MULTILINE_PLACEHOLDER = "⏎"
 

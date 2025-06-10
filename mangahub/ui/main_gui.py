@@ -7,11 +7,14 @@ from loguru import logger
 
 from ui.multi_window import AddMangaWindow, SettingsWindow
 from ui.widgets import IconRepo, ImageWidget, SelectionMenu
+from ui.widgets.novels import NovelWriter
 from ui.widgets.dashboard import Dashboard, MediaCard
 from ui.widgets.scroll_areas import MangaViewer, NovelViewer
 from ui.widgets.slide_menus import SideMenu
 
 from models.abstract import AbstractMedia
+from models.novels import NovelChapter
+from services.repositories.novels import ParagraphsRepository
 
 from app_status import AppStatus
 from utils import MM  # TODO
@@ -77,18 +80,22 @@ class MainWindow(QMainWindow):
         self.sites_manager = self.app.sites_manager
         self.app_controller = self.app.app_controller
 
-        self.selection_menu = SelectionMenu(self)
+        # self.selection_menu = SelectionMenu(self)
         self.settings_window = SettingsWindow()
         self.dashboard = Dashboard()
         self.manga_viewer = MangaViewer(self)
-        self.novel_viewer = NovelViewer()
+        self.novel_viewer = NovelWriter(self)
+        self.novel_viewer.text_edit.load_chapter(NovelChapter(num=0, folder=Config.Dirs.NOVELS / 'test.json')
+                                                 .set_data_repo(ParagraphsRepository(
+                                                   Config.Dirs.NOVELS / 'test2.json'
+                                                 )))
         
         self.add_manga_window = AddMangaWindow(self.app_controller)
         self.add_manga_button = QPushButton("Add Manga")
         self.dashboard.top_layout.addWidget(self.add_manga_button)
         self.add_manga_button.clicked.connect(self.add_manga)
         
-        self.selection_menu.show()
+        # self.selection_menu.show()
 
         self.root_layout.insertWidget(0, self.dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)

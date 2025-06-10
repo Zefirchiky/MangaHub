@@ -1,5 +1,6 @@
 import ctypes
 import sys
+import os
 
 from config import CM
 from controllers import AppController, MangaManager, NovelsManager, SitesManager
@@ -13,7 +14,7 @@ import PySide6.QtCore
 from services.downloaders import DownloadManager
 from services.handlers import JsonHandler
 from services.repositories.manga import MangaRepository
-from services.repositories import NovelsRepository
+from services.repositories.novels import NovelsRepository
 from config import Config
 from utils import MM
 
@@ -125,6 +126,7 @@ class App:
         #     'https://stackoverflow.com/questions/862412/is-it-possible-to-have-multiple-statements-in-a-python-lambda-expression',
         #     'https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRunnable.html#PySide6.QtCore.QRunnable'
         #     ])
+
         pass
 
     def run(self):
