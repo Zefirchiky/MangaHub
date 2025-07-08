@@ -91,7 +91,7 @@ class MediaCard(QFrame):
 
     def set_media(self, media: AbstractMedia):
         self.media = media
-        self.set_name(media.name)
+        self.set_name(media.id_)
         if media.cover:
             self.set_cover(media.folder / 'cover.webp')
             

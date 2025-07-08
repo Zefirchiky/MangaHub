@@ -55,6 +55,7 @@ Huh?
     - Conditional (authors can put start and finish)
 - Easy color themes saving and loading
 - Better image compression (JXL)
+- Integration with MyAnimeList and AniList
 
 ### LONG-LONG-TERM TODO
 - Multi-platforming

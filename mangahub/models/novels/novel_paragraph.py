@@ -10,17 +10,67 @@ class NovelParagraph(TagModel):
     sentences: list[BaseSentence, str] = []
 
     def add_chars(self, i: int, chars: str):
-        if len(self) - 1 < i:
+        print(len(self), i)
+        if len(self) <= i:
+            print(chars)
             for char in chars:
+                print(repr(chars))
+                if not self.sentences:
+                    if char == ' ':
+                        continue
+                    
+                    if char == "'":
+                        self.sentences.append(Thought())
+                    elif char == '"':
+                        self.sentences.append(Dialog())
+                    else:
+                        sentence = Narration()
+                        sentence.words.append(Word(text=char))
+                        self.sentences.append(sentence)
+
+                if not (w := self.sentences[-1].words):
+                    w.append(Word())
+
                 if char == ' ':
-                    if not self.sentences or self.sentences and self.sentences[-1] == ' ':
+                    # if space:
+                    #   if prev sentence is space - skip (No 2 spaces in a row)
+                    #   if prev word is space - skip (No 2 spaces in a row)
+                    #   else - add 
+                    if self.sentences[-1] == ' ':
                         continue 
                     
                     sentence = self.sentences[-1]
-                    if not sentence.words or sentence.words and sentence.words[-1] == ' ':
+                    if sentence.words[-1] == ' ':
                         continue
-                
+                    
+                    word = sentence.words[-1]
+                    if isinstance(word, Punctuation) and word.text[-1] in '.!?':
+                        self.sentences.append(' ')
 
+                    else:
+                        self.sentences[-1].words.append(' ')
+                
+                elif char in ',.!?':
+                    if not isinstance(self.sentences[-1].words[-1], Punctuation):
+                        self.sentences[-1].words.append(Punctuation())
+
+                    elif isinstance(self.sentences[-1].words[-1], Punctuation):
+                        self.sentences[-1].words[-1].text += char
+
+                elif char == '"':
+                    if isinstance(self.sentences[-1], Dialog):
+                        continue
+                    self.sentences.append(Dialog())
+
+                else:
+                    if self.sentences[-1] == ' ':
+                        sentence = Narration()
+                        sentence.words.append(Word(text=char))
+                        self.sentences.append(sentence)
+                        continue
+                    if not self.sentences[-1].words:
+                        self.sentences[-1].words.append(Word())
+                    self.sentences[-1].words[-1].text += char
         
         return self
 

@@ -1,5 +1,5 @@
 import asyncio
-import aiohttp
+import httpx
 import io
 from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal, QUrl
 from PIL import Image
@@ -23,6 +23,7 @@ class ImageDownloadWorker(QRunnable):
     """Worker thread for downloading an image without blocking the GUI"""
 
     _signals = ImageDownloadWorkerSignals()
+    _signals.error.connect(print)
 
     def __init__(
         self,
@@ -33,6 +34,7 @@ class ImageDownloadWorker(QRunnable):
         chunk_size: int = 8192,
         update_p: int = 1,
         convert=True,
+        session=None
     ):
         super().__init__()
 
@@ -46,6 +48,7 @@ class ImageDownloadWorker(QRunnable):
         self.chunk_size = chunk_size
         self.update_p = update_p
         self.convert = convert
+        self.session: httpx.Client = session
 
     def run(self):
         loop = asyncio.new_event_loop()
@@ -59,79 +62,80 @@ class ImageDownloadWorker(QRunnable):
 
     async def _download_image(self):
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(self.url) as response:
-                    if response.status != 200:
-                        return (
-                            None,
-                            None,
-                            Exception(f"Error getting response: {response.status}"),
-                        )
-
-                    size = int(response.headers.get("Content-Length", 0))
-                    format = str(
-                        response.headers.get("Content-Type", "").split("/")[-1]
+            with self.session or httpx.Client() as session:
+                response = session.get(self.url)
+                if response.is_error:
+                    return (
+                        None,
+                        None,
+                        Exception(f"Error getting response: {response.status_code}"),
                     )
-                    image_data = bytearray()
-                    downloaded = 0
-                    prev_percentage = 0
-                    diff = 0
 
-                    async for chunk in response.content.iter_chunked(self.chunk_size):
-                        if not chunk:
-                            break
+                size = int(response.headers.get("Content-Length", 0))
+                format = str(
+                    response.headers.get("Content-Type", "").split("/")[-1]
+                )
+                image_data = bytearray()
+                downloaded = 0
+                prev_percentage = 0
+                diff = 0
 
-                        if downloaded == 0:
-                            w, h = get_dimensions_from_bytes(chunk)
-                            metadata = ImageMetadata(
-                                url=self.url,
-                                width=w,
-                                height=h,
-                                format=format,
-                                size=size,
-                            )
-                            if self.metadata_only:
-                                return None, metadata, None
-                            self._signals.metadata.emit(self.url, metadata)
+                for chunk in response.iter_bytes(self.chunk_size):
+                    if not chunk:
+                        break
 
-                        chunk_size = len(chunk)
-                        diff += chunk_size
-                        downloaded += chunk_size
-                        image_data.extend(chunk)
-
-                        if size > 0:
-                            percentage = int(downloaded / size * 100)
-                            if (
-                                percentage - prev_percentage >= self.update_p
-                                or percentage == 100
-                            ):
-                                prev_percentage = percentage
-                                self._signals.progress.emit(
-                                    self.url, percentage, downloaded, diff, size
-                                )
-                                diff = 0
-
-                    if size > 0 and downloaded != size:
-                        return (
-                            None,
-                            None,
-                            Exception(
-                                f"Size downloaded does not match with size expected: {downloaded}/{size} bytes"
-                            ),
+                    print(len(chunk))
+                    if downloaded == 0:
+                        w, h = get_dimensions_from_bytes(chunk)
+                        metadata = ImageMetadata(
+                            url=self.url,
+                            width=w,
+                            height=h,
+                            format=format,
+                            size=size,
                         )
+                        if self.metadata_only:
+                            return None, metadata, None
+                        self._signals.metadata.emit(self.url, metadata)
 
-                    if self.convert:
-                        image_data = io.BytesIO(image_data)
-                        with image_data as f:
-                            img = Image.open(f)
-                            if self.ext != format:
-                                img.save(
-                                    f, self.ext, optimize=True
-                                )  # TODO: Better conversion
+                    chunk_size = len(chunk)
+                    diff += chunk_size
+                    downloaded += chunk_size
+                    image_data.extend(chunk)
 
-                            return image_data.getvalue(), metadata, None
+                    if size > 0:
+                        percentage = int(downloaded / size * 100)
+                        if (
+                            percentage - prev_percentage >= self.update_p
+                            or percentage == 100
+                        ):
+                            prev_percentage = percentage
+                            self._signals.progress.emit(
+                                self.url, percentage, downloaded, diff, size
+                            )
+                            diff = 0
 
-                    return image_data, metadata, None
+                if size > 0 and downloaded != size:
+                    return (
+                        None,
+                        None,
+                        Exception(
+                            f"Size downloaded does not match with size expected: {downloaded}/{size} bytes"
+                        ),
+                    )
+
+                if self.convert:
+                    image_data = io.BytesIO(image_data)
+                    with image_data as f:
+                        img = Image.open(f)
+                        if self.ext != format:
+                            img.save(
+                                f, self.ext, optimize=True
+                            )  # TODO: Better conversion
+
+                        return image_data.getvalue(), metadata, None
+
+                return image_data, metadata, None
 
         except Exception as e:
             return None, None, Exception(f"Error: {e}")
@@ -209,7 +213,7 @@ class ImageDownloader(QObject):
         self.workers.pop(name)
         if emit_finish and not self.workers:
             self.finished.emit(self.total_bytes)
-        self.cache.add(name, image, metadata.size)
+        self.cache.add  (name, image, metadata.size)
         self.image_downloaded.emit(url, name, metadata)
 
     def download_metadata(self, url: str, name: str = "", emit_finish=True):
@@ -247,6 +251,7 @@ class ImageDownloader(QObject):
         update_percentage=1,
         convert=True,
         emit_finish=True,
+        session=None
     ):
         url_ = QUrl(url)
         if not url_.isValid():
@@ -273,6 +278,7 @@ class ImageDownloader(QObject):
             chunk_size=Config.Downloading.Image.chunk_size().bytes_value,
             update_p=update_percentage,
             convert=convert,
+            session=session
         )
         self.workers[name] = worker
         self.pool.start(worker)
@@ -301,9 +307,10 @@ class ImageDownloader(QObject):
         self.current_bytes = 0
         self.percent = 0
         
+        session = httpx.Client()
         for url, name in urls.items():
             self.download_image(
-                url, name, update_percentage, convert=convert, emit_finish=False
+                url, name, update_percentage, convert=convert, emit_finish=False, session=session
             )
                 
     def download_metadatas(self, urls: list[str]):

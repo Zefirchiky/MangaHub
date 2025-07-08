@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class BaseWord(BaseModel):
-    text: str
+    text: str = ''
 
     def __len__(self) -> int:
         return len(self.text)
