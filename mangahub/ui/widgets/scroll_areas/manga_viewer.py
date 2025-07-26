@@ -21,6 +21,7 @@ from models.images import ImageMetadata
 from models.manga import Manga, MangaChapter
 from .smooth_graphics_view import SmoothGraphicsView
 from resources.enums import StorageSize
+from ui import ImageDecoder
 from utils import MM, PlaceholderGenerator
 from config import Config
 
@@ -43,7 +44,7 @@ class MangaViewerScene(QGraphicsScene):
 
         self._placeholder_queue: list[
             tuple[int, int, int]
-        ] = []  # ! heapq is used for fast smallest element
+        ] = []  #! heapq is used for fast smallest element
         self._placeholder_timer = QTimer(self)
         self._placeholder_timer.timeout.connect(self._add_placeholder)
 
@@ -243,19 +244,20 @@ class MangaViewer(SmoothGraphicsView):
 
     def _on_images_request(self, indexes: set[int]):
         for i in indexes:
-            try:
-                image_bytes = self._image_cache.get(
-                    self._image_indexes_names.get(i, "")
-                )
-                image = QPixmap()
-                image.loadFromData(image_bytes)
-            except Exception:
+            if not (image := self._image_cache.get(self._image_indexes_names[i])):
                 meta = self.chapter.get_data_repo().get(i).metadata
                 image = PlaceholderGenerator.static(
                     meta.width, meta.height, f"Num {i}\n{meta.width}x{meta.height}"
                 )  # type: ignore
+                self._scene.set_image(i, image)
+            else:
+                ImageDecoder.decode_from_bytes(image, self._image_indexes_names[i])
 
-            self._scene.set_image(i, image)
+    def _on_decoding_success(self, name: str, pixmap: QPixmap):
+        for i, n in self._image_indexes_names.items():
+            if n == name:
+                self._scene.set_image(i, pixmap)
+                break
 
     def _on_chapter_loaded(self):
         self._cull_scene()

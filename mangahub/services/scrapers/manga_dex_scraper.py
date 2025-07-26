@@ -5,7 +5,7 @@ from loguru import logger
 from PIL import Image
 
 # from utils import MM
-from utils import BatchWorker
+from utils import ThreadingManager
 from utils.image_conversion import convert_to_format
 
 
@@ -165,12 +165,11 @@ class MangaDexScraper:
         _hash = chapter_data["hash"]
         image_ids = chapter_data["dataSaver" if data_saver else "data"]
 
-        worker = BatchWorker()
-        image_urls = worker.process_batch(
-            lambda x: f"{base_url}/data-saver/{_hash}/{x}", image_ids, blocking=True
-        )
+        # image_urls = worker.process_batch(
+        #     lambda x: f"{base_url}/data-saver/{_hash}/{x}", image_ids, blocking=True
+        # )
 
-        return image_urls
+        # return image_urls
 
     def get_image_size(self, url):
         headers = {"Range": "bytes=0-1023"}
@@ -185,13 +184,13 @@ class MangaDexScraper:
         if not image_urls:
             return []
 
-        placeholders_worker = BatchWorker()
-        # placeholders_worker.signals.all_completed.connect(lambda _: MM.show_success("Image sizes downloaded"))
-        return list(
-            placeholders_worker.process_batch(
-                self.get_image_size, image_urls, blocking=True
-            )
-        )
+        # placeholders_worker = BatchWorker()
+        # # placeholders_worker.signals.all_completed.connect(lambda _: MM.show_success("Image sizes downloaded"))
+        # return list(
+        #     placeholders_worker.process_batch(
+        #         self.get_image_size, image_urls, blocking=True
+        #     )
+        # )
 
     def get_chapter_images(self, chapter_id, data_saver=1):
         image_urls = self.get_chapter_image_urls(chapter_id, data_saver)
@@ -199,7 +198,7 @@ class MangaDexScraper:
             return None
 
         # TODO: add a progress bar
-        images_worker = BatchWorker()
-        # images_worker.signals.all_completed.connect(lambda _: MM.show_success("Images downloaded"))
-        images_worker.process_batch(requests.get, image_urls, blocking=False)
-        return images_worker
+        # images_worker = BatchWorker()
+        # # images_worker.signals.all_completed.connect(lambda _: MM.show_success("Images downloaded"))
+        # images_worker.process_batch(requests.get, image_urls, blocking=False)
+        # return images_worker

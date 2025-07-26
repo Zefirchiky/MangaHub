@@ -23,7 +23,7 @@ class ImageDownloadWorker(QRunnable):
     """Worker thread for downloading an image without blocking the GUI"""
 
     _signals = ImageDownloadWorkerSignals()
-    _signals.error.connect(print)
+    _signals.error.connect(lambda url, e: print(f'ImageDownloadWorker: {url}, {e}'))
 
     def __init__(
         self,
@@ -48,7 +48,7 @@ class ImageDownloadWorker(QRunnable):
         self.chunk_size = chunk_size
         self.update_p = update_p
         self.convert = convert
-        self.session: httpx.Client = session
+        self.session: httpx.AsyncClient = session
 
     def run(self):
         loop = asyncio.new_event_loop()
@@ -62,7 +62,7 @@ class ImageDownloadWorker(QRunnable):
 
     async def _download_image(self):
         try:
-            with self.session or httpx.Client() as session:
+            async with self.session or httpx.AsyncClient() as session:
                 response = session.get(self.url)
                 if response.is_error:
                     return (
@@ -84,7 +84,6 @@ class ImageDownloadWorker(QRunnable):
                     if not chunk:
                         break
 
-                    print(len(chunk))
                     if downloaded == 0:
                         w, h = get_dimensions_from_bytes(chunk)
                         metadata = ImageMetadata(
@@ -208,7 +207,7 @@ class ImageDownloader(QObject):
     def _image_downloaded(self, url, name, result, emit_finish):
         image, metadata, err = result
         if err:
-            self.download_error.emit(url, err)
+            self.download_error.emit(url, f"ImageDownloader: {err}")
             return
         self.workers.pop(name)
         if emit_finish and not self.workers:
@@ -307,7 +306,7 @@ class ImageDownloader(QObject):
         self.current_bytes = 0
         self.percent = 0
         
-        session = httpx.Client()
+        session = httpx.AsyncClient()
         for url, name in urls.items():
             self.download_image(
                 url, name, update_percentage, convert=convert, emit_finish=False, session=session

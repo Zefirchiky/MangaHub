@@ -33,7 +33,6 @@ class SitesDownloader(QObject):
         self.downloader.signals.downloaded.connect(self._downloaded)
         self.downloader.error.connect(self._downloading_error)
         self.downloader.signals.all_downloaded.connect(self._all_downloaded)
-        self.url_checked.connect(print)
         
         self._urls_downloading: dict[str, SiteUrlTypes] = {}
         self._retries: dict[str, int] = {}
@@ -95,7 +94,7 @@ class SitesDownloader(QObject):
 
     def check_urls(self, urls: list[str]):
         self._pending_tasks = []
-        ThreadingManager.run(self._check_urls, urls).signals.finished.connect(print)
+        ThreadingManager.run(self._check_urls, urls)
         
     def _check_urls(self, urls: list[str]):
         loop = asyncio.new_event_loop()
