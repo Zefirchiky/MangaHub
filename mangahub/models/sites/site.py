@@ -2,13 +2,13 @@ from __future__ import annotations
 from pydantic import field_validator
 
 from ..tags.tag_model import TagModel
-from ..url import URL
+from ..url import Url
 from .parsing_methods import MangaParsing, NovelParsing, MangaChapterParsing
 
 
 class Site(TagModel):
     name: str
-    url: str | URL
+    url: str | Url
     manga_parsing: MangaParsing | None = None
     manga_chapter_parsing: MangaChapterParsing | None = None
     novel_parsing: NovelParsing | None = None
@@ -18,9 +18,9 @@ class Site(TagModel):
     manga: list[str] = []
 
     @field_validator("url")
-    def validate_url(cls, url: str | URL) -> URL:
+    def validate_url(cls, url: str | Url) -> Url:
         if isinstance(url, str):
-            url = URL(url=url)
+            url = Url(url=url)
         return url
 
     def add_manga(self, manga_id: str) -> None:

@@ -81,6 +81,7 @@ class MainWindow(QMainWindow):
         self.app_controller = self.app.app_controller
 
         # self.selection_menu = SelectionMenu(self)
+        # self.selection_menu.move(1000, 500)
         self.settings_window = SettingsWindow()
         self.dashboard = Dashboard()
         self.manga_viewer = MangaViewer(self)
@@ -154,10 +155,24 @@ class MainWindow(QMainWindow):
         self.app_controller.manga_signals.image_meta_loaded.connect(lambda i, meta: self.manga_viewer.add_placeholder(i, meta.width, meta.height))
         self.app_controller.manga_signals.image_loaded.connect(self.manga_viewer.replace_placeholder)
         
+        self.add_manga_window.find_button.clicked.connect(
+            lambda: self.app_controller.find_manga_sites(
+                name=self.add_manga_window.name_input.text(),
+            )
+        )
+
+        self.app_controller.manga_signals.sites_checked.connect(
+            lambda id_, sites: self.add_manga_window.sites_list.addItems(sites)
+        )
+        
+        self.app_controller.manga_signals.sites_checked.connect(
+            lambda: self.add_manga_window.find_button.setDisabled(False)
+        )
+        
         self.add_manga_window.add_manga_button.clicked.connect(
             lambda: self.app_controller.create_manga(
                 name=self.add_manga_window.name_input.text(),
-                site=self.add_manga_window.main_site_list.currentText()
+                site=self.add_manga_window.sites_list.currentText()
             )
         )
 

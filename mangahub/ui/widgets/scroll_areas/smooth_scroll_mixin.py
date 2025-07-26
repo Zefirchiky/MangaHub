@@ -16,10 +16,10 @@ class SmoothScrollMixin:
         self._scroll_animation_running = False
 
         # Configurable parameters
-        self.scale_multiplier = Config.Scrolling.scale_multiplier()
-        self.step_size = Config.Scrolling.step()
-        self.scroll_duration = Config.Scrolling.step_duration()
-        self.alt_multiplier = Config.Scrolling.alt_multiplier()
+        self.scale_multiplier = Config.UI.Scrolling.scale_multiplier()
+        self.step_size = Config.UI.Scrolling.step()
+        self.scroll_duration = Config.UI.Scrolling.step_duration()
+        self.alt_multiplier = Config.UI.Scrolling.alt_multiplier()
 
         self._scroll_animation = QPropertyAnimation(self.scroll_bar, b"value")
         self._scroll_animation.setDuration(self.scroll_duration)

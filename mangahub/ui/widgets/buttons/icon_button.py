@@ -23,6 +23,7 @@ class IconTypes(Enum):
     LEFT_ARROW = "left.svg"
 
     EYE = "eye.svg"
+    SEARCH = "search.svg"
 
 
 class IconButton(QPushButton):
@@ -33,7 +34,7 @@ class IconButton(QPushButton):
         icon: str | Path | IconTypes,
         color="white",
         size: int = 32,
-        icon_size: int = 24,
+        icon_size: int = -1,
         fn=None,
         parent=None,
     ):
@@ -58,6 +59,9 @@ class IconButton(QPushButton):
         self.setFixedSize(size, size)
         self.setIconSize(QSize(icon_size, icon_size))
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        
+        if icon_size == -1:
+            icon_size = size - 8
 
         if fn:
             self.clicked.connect(fn)

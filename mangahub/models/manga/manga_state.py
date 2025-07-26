@@ -1,7 +1,6 @@
 from models.manga import Manga, MangaChapter
 from pydantic import BaseModel, PrivateAttr
 from PySide6.QtCore import QObject, Signal
-from utils import BatchWorker
 
 
 class MangaStateSignals(QObject):
@@ -16,7 +15,6 @@ class MangaState(BaseModel):
 
     _manga: Manga = PrivateAttr(default=None)
     _chapter: MangaChapter = PrivateAttr(default=None)
-    _worker: BatchWorker | None = PrivateAttr(default=None)
     _signals: MangaStateSignals = PrivateAttr(default_factory=MangaStateSignals)
 
     def get_media(self) -> Manga:
@@ -35,9 +33,6 @@ class MangaState(BaseModel):
     def set_chapter_num(self, chapter_num: float):
         self.chapter_num = chapter_num
         self._signals.chapter_num_changed.emit(chapter_num)
-
-    def set_worker(self, worker: BatchWorker):
-        self._worker = worker
 
     def is_first(self):
         return self.chapter_num <= 1

@@ -91,8 +91,8 @@ class NovelTextEdit(QTextEdit):
         
         block = self.document().findBlock(pos)
         print(block.blockNumber(), pos - block.position(), repr(removed_cursor.selectedText()), repr(added_cursor.selectedText()))
-        if (para := block.userData()) and para is not None:
-            para: NovelParagraph = para.paragraph
+        if (block_data := block.userData()) and block_data.paragraph is not None:
+            para: NovelParagraph = block_data.paragraph
             para.add_chars(pos, added_cursor.selectedText())
         else:
             para = self._chapter.get_data_repo().add(block.blockNumber(), NovelParagraph().add_chars(pos, added_cursor.selectedText()))

@@ -5,7 +5,7 @@ from loguru import logger
 from models.abstract import AbstractMedia
 from models.manga import Manga, MangaChapter
 from models.images import ImageCache, ImageMetadata
-from models import URL
+from models import Url
 from .image_downloader import ImageDownloader
 from .html_downloader import HtmlDownloader
 from config import Config
@@ -41,11 +41,11 @@ class DownloadManager(QObject):
         self.image_downloader.metadata_downloaded.connect(self._image_metadata_downloaded)
         self.image_downloader.image_downloaded.connect(self._image_downloaded)
         
-        self.queue: dict[str, dict[str, list[URL]]] = {}
+        self.queue: dict[str, dict[str, list[Url]]] = {}
         self._cover_downloads: dict[str, str] = {}
         self._image_urls: dict[str, tuple[str, float, int]] = {}
     
-    def _url_from_url(self, url: str | URL) -> str:
+    def _url_from_url(self, url: str | Url) -> str:
         return url if isinstance(url, str) else url.url
     
     def download_cover(self, media: AbstractMedia):
@@ -75,7 +75,7 @@ class DownloadManager(QObject):
             self._image_urls[image.metadata.url] = (manga_id, chapter.num, num)
         self.image_downloader.download_images(name_urls)
         
-    def download_html(self, name: str, url: str | URL):
+    def download_html(self, name: str, url: str | Url):
         url = self._url_from_url(url)
         if not self.queue.get(name):
             self.queue[name] = {}
@@ -84,7 +84,7 @@ class DownloadManager(QObject):
         if url not in self.queue[name]['html']:
             self.queue[name]['html'].append(url)
         
-    def download_htmls(self, urls: list[str | URL]):
+    def download_htmls(self, urls: list[str | Url]):
         for i, url in enumerate(urls):
             urls[i] = self._url_from_url(url)
         return self.html_downloader.download_htmls(urls)

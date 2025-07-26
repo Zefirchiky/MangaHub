@@ -27,6 +27,7 @@ Huh?
 - [+] Manga Reading
 
 ### TOP-PRIORITY
+- Save unused models in json and unload from memory
 - ASYNC manga creation
 - Partial image loading
 

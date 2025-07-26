@@ -5,27 +5,27 @@ import re
 from pydantic import BaseModel, PrivateAttr, field_validator
 
 
-class URL(BaseModel):
+class Url(BaseModel):
     url: str
     regex: str = ""
     _cached_elements: list[str] = PrivateAttr(default_factory=list)
 
-    def __init__(self, url: URL | str, regex: str = ""):
-        if isinstance(url, URL):
+    def __init__(self, url: Url | str, regex: str = ""):
+        if isinstance(url, Url):
             regex = url.regex
             url = url.url
         super().__init__(url=url, regex=regex)
 
     @field_validator("url")
     def validate_url(cls, value) -> str:
-        if not URL.is_url(value):
+        if not Url.is_url(value):
             raise ValueError("Invalid URL")
-        return URL.make_url(value)
+        return Url.make_url(value)
 
-    def with_domain(self, domain: str) -> "URL":
-        return URL(f"{self.protocol}{domain}/{self.path}")
+    def with_domain(self, domain: str) -> "Url":
+        return Url(f"{self.protocol}{domain}/{self.path}")
 
-    def remove_suffix(self, suffix: str = "", number: int = 0) -> "URL":
+    def remove_suffix(self, suffix: str = "", number: int = 0) -> "Url":
         if suffix:
             url = self.url.removesuffix(suffix)
 
@@ -70,7 +70,7 @@ class URL(BaseModel):
 
     @url.setter
     def url(self, url: str):
-        if not URL.is_url(url):
+        if not Url.is_url(url):
             raise ValueError("Invalid URL")
         self._url = self.make_url(url)
         self._cached_elements = None
@@ -130,11 +130,11 @@ class URL(BaseModel):
     def __eq__(self, other):
         return self.url == other
 
-    def __add__(self, key: str) -> "URL":
-        return URL(f"{self.url}/{key}")
+    def __add__(self, key: str) -> "Url":
+        return Url(f"{self.url}/{key}")
 
-    def __truediv__(self, key: str) -> "URL":
-        return URL(f"{self.url}/{key}")
+    def __truediv__(self, key: str) -> "Url":
+        return Url(f"{self.url}/{key}")
 
     def __str__(self) -> str:
         return self.url

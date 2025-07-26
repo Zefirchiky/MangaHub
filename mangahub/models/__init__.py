@@ -1,5 +1,5 @@
-from .url import URL
+from .url import Url
 
 __all__ = [
-    'URL',
+    'Url',
 ]

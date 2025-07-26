@@ -67,8 +67,9 @@ class MangaManager(QObject):
             self.download_manager.download_manga_chapter_images(manga, chapter)
         else:
             self.download_manager.download_manga_chapter_details(manga, num)
-        
-    def get_id_from_name(self, name: str) -> str:
+
+    @staticmethod
+    def get_id_from_name(name: str) -> str:
         id_ = name.lower()
         for s1, s2 in Config.DataProcessing.UrlParsing.replace_symbols().items():
             id_ = id_.replace(s1, s2)

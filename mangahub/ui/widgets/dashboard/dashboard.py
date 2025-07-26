@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 
 from ..flow_layout import FlowLayout
 from ..scroll_areas import SmoothScrollArea
@@ -12,9 +12,11 @@ class Dashboard(SmoothScrollArea):
         self.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         self.top_layout = QHBoxLayout()
+        self.main_layout = FlowLayout(spacing=10)
         
-        self.root_layout = FlowLayout(spacing=10)
-        self.root_layout.addChildLayout(self.top_layout)
+        self.root_layout = QVBoxLayout()
+        self.root_layout.addLayout(self.top_layout)
+        self.root_layout.addLayout(self.main_layout)
         self.root = QWidget()
         self.root.setContentsMargins(10, 10, 10, 10)
         self.root.setLayout(self.root_layout)
@@ -33,7 +35,7 @@ class Dashboard(SmoothScrollArea):
             raise ValueError(f"Card {name} not found")
 
     def add_card(self, mc: MediaCard):
-        self.root_layout.addWidget(mc)
+        self.main_layout.addWidget(mc)
         self.mc_repo[mc.name] = mc
         return self
 

@@ -3,8 +3,9 @@ from __future__ import annotations
 from loguru import logger
 from PySide6.QtCore import QObject, Signal, QTimer
 
-from models import URL
+from models import Url
 from models.images import ImageMetadata
+from models.sites import Site
 from models.manga import MangaState, MangaChapter
 from services.repositories import StateRepository
 
@@ -22,6 +23,7 @@ class MangaSignals(QObject):
     chapter_started_loading = Signal(str, MangaChapter) # manga.id_
     image_meta_loaded = Signal(int, ImageMetadata)      # i, metadata
     image_loaded = Signal(int, str)                     # i, name
+    sites_checked = Signal(str, list)
 
 class AppController(QObject):
     manga_signals = MangaSignals()
@@ -45,6 +47,8 @@ class AppController(QObject):
         self.manga_changed = self.state._signals.manga_changed
         self.chapter_changed = self.state._signals.chapter_changed
         
+        self.sites_manager.manga_signals.sites_checked.connect(self.manga_signals.sites_checked.emit)
+        
         self.manga_manager.image_meta_loaded.connect(self.manga_signals.image_meta_loaded.emit)
         self.manga_manager.image_loaded.connect(self.manga_signals.image_loaded.emit)
 
@@ -53,8 +57,14 @@ class AppController(QObject):
     def get_manga(self, name: str) -> Manga | None:
         return self.manga_manager.get(name)
 
+    def find_manga_sites(self, name: str):
+        if Url.is_url(name):
+            self.manga_signals.sites_checked.emit(name, [self.sites_manager.get_site_from_url(Url(name)).name])
+        else:
+            self.sites_manager.find_media_sites(MangaManager.get_id_from_name(name))
+
     def create_manga(
-        self, name: str, url: str | URL = "", site="MangaDex", sites=[], overwrite=False, **kwargs
+        self, name: str, url: str | Url = "", site="MangaDex", sites=[], overwrite=False, **kwargs
     ):
         manga = self.manga_manager.create(name, site, overwrite=overwrite, **kwargs)
         self.manga_created.emit(manga)

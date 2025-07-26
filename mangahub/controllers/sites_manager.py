@@ -1,8 +1,12 @@
 from __future__ import annotations
 from enum import Enum, auto
 from PySide6.QtCore import QObject, Signal
+import httpx
+import asyncio
 from loguru import logger
-from models import URL
+
+from models import Url
+from models.abstract import AbstractMedia
 from models.manga import Manga, MangaChapter
 from models.sites import Site
 from models.sites.parsing_methods import MangaParsing, NameParsing, CoverParsing, ChaptersListParsing, MangaChapterParsing, ImagesParsing
@@ -20,6 +24,7 @@ class MangaSignals(QObject):    # manga id, content
     name = Signal(str, str)
     cover_url_downloaded = Signal(str, str)
     chapters_list = Signal(str, list)
+    sites_checked = Signal(str, list)
     
 class MangaChapterSignals(QObject): # manga id, chapter num, content
     name = Signal(str, float, str)
@@ -36,9 +41,14 @@ class SitesManager:
     
     def __init__(self):
         self.downloader.downloader.signals.downloaded.connect(self._url_downloaded)
+        self.downloader.url_checked.connect(self._url_checked)
+        self.downloader.all_urls_checked.connect(lambda: self.manga_signals.sites_checked.emit(self._checking_media, self._checking_media_sites))
         
         self._manga_downloading: dict[str, tuple[str, Site, Manga, DownloadTypes]] = {}
         self._manga_chapter_downloading: dict[str, tuple[str, Site, Manga, float, DownloadTypes]] = {}
+        
+        self._checking_media = None
+        self._checking_media_sites = []
         
         logger.success("SitesManager initialized")
 
@@ -63,13 +73,29 @@ class SitesManager:
     def get_all(self) -> dict[str, Site]:
         return self.repo.get_all()
 
-    def get(self, name: str = None, url: str | URL = None) -> Site | None:
+    def get(self, name: str = None, url: str | Url = None) -> Site | None:
         if url:
-            url = URL(url)
+            url = Url(url)
             for site in self.repo.get_all().values():
                 if site["url"] == url.site_url:
                     return site
         return self.repo.get(name)
+    
+    def get_site_from_url(self, url: Url):
+        for site in self.get_all().values():
+            if url.url.startswith(site.url.url):
+                return site
+
+    def find_media_sites(self, media_id: str):
+        urls = []
+        for site in self.get_all().values():
+            urls.append(f'{site.url}/series/{media_id}-ffffffff')
+        self.downloader.check_urls(urls)
+        self._checking_media = media_id
+
+    def _url_checked(self, url: str, code: int):
+        if code == 200:
+            self._checking_media_sites.append(self.get_site_from_url(Url(url)).name)
     
     def _url_downloaded(self, url: str, content: str):
         if url in self._manga_downloading:

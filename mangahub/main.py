@@ -1,4 +1,5 @@
 import ctypes
+import asyncio
 import sys
 import os
 
@@ -109,11 +110,14 @@ class App:
         # self.app_controller.create_manga("I, The Demon Lord, Am Being Targeted by My Female Disciples!")
         # self.app_controller.create_manga("Dragon-Devouring Mage", site="AsuraScans")
         # self.app_controller.create_manga("Hero? I Quit A Long Time Ago")
+        
         # self.app_controller.remove_manga('Dragon-Devouring Mage')
         # self.app_controller.remove_manga('return of the disaster class hero')
         # self.app_controller.remove_manga(self.app_controller.get_manga('Circles'))
         # self.app_controller.remove_manga('Bad Born Blood')
+        
         # self.app_controller.get_manga('I, The Demon Lord, Am Being Targeted by My Female Disciples!').description = 'lol'
+        
         self.test_code()
 
     def test_code(self):
