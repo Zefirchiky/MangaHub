@@ -222,6 +222,28 @@ wheels = [
 ]
 
 [[package]]
+name = "h2"
+version = "4.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "hpack" },
+    { name = "hyperframe" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1b/38/d7f80fd13e6582fb8e0df8c9a653dcc02b03ca34f4d72f34869298c5baf8/h2-4.2.0.tar.gz", hash = "sha256:c8a52129695e88b1a0578d8d2cc6842bbd79128ac685463b887ee278126ad01f", size = 2150682, upload-time = "2025-02-02T07:43:51.815Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/9e/984486f2d0a0bd2b024bf4bc1c62688fcafa9e61991f041fb0e2def4a982/h2-4.2.0-py3-none-any.whl", hash = "sha256:479a53ad425bb29af087f3458a61d30780bc818e4ebcf01f0b536ba916462ed0", size = 60957, upload-time = "2025-02-01T11:02:26.481Z" },
+]
+
+[[package]]
+name = "hpack"
+version = "4.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/48/71de9ed269fdae9c8057e5a4c0aa7402e8bb16f2c6e90b3aa53327b113f8/hpack-4.1.0.tar.gz", hash = "sha256:ec5eca154f7056aa06f196a557655c5b009b382873ac8d1e66e79e87535f1dca", size = 51276, upload-time = "2025-01-22T21:44:58.347Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/c6/80c95b1b2b94682a72cbdbfb85b81ae2daffa4291fbfa1b1464502ede10d/hpack-4.1.0-py3-none-any.whl", hash = "sha256:157ac792668d995c657d93111f46b4535ed114f0c9c8d672271bbec7eae1b496", size = 34357, upload-time = "2025-01-22T21:44:56.92Z" },
+]
+
+[[package]]
 name = "httpcore"
 version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
@@ -247,6 +269,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc", size = 141406, upload-time = "2024-12-06T15:37:23.222Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517, upload-time = "2024-12-06T15:37:21.509Z" },
+]
+
+[package.optional-dependencies]
+http2 = [
+    { name = "h2" },
+]
+
+[[package]]
+name = "hyperframe"
+version = "6.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/02/e7/94f8232d4a74cc99514c13a9f995811485a6903d48e5d952771ef6322e30/hyperframe-6.1.0.tar.gz", hash = "sha256:f630908a00854a7adeabd6382b43923a4c4cd4b821fcb527e6ab9e15382a3b08", size = 26566, upload-time = "2025-01-22T21:41:49.302Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/30/47d0bf6072f7252e6521f3447ccfa40b421b6824517f82854703d0f5a98b/hyperframe-6.1.0-py3-none-any.whl", hash = "sha256:b03380493a519fce58ea5af42e4a42317bf9bd425596f7a0835ffce80f1a42e5", size = 13007, upload-time = "2025-01-22T21:41:47.295Z" },
 ]
 
 [[package]]
@@ -325,13 +361,14 @@ dependencies = [
     { name = "aiohttp" },
     { name = "bs4" },
     { name = "easy-config-hub" },
-    { name = "httpx" },
+    { name = "httpx", extra = ["http2"] },
     { name = "loguru" },
     { name = "lxml" },
     { name = "nuitka" },
     { name = "objsize" },
     { name = "orjson" },
     { name = "pillow" },
+    { name = "pillow-jxl-plugin" },
     { name = "pip" },
     { name = "pydantic" },
     { name = "pyenchant" },
@@ -340,6 +377,7 @@ dependencies = [
     { name = "pytest" },
     { name = "requests" },
     { name = "rich" },
+    { name = "tenacity" },
     { name = "tomli" },
     { name = "ujson" },
 ]
@@ -349,13 +387,14 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.11.11" },
     { name = "bs4", specifier = ">=0.0.2" },
     { name = "easy-config-hub", directory = "../packages/easy-config-hub" },
-    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "httpx", extras = ["http2"], specifier = ">=0.28.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "lxml", specifier = ">=5.3.1" },
     { name = "nuitka", specifier = ">=2.6.7" },
     { name = "objsize", specifier = ">=0.7.1" },
     { name = "orjson", specifier = ">=3.10.18" },
     { name = "pillow", specifier = ">=11.0.0" },
+    { name = "pillow-jxl-plugin", specifier = ">=1.3.4" },
     { name = "pip", specifier = ">=25.0.1" },
     { name = "pydantic", specifier = ">=2.10.4" },
     { name = "pyenchant", specifier = ">=3.2.2" },
@@ -364,6 +403,7 @@ requires-dist = [
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "rich", specifier = ">=14.1.0" },
+    { name = "tenacity", specifier = ">=9.1.2" },
     { name = "tomli", specifier = ">=2.2.1" },
     { name = "ujson", specifier = ">=5.10.0" },
 ]
@@ -507,6 +547,30 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e5/fb/a7960e838bc5df57a2ce23183bfd2290d97c33028b96bde332a9057834d3/pillow-11.1.0-cp313-cp313t-win32.whl", hash = "sha256:dda60aa465b861324e65a78c9f5cf0f4bc713e4309f83bc387be158b077963d9", size = 2295494, upload-time = "2025-01-02T08:12:47.098Z" },
     { url = "https://files.pythonhosted.org/packages/d7/6c/6ec83ee2f6f0fda8d4cf89045c6be4b0373ebfc363ba8538f8c999f63fcd/pillow-11.1.0-cp313-cp313t-win_amd64.whl", hash = "sha256:ad5db5781c774ab9a9b2c4302bbf0c1014960a0a7be63278d13ae6fdf88126fe", size = 2631595, upload-time = "2025-01-02T08:12:50.47Z" },
     { url = "https://files.pythonhosted.org/packages/cf/6c/41c21c6c8af92b9fea313aa47c75de49e2f9a467964ee33eb0135d47eb64/pillow-11.1.0-cp313-cp313t-win_arm64.whl", hash = "sha256:67cd427c68926108778a9005f2a04adbd5e67c442ed21d95389fe1d595458756", size = 2377651, upload-time = "2025-01-02T08:12:53.356Z" },
+]
+
+[[package]]
+name = "pillow-jxl-plugin"
+version = "1.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0a/0e/77af926bdf99bac7f1decdca8102b13945a2e2aa9c716ce617e36bcd82d3/pillow_jxl_plugin-1.3.4.tar.gz", hash = "sha256:8ea589fc559ea7c5dfccb42af4d8148f5db508f5f4d4518328bab5a31fcb268e", size = 1586219, upload-time = "2025-07-03T11:46:50.224Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d2/ad/405d3ca812557c4855e15d9eb3c9c35500aaef6673603f4a3f5145c4ed80/pillow_jxl_plugin-1.3.4-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:9e8da4f7750684f3e1c30ae75d7f23f137503787115373c11e5274af459f3e42", size = 2208559, upload-time = "2025-07-03T11:45:55.442Z" },
+    { url = "https://files.pythonhosted.org/packages/93/18/be1e4423f1dc3a2cf0c9cd188449a024bc29a6e9846356929c6cf47c8df0/pillow_jxl_plugin-1.3.4-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:065d4e9a9060259d566f71c3e2a21723942fb03883c5f70235d8d67f7302cfc6", size = 1603075, upload-time = "2025-07-03T11:45:45.019Z" },
+    { url = "https://files.pythonhosted.org/packages/10/5c/af372084cdbc36e5bc0b2240174e7b2d932538fdfee9b9f5098aca6d1fb0/pillow_jxl_plugin-1.3.4-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:802444a79850ee2d04a433e720c6d53832d2c758a95e80a7726e6ac20d14956e", size = 2053438, upload-time = "2025-07-03T11:45:15.054Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/c9/ad74fd31476fab1dc6d400b047e28d9e7b8a7ecf2cf98cfc7ee2718890ad/pillow_jxl_plugin-1.3.4-cp313-cp313-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:abf586f7aef11c1a045b39e3aebfeb5947d6de72dfd9612c178a360c164b25d5", size = 2411806, upload-time = "2025-07-03T11:45:25.111Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/1a/e9926e352cc39f29a1da050f7798d38f7c04b6017357dffb32db27561af8/pillow_jxl_plugin-1.3.4-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:455b3d14f8ee8e9fc40d6e986b5b485a4d8d2ddfc1778f2af09a72d1ee13ce31", size = 2500493, upload-time = "2025-07-03T11:45:35.4Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/e4/8cdd7b4251d53c81f9e453ea06b524f74a7208f8bcfad6eecec48f8a6fef/pillow_jxl_plugin-1.3.4-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:fcb8017f4cd11628585074729b969b09a021814cff2842518db6e6f8a0f3bdb1", size = 8115031, upload-time = "2025-07-03T11:46:05.883Z" },
+    { url = "https://files.pythonhosted.org/packages/04/9c/9646dabdef692dd596c319221c1626ee91bdf89d7ddafd52ba0d3fd4acf5/pillow_jxl_plugin-1.3.4-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:dc82b63d046185c15cf9ed9accdff59dabd42a5a0abf0c395a5ebe583114a5ee", size = 8011151, upload-time = "2025-07-03T11:46:17.134Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/3c/d20ca7b7d55f619af240f3afcf0fe9d000b923f7fb50fd965767ad765a86/pillow_jxl_plugin-1.3.4-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:2a4c6f06d3973262008ba4fa5258f4005be87b88e50cb825e4fd430391c9dabe", size = 8591410, upload-time = "2025-07-03T11:46:28.612Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/cf/f394f13cfd92e43ee914ab1c084eb70740e8c44628f79ccba1d5d8bbc6ad/pillow_jxl_plugin-1.3.4-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:2c74c10acd9f253185bb1b20a3d4531a57e31bbd8fd91e07081ee4c4bef0a8e6", size = 8809184, upload-time = "2025-07-03T11:46:42.335Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/57/a993587f94edb599b12184a212c85fced74ba90a2005fe2c8001ab4283d6/pillow_jxl_plugin-1.3.4-cp313-cp313-win32.whl", hash = "sha256:bd4920e1aad87d8fc2c5cb1019e14b81f2c828a93651b551b255aa2e8da61247", size = 3046023, upload-time = "2025-07-03T11:47:07.838Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/a9/6d70b17ec20789424d5c9c693c8a917503a45519f20e0f66d54b37e24cda/pillow_jxl_plugin-1.3.4-cp313-cp313-win_amd64.whl", hash = "sha256:492c41232616f2a2efae18bf3fd0e20312019af649f7372c583dd4f5bbffe914", size = 4225110, upload-time = "2025-07-03T11:47:00.684Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/74/3852943352f761e6ff9cb55e92f3d399c938fad57435bcca68e9815a1014/pillow_jxl_plugin-1.3.4-cp313-cp313-win_arm64.whl", hash = "sha256:c140e7520d0e88ffabc3af166ce22d2bff1f507f8692918791d675f9accb40b7", size = 2173676, upload-time = "2025-07-03T11:46:54.456Z" },
 ]
 
 [[package]]
@@ -810,6 +874,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d7/ce/fbaeed4f9fb8b2daa961f90591662df6a86c1abf25c548329a86920aedfb/soupsieve-2.6.tar.gz", hash = "sha256:e2e68417777af359ec65daac1057404a3c8a5455bb8abc36f1a9866ab1a51abb", size = 101569, upload-time = "2024-08-13T13:39:12.166Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl", hash = "sha256:e72c4ff06e4fb6e4b5a9f0f55fe6e81514581fca1515028625d0f299c602ccc9", size = 36186, upload-time = "2024-08-13T13:39:10.986Z" },
+]
+
+[[package]]
+name = "tenacity"
+version = "9.1.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/d4/2b0cd0fe285e14b36db076e78c93766ff1d529d70408bd1d2a5a84f1d929/tenacity-9.1.2.tar.gz", hash = "sha256:1169d376c297e7de388d18b4481760d478b0e99a777cad3a9c86e556f4b697cb", size = 48036, upload-time = "2025-04-02T08:25:09.966Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/30/643397144bfbfec6f6ef821f36f33e57d35946c44a2352d3c9f0ae847619/tenacity-9.1.2-py3-none-any.whl", hash = "sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138", size = 28248, upload-time = "2025-04-02T08:25:07.678Z" },
 ]
 
 [[package]]

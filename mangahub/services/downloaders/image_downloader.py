@@ -1,317 +1,218 @@
 import asyncio
 import httpx
 import io
-from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal, QUrl
+import time
+from pathlib import Path
+import logging
+from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal, QUrl, Slot
 from PIL import Image
+import tenacity
+from loguru import logger
 
 from models.images import ImageMetadata, ImageCache
-from utils.image_dimensions import get_dimensions_from_bytes
-
+from utils import ThreadingManager
 from config import Config
 
 
-class ImageDownloadWorkerSignals(QObject):
-    progress = Signal(
-        str, int, int, int, int
-    )  # url, percent, bytes downloaded, bytes downloaded diff, total bytes
-    metadata = Signal(str, ImageMetadata)  # url, metadata
-    error = Signal(str, Exception)
-
-
-# TODO: Better use of async (reuse of client/session)
-class ImageDownloadWorker(QRunnable):
-    """Worker thread for downloading an image without blocking the GUI"""
-
-    _signals = ImageDownloadWorkerSignals()
-    _signals.error.connect(lambda url, e: print(f'ImageDownloadWorker: {url}, {e}'))
-
-    def __init__(
-        self,
-        url: str,
-        callback,
-        ext: str = "",
-        metadata_only: bool = False,
-        chunk_size: int = 8192,
-        update_p: int = 1,
-        convert=True,
-        session=None
-    ):
-        super().__init__()
-
-        self.url = url
-        self.ext = (
-            Config.Downloading.Image.PIL_SUPPORTED_EXT().get(ext.upper()) or "WEBP"
-        )
-
-        self.callback = callback
-        self.metadata_only = metadata_only
-        self.chunk_size = chunk_size
-        self.update_p = update_p
-        self.convert = convert
-        self.session: httpx.AsyncClient = session
-
-    def run(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        result = loop.run_until_complete(self._download_image())
-
-        self.callback(result)
-
-        loop.close()
-
-    async def _download_image(self):
-        try:
-            async with self.session or httpx.AsyncClient() as session:
-                response = session.get(self.url)
-                if response.is_error:
-                    return (
-                        None,
-                        None,
-                        Exception(f"Error getting response: {response.status_code}"),
-                    )
-
-                size = int(response.headers.get("Content-Length", 0))
-                format = str(
-                    response.headers.get("Content-Type", "").split("/")[-1]
-                )
-                image_data = bytearray()
-                downloaded = 0
-                prev_percentage = 0
-                diff = 0
-
-                for chunk in response.iter_bytes(self.chunk_size):
-                    if not chunk:
-                        break
-
-                    if downloaded == 0:
-                        w, h = get_dimensions_from_bytes(chunk)
-                        metadata = ImageMetadata(
-                            url=self.url,
-                            width=w,
-                            height=h,
-                            format=format,
-                            size=size,
-                        )
-                        if self.metadata_only:
-                            return None, metadata, None
-                        self._signals.metadata.emit(self.url, metadata)
-
-                    chunk_size = len(chunk)
-                    diff += chunk_size
-                    downloaded += chunk_size
-                    image_data.extend(chunk)
-
-                    if size > 0:
-                        percentage = int(downloaded / size * 100)
-                        if (
-                            percentage - prev_percentage >= self.update_p
-                            or percentage == 100
-                        ):
-                            prev_percentage = percentage
-                            self._signals.progress.emit(
-                                self.url, percentage, downloaded, diff, size
-                            )
-                            diff = 0
-
-                if size > 0 and downloaded != size:
-                    return (
-                        None,
-                        None,
-                        Exception(
-                            f"Size downloaded does not match with size expected: {downloaded}/{size} bytes"
-                        ),
-                    )
-
-                if self.convert:
-                    image_data = io.BytesIO(image_data)
-                    with image_data as f:
-                        img = Image.open(f)
-                        if self.ext != format:
-                            img.save(
-                                f, self.ext, optimize=True
-                            )  # TODO: Better conversion
-
-                        return image_data.getvalue(), metadata, None
-
-                return image_data, metadata, None
-
-        except Exception as e:
-            return None, None, Exception(f"Error: {e}")
-
+try:
+    jxl_supported = 'JXL' in Image.registered_extensions().values()  # TODO: Make it global state
+    jxl_supported = True
+except Exception:
+    pass
 
 class ImageDownloader(QObject):
-    """Manages parallel downloading of images"""
+    """
+    Handles the asynchronous downloading and processing of images.
+    Emits signals for progress, metadata (with dimensions), and completion.
+    """
+    metadata_downloaded = Signal(ImageMetadata)
+    download_progress = Signal(str, str, float, int, int, int)   # url, name, percent, downloaded_bytes, diff_bytes, total_bytes
+    download_finished = Signal(ImageMetadata)
+    download_error = Signal(str, str, tuple)
+    
+    def __init__(self, client: httpx.AsyncClient, cache: ImageCache):
+        super().__init__()
+        self.client = client
+        self.cache = cache
+        
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(Config.Downloading.max_retries()),
+        wait=tenacity.wait_fixed(Config.Downloading.min_wait_time()),
+        reraise=True,
+    )
+    async def _download_and_process_single_image(self, url, name):
+        image_buffer = io.BytesIO()
+        downloaded_bytes = 0
+        prev_downloaded_bytes = 0
+        diff_bytes = 0
+        total_size = 0
+        width, height = 0, 0
+        metadata_emited = False
+        
+        # dt = time.perf_counter()
+        try:
+            async with self.client.stream('GET', url) as response:
+                response.raise_for_status()
+                
+                if content_length := response.headers.get('Content-Length'):
+                    total_size = int(content_length)
+                    
+                async for chunk in response.aiter_bytes(Config.Downloading.Image.chunk_size().bytes_value):
+                    bytes_written = image_buffer.write(chunk)
+                    downloaded_bytes += bytes_written
+                    diff_bytes = downloaded_bytes - prev_downloaded_bytes
+                    prev_downloaded_bytes = 0
+                    
+                    if not metadata_emited and downloaded_bytes > 0:
+                        try:
+                            img_temp = Image.open(image_buffer)
+                            img_temp.verify()
+                            width, height = img_temp.size
+                            self.metadata_downloaded.emit(ImageMetadata(
+                                url=url, name=name, width=width, height=height, size=total_size, format=img_temp.format
+                            ))
+                            metadata_emited = True
+                        except Exception:
+                            pass
+                        
+                    percent = (downloaded_bytes / total_size * 100) if total_size > 0 else 0
+                    self.download_progress.emit(url, name, percent, downloaded_bytes, diff_bytes, total_size)
+            # print('Downloading: ', time.perf_counter() - dt)
+            # --- Image Optimization ---
+            image_buffer.seek(0)
+            original_image_bytes = image_buffer.getvalue()
 
-    metadata_downloaded = ImageDownloadWorker._signals.metadata
-    image_downloaded = Signal(str, str, ImageMetadata)  # url, name.ext, metadata
-    overall_download_progress = Signal(
-        int, int, int, int
-    )  # len(urls), percent, current bytes, total bytes
-    download_progress = ImageDownloadWorker._signals.progress
-    download_error = ImageDownloadWorker._signals.error
-    finished = Signal(int)
+            try:
+                img = Image.open(io.BytesIO(original_image_bytes)).convert('RGB')   # TODO: Conversion helped greatly, but playing with it may improve perf even more
+            except Exception as e:
+                raise ValueError(f"Could not open image from downloaded data: {e}")
+            if not metadata_emited:
+                width, height = img_temp.size
+                self.metadata_downloaded.emit(ImageMetadata(
+                    url=url, name=name, width=img.width, height=img.height, size=len(original_image_bytes), format=img_temp.format
+                ))
+            # dt = time.perf_counter()
+            optimized_image_buffer = io.BytesIO()
+            format_to_save = '.webp'
+            
+            if jxl_supported:
+                try:
+                    img.save(optimized_image_buffer, format='JXL', lossless=True, effort=1) # TODO: Tweak params
+                    format_to_save = '.jxl'
+                except Exception:
+                    img.save(optimized_image_buffer, format='WEBP', lossless=True, method=6, quality=100)
+            else:
+                img.save(optimized_image_buffer, format='WEBP', lossless=True, method=6, quality=100)
+            # print('Save: ', time.perf_counter() - dt)
+            name = name + format_to_save
+            self.cache.add(name, optimized_image_buffer.getvalue())
+            self.download_finished.emit(ImageMetadata(
+                    url=url, name=name, width=img.width, height=img.height, size=len(optimized_image_buffer.getvalue()), format=format_to_save
+                ))
+        
+            
+        except httpx.HTTPStatusError as e:
+            error_msg = f"HTTP error {e.response.status_code} for {url}: {e.response.text}"
+            logger.error(error_msg)
+            raise # Re-raise for tenacity to handle retries
+        except httpx.RequestError as e:
+            error_msg = f"Network error during download of {url}: {e}"
+            logger.error(error_msg)
+            raise # Re-raise for tenacity to handle retries
+        except Exception as e:
+            error_msg = f"An unexpected error occurred for {url}: {e}"
+            logger.error(error_msg, exc_info=True)
+            raise # Re-raise for tenacity to handle retries
+        
 
-    def __init__(self, cache: ImageCache, max_threads: int = 0):
+class ImageDownloaderWorker(QRunnable):
+    """
+    QRunnable to execute ImageDownloader tasks in a separate thread.
+    """
+    def __init__(self, client: httpx.AsyncClient, cache: ImageCache, urls: list[str], names: list[str]):
+        super().__init__()
+        self.client = client
+        self.urls = urls
+        self.names = names
+        # ImageDownloader instance will emit signals
+        self.downloader = ImageDownloader(client, cache)
+
+        # We don't connect signals directly here, but expose them for the Main Window
+        # The MainWindow will connect to these signals
+        self.metadata_downloaded = self.downloader.metadata_downloaded
+        self.download_progress = self.downloader.download_progress
+        self.download_finished = self.downloader.download_finished
+        self.download_error = self.downloader.download_error
+        
+    @Slot()
+    def run(self):
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+        try:
+            tasks = [self.downloader._download_and_process_single_image(url, name)
+                     for url, name in zip(self.urls, self.names)]
+            
+            results = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+            
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error(f"Task for {self.urls[i]} failed in worker: {result}")
+            
+        except Exception as e:
+            logger.critical(f"ImageDownloaderWorker: Unhandled exception in worker thread for URLs {self.urls}: {e}", exc_info=True)
+            for url in self.urls: # Fallback to emit error for all URLs if a critical error
+                self.downloader.download_error.emit(url, f"Critical internal error: {e}")
+                
+        finally:
+            loop.close()
+            
+
+class ImageDownloadManager(QObject):
+    metadata_downloaded = Signal(ImageMetadata)
+    downloaded = Signal(ImageMetadata)
+    download_error = Signal(str, str, tuple)
+    overall_progress = Signal(str, str, float, int, int, int)
+    all_downloaded = Signal()
+    
+    def __init__(self, cache: ImageCache):
         super().__init__()
         self.cache = cache
-
-        self.pool = QThreadPool()
-        if not max_threads:
-            self.pool.setMaxThreadCount(Config.Downloading.Image.max_threads())
-        else:
-            self.pool.setMaxThreadCount(max_threads)
-
-        self.workers = {}
-
-        self.counted_urls = set()
-        self.total_bytes = 0
-        self.total_bytes_is_known = False
-        self.current_bytes = 0
-        self.percent = 0
-        self.download_progress.connect(
-            lambda url, percent, downloaded, diff, total: self._update_overall_progress(
-                url, diff, total
-            )
-        )
-
-    def _update_overall_progress(self, url: str, diff: int, total: int):
-        if not self.total_bytes_is_known and url not in self.counted_urls:
-            self.total_bytes += total
-            self.counted_urls.add(url)
-        self.current_bytes += diff
-
-        if self.total_bytes > 0:  # Avoid division by zero
-            percent = int(self.current_bytes / self.total_bytes * 100)
-            if (
-                percent >= self.percent + 1 or percent == 100
-            ):  # TODO: Update every 1% change   Add setting for this
-                self.percent = percent
-                self.overall_download_progress.emit(
-                    len(self.counted_urls),
-                    percent,
-                    self.current_bytes,
-                    self.total_bytes,
-                )
-
-    def _metadata_downloaded(self, url, name, result, emit_finish):
-        _, metadata, err = result
-        if err:
-            self.download_error.emit(url, err)
-            return
-        self.workers.pop(name)
-        if emit_finish and not self.workers:
-            self.finished.emit(0)
-        self.metadata_downloaded.emit(url, metadata)
-
-    def _image_downloaded(self, url, name, result, emit_finish):
-        image, metadata, err = result
-        if err:
-            self.download_error.emit(url, f"ImageDownloader: {err}")
-            return
-        self.workers.pop(name)
-        if emit_finish and not self.workers:
-            self.finished.emit(self.total_bytes)
-        self.cache.add  (name, image, metadata.size)
-        self.image_downloaded.emit(url, name, metadata)
-
-    def download_metadata(self, url: str, name: str = "", emit_finish=True):
-        url_ = QUrl(url)
-        if not url_.isValid():
-            self.download_error.emit(url, "Url is not valid")
-        url = url_.toString()
-
-        # Finds or creates name and preferable extension
-        ext = Config.Downloading.Image.preferable_format()
-        if name:
-            if "." in name:
-                name, ext = name.split(".")
-        else:
-            name, _ = url.split("/")[-1].split(".")
-        name, ext = str(name), str(ext)
-        name = f"{name}.{ext.lower()}"
-
-        worker = ImageDownloadWorker(
-            url=url,
-            ext=ext,
-            callback=lambda result: self._metadata_downloaded(
-                url, name, result, emit_finish
-            ),
-            chunk_size=Config.Downloading.Image.chunk_size().bytes_value,
-            metadata_only=True,
-        )
-        self.workers[name] = worker
-        self.pool.start(worker)
-
-    def download_image(
-        self,
-        url: str,
-        name: str = "",
-        update_percentage=1,
-        convert=True,
-        emit_finish=True,
-        session=None
-    ):
-        url_ = QUrl(url)
-        if not url_.isValid():
-            self.download_error.emit(url, "Url is not valid")
-        url = url_.toString()
-
-        # Finds or creates name and preferable extension
-        ext = Config.Downloading.Image.preferable_format()
-        if name:
-            if "." in name:
-                s = name.split(".")
-                name, ext = ''.join(s[:-1]), s[-1]
-        else:
-            name, _ = url.split("/")[-1].rsplit(".", 1)
-        name, ext = str(name), str(ext)
-        name = f"{name}.{ext.lower()}"
-
-        worker = ImageDownloadWorker(
-            url=url,
-            ext=ext,
-            callback=lambda result: self._image_downloaded(
-                url, name, result, emit_finish
-            ),
-            chunk_size=Config.Downloading.Image.chunk_size().bytes_value,
-            update_p=update_percentage,
-            convert=convert,
-            session=session
-        )
-        self.workers[name] = worker
-        self.pool.start(worker)
-
-    def download_images(
-        self,
-        urls: dict[str, str],
-        update_percentage=10,
-        convert=True,
-        total_bytes=0,
-    ):
-        """Downloads images async.
+        self.thread_pool = QThreadPool(maxThreadCount=Config.Downloading.Image.max_threads())
+        
+    def _add_to_overall_progress(self, url, name, percent, downloaded, diff, total):
+        pass
+    
+    def _image_downloaded(self, metadata: ImageMetadata):
+        if not self.thread_pool.activeThreadCount():
+            self.all_downloaded.emit()
+    
+    def download_images_sep_thread(self, urls: list[str], names: list[str]=None, cache: ImageCache=None) -> ImageDownloaderWorker:
+        """
+        Downloads a list of images in separate threads.
 
         Args:
-            urls (dict[str, str]): Dictionary of urls and their preferable names. If extension is not in the name, preferable one will be used (check AppConfig.Downloading.Image.preferable_format)
-            update_percentage (int, optional): ImageDownloader will emit download_progress signal every x%. Defaults to 10.
-            metadata_only (bool, optional): Will only download metadata, emits metadata_downloaded. Defaults to False.
+            urls: list of URLs to download
+            names: list of names to associate with the downloaded images (optional)
+            cache: cache to store the downloaded images (optional)
+
+        Returns:
+            ImageDownloaderWorker: worker object that can be used to track the progress
         """
-        if total_bytes:
-            self.total_bytes = total_bytes
-            self.total_bytes_is_known = True
-        else:
-            self.total_bytes = 0
-            self.total_bytes_is_known = False
-        self.counted_urls = set()
-        self.current_bytes = 0
-        self.percent = 0
-        
-        session = httpx.AsyncClient()
-        for url, name in urls.items():
-            self.download_image(
-                url, name, update_percentage, convert=convert, emit_finish=False, session=session
-            )
-                
-    def download_metadatas(self, urls: list[str]):
-        for url in urls:
-            self.download_metadata(url, emit_finish=False)
+        client = httpx.AsyncClient(timeout=10, follow_redirects=True)
+        worker = ImageDownloaderWorker(client, cache or self.cache, urls, names or urls)
+        worker.setAutoDelete(True)
+        worker.metadata_downloaded.connect(self.metadata_downloaded.emit)
+        worker.download_finished.connect(self.downloaded.emit)
+        worker.download_finished.connect(self._image_downloaded)
+        worker.download_error.connect(self.download_error.emit)
+        self.thread_pool.start(worker)
+        return worker
+
+# cache = ImageCache(Config.Dirs.CACHE, 0)
+# d = ImageDownloadManager(cache)
+# dt = time.perf_counter()
+# d.download_images_sep_thread(['https://asurascans.imagemanga.online/aHR0cHM6Ly9nZy5hc3VyYWNvbWljLm5ldC9zdG9yYWdlL21lZGlhLzEyMjc1OC9jb252ZXJzaW9ucy8wMS1vcHRpbWl6ZWQud2VicA/aHR0cHM6Ly9hc3VyYWNvbWljLm5ldC9zZXJpZXMvbmFuby1tYWNoaW5lLWFkZDgxMmY2'], ['test']).download_finished.connect(lambda: print(time.perf_counter() - dt))

@@ -1,9 +1,8 @@
 import traceback
 from enum import Enum, auto
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Callable
 
-from loguru import logger
-from PySide6.QtCore import QEventLoop, QObject, QRunnable, QThreadPool, Signal, Slot
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, Slot
 
 class WorkerStatus(Enum):
     PROCESSING = auto()
@@ -50,17 +49,18 @@ class ThreadingManager(QObject):
         worker = Worker(
             name, fn, *args, **kwargs
         )
-        cls.workers[name] = worker
-        worker.signals.finished.connect(cls._destroy_worker)
+        worker.setAutoDelete(True)
+        worker.signals.finished.connect(lambda: print(cls.workers))
+        cls.thread_pool.start(worker)
+        return worker
+
+    @classmethod
+    def run_worker(cls, worker: QRunnable, name=None):
+        name = name or f'worker_{len(cls.workers)}_{worker.__class__.__name__}'
+        worker.setAutoDelete(True)
         cls.thread_pool.start(worker)
         return worker
         
     @classmethod
     def run_bunch(cls, fn, *args, name, max_threads=1, **kwargs):
         ...
-        
-    @classmethod
-    @Slot(str)
-    def _destroy_worker(cls, name):
-        worker = cls.workers.pop(name)
-        del worker

@@ -1,7 +1,8 @@
-from .image_decoder import ImageDecoder
+from .image_decoder import ImageDecoderSignals, ImageDecoder
 from .main_gui import MainWindow
 
 __all__ = [
-    'ImageDecoder', 
+    'ImageDecoderSignals', 
+	'ImageDecoder', 
 	'MainWindow',
 ]

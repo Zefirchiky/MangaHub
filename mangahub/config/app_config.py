@@ -6,6 +6,7 @@ from loguru import logger
 from rich import print
 from rich.console import Console
 import rich.traceback
+import pillow_jxl
 
 from easy_config_hub import Config_, DirectoriesConfig_, Setting, Level, SettingType
 from resources.enums import SU, StorageSize
@@ -18,6 +19,7 @@ class Config(Config_):
 
     class Downloading(Config_):
         max_retries = Setting[int](3, "Maximum Download Retries")
+        min_wait_time = Setting[int](1, "Minimum Time between Retries")
         
         class Chapter(Config_):
             time_wait_before_loading = Setting[int](300, "Time to Wait before Attempting to Download Chapter", 'ms')
@@ -98,7 +100,7 @@ class Config(Config_):
 
     class Caching(Config_):
         class Image(Config_):
-            max_ram = Setting[StorageSize](100 * SU.MB, "Max Ram for Images")
+            max_ram = Setting[StorageSize](00 * SU.MB, "Max Ram for Images")
             max_disc = Setting[StorageSize](500 * SU.MB, "Max Disc Space for Images")
             
     class DataProcessing(Config_):

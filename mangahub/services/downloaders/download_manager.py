@@ -1,4 +1,6 @@
 from __future__ import annotations
+import time
+from itertools import batched
 from PySide6.QtCore import Signal, QObject
 from loguru import logger
 
@@ -6,7 +8,7 @@ from models.abstract import AbstractMedia
 from models.manga import Manga, MangaChapter
 from models.images import ImageCache, ImageMetadata
 from models import Url
-from .image_downloader import ImageDownloader
+from .image_downloader import ImageDownloadManager
 from .html_downloader import HtmlDownloader
 from config import Config
 
@@ -18,10 +20,10 @@ if TYPE_CHECKING:
 class DownloadManager(QObject):
     image_downloaded = Signal(str, float, int, str) # manga id, chapter num, image num, name
     image_metadata_downloaded = Signal(str, float, int, ImageMetadata)   # manga id, chapter num, image num, metadata
-    overall_image_download_progress = ImageDownloader.overall_download_progress  # len(urls), percent, current bytes, total bytes
-    image_download_progress = ImageDownloader.download_progress
-    image_download_error = ImageDownloader.download_error
-    images_downloaded = ImageDownloader.finished
+    # overall_image_download_progress = ImageDownloader.overall_download_progress  # len(urls), percent, current bytes, total bytes
+    # image_download_progress = ImageDownloadManager.download_progress
+    image_download_error = ImageDownloadManager.download_error
+    images_downloaded = ImageDownloadManager.all_downloaded
     
     html_downloaded = HtmlDownloader.signals.downloaded   # url, content
     all_html_downloaded = Signal()
@@ -32,18 +34,20 @@ class DownloadManager(QObject):
     def __init__(self, app: App):
         super().__init__()
         self.images_cache = ImageCache(Config.Dirs.IMAGES_CACHE, Config.Caching.Image.max_ram(), Config.Caching.Image.max_disc())
-        self.image_downloader = ImageDownloader(self.images_cache)
+        self.image_downloader = ImageDownloadManager(self.images_cache)
         self.html_downloader = HtmlDownloader()
         
         self.sites_manager = app.sites_manager
         self.chapter_images_urls_downloaded = self.sites_manager.manga_chapter_signals.image_urls   # manga id, chapter num, image
         
         self.image_downloader.metadata_downloaded.connect(self._image_metadata_downloaded)
-        self.image_downloader.image_downloaded.connect(self._image_downloaded)
+        self.image_downloader.downloaded.connect(self._image_downloaded)
+        self.image_downloader.all_downloaded.connect(lambda: print('IT WORKS: ', time.perf_counter() - self.dt))
         
         self.queue: dict[str, dict[str, list[Url]]] = {}
         self._cover_downloads: dict[str, str] = {}
         self._image_urls: dict[str, tuple[str, float, int]] = {}
+        self.dt = 0
     
     def _url_from_url(self, url: str | Url) -> str:
         return url if isinstance(url, str) else url.url
@@ -62,18 +66,26 @@ class DownloadManager(QObject):
         if not url:
             logger.error('DownloadManager.download_cover did not received url')
             return
-        self.image_downloader.download_image(url, f'cover_{media_id}')
+        self.image_downloader.download_images_sep_thread(url, f'cover_{media_id}')
         self._cover_downloads[url] = media_id
         
     def download_manga_chapter_details(self, manga: Manga, chapter: MangaChapter):
         self.sites_manager.download_manga_chapter_details(manga, chapter)
         
     def download_manga_chapter_images(self, manga_id: str, chapter: MangaChapter):
-        urls = [image.metadata.url for image in chapter.get_data_repo().get_all().values()]
-        name_urls = {url: f'chap-image_{manga_id}_{chapter.num}_{i}' for i, url in enumerate(urls)}
+        all_urls = [image.metadata.url for image in chapter.get_data_repo().get_all().values()]
+        
         for num, image in chapter.get_data_repo().get_all().items():
             self._image_urls[image.metadata.url] = (manga_id, chapter.num, num)
-        self.image_downloader.download_images(name_urls)
+            
+        urls_names = [(url, f'chap-image_{manga_id}_{str(chapter.num).replace('.', '-')}_{i}') for i, url in enumerate(all_urls)]
+        self.dt = time.perf_counter()
+        for batch in list(batched(urls_names, 7)):
+            urls, names = [], []
+            for url, name in batch:
+                urls.append(url)
+                names.append(name)
+            self.image_downloader.download_images_sep_thread(urls, names)
         
     def download_html(self, name: str, url: str | Url):
         url = self._url_from_url(url)
@@ -89,18 +101,19 @@ class DownloadManager(QObject):
             urls[i] = self._url_from_url(url)
         return self.html_downloader.download_htmls(urls)
     
-    def _image_metadata_downloaded(self, url: str, metadata: ImageMetadata):
-        manga_id, chapter_num, num = self._image_urls.get(url)
+    def _image_metadata_downloaded(self, metadata: ImageMetadata):
+        manga_id, chapter_num, num = self._image_urls.get(metadata.url)
         self.image_metadata_downloaded.emit(manga_id, chapter_num, num, metadata)
     
-    def _image_downloaded(self, url: str, name: str, metadata):
-        if name.startswith('cover'):
-            self.cover_downloaded.emit(self._cover_downloads.pop(url), self.images_cache.pop(name))
-        elif name.startswith('chap-image'):
-            manga_id, chapter_num, num = self._image_urls.pop(url)
-            self.image_downloaded.emit(manga_id, chapter_num, num, name)
+    def _image_downloaded(self, metadata: ImageMetadata):
+        print(metadata)
+        if metadata.name.startswith('cover'):
+            self.cover_downloaded.emit(self._cover_downloads.pop(metadata.url), self.images_cache.pop(metadata.name))
+        elif metadata.name.startswith('chap-image'):
+            manga_id, chapter_num, num = self._image_urls.pop(metadata.url)
+            self.image_downloaded.emit(manga_id, chapter_num, num, metadata.name)
         else:
-            logger.warning(f'Unknown image was downloaded: {url} ({name}, {metadata})')
+            logger.warning(f'Unknown image was downloaded: {metadata.url} ({metadata.name}, {metadata})')
     
     def start(self, name: str):
         if content := self.queue.pop(name, None):
@@ -109,4 +122,4 @@ class DownloadManager(QObject):
                     case 'html':
                         self.html_downloader.download_htmls(urls)
                     case 'img':
-                        self.image_downloader.download_images(urls)
+                        self.image_downloader.download_images_sep_thread(urls)

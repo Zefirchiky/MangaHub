@@ -1,6 +1,6 @@
 from .download_manager import DownloadManager
 from .html_downloader import HtmlDownloaderWorkerSignals, HtmlDownloaderWorker, HtmlDownloaderSignals, HtmlDownloader
-from .image_downloader import ImageDownloadWorkerSignals, ImageDownloadWorker, ImageDownloader
+from .image_downloader import ImageDownloader, ImageDownloaderWorker, ImageDownloadManager
 from .sites_downloader import SiteUrlTypes, SitesDownloader
 
 __all__ = [
@@ -9,9 +9,9 @@ __all__ = [
 	'HtmlDownloaderWorker', 
 	'HtmlDownloaderSignals', 
 	'HtmlDownloader', 
-	'ImageDownloadWorkerSignals', 
-	'ImageDownloadWorker', 
 	'ImageDownloader', 
+	'ImageDownloaderWorker', 
+	'ImageDownloadManager', 
 	'SiteUrlTypes', 
 	'SitesDownloader',
 ]

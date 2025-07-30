@@ -40,8 +40,8 @@ class ImageCache:  # TODO: SAVE/LOAD
             self.cur_disc -= size
             os.remove(file)
 
-    def add(self, name: str, image: bytes, size_: int):
-        size: StorageSize = StorageSize(size_)
+    def add(self, name: str, image: bytes):
+        size: StorageSize = StorageSize(len(image))
         if self.max_ram < size:  # If image larger that maximum ram available
             self._free_ram(self.max_ram)  # Free all ram
             self._freed_from_ram[name] = [image, size]
