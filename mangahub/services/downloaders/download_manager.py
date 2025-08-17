@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class DownloadManager(QObject):
-    image_downloaded = Signal(str, float, int, str) # manga id, chapter num, image num, name
+    image_downloaded = Signal(str, float, int, ImageMetadata) # manga id, chapter num, image num, name
     image_metadata_downloaded = Signal(str, float, int, ImageMetadata)   # manga id, chapter num, image num, metadata
     # overall_image_download_progress = ImageDownloader.overall_download_progress  # len(urls), percent, current bytes, total bytes
     # image_download_progress = ImageDownloadManager.download_progress
@@ -33,7 +33,7 @@ class DownloadManager(QObject):
     
     def __init__(self, app: App):
         super().__init__()
-        self.images_cache = ImageCache(Config.Dirs.IMAGES_CACHE, Config.Caching.Image.max_ram(), Config.Caching.Image.max_disc())
+        self.images_cache = app.images_cache
         self.image_downloader = ImageDownloadManager(self.images_cache)
         self.html_downloader = HtmlDownloader()
         
@@ -80,7 +80,7 @@ class DownloadManager(QObject):
             
         urls_names = [(url, f'chap-image_{manga_id}_{str(chapter.num).replace('.', '-')}_{i}') for i, url in enumerate(all_urls)]
         self.dt = time.perf_counter()
-        for batch in list(batched(urls_names, 7)):
+        for batch in list(batched(urls_names, 3)):
             urls, names = [], []
             for url, name in batch:
                 urls.append(url)
@@ -106,12 +106,11 @@ class DownloadManager(QObject):
         self.image_metadata_downloaded.emit(manga_id, chapter_num, num, metadata)
     
     def _image_downloaded(self, metadata: ImageMetadata):
-        print(metadata)
         if metadata.name.startswith('cover'):
             self.cover_downloaded.emit(self._cover_downloads.pop(metadata.url), self.images_cache.pop(metadata.name))
         elif metadata.name.startswith('chap-image'):
             manga_id, chapter_num, num = self._image_urls.pop(metadata.url)
-            self.image_downloaded.emit(manga_id, chapter_num, num, metadata.name)
+            self.image_downloaded.emit(manga_id, chapter_num, num, metadata)
         else:
             logger.warning(f'Unknown image was downloaded: {metadata.url} ({metadata.name}, {metadata})')
     

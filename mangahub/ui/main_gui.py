@@ -9,7 +9,8 @@ from ui.multi_window import AddMangaWindow, SettingsWindow
 from ui.widgets import IconRepo, ImageWidget, SelectionMenu
 from ui.widgets.novels import NovelWriter
 from ui.widgets.dashboard import Dashboard, MediaCard
-from ui.widgets.scroll_areas import MangaViewer, NovelViewer
+from ui.widgets.manga import MangaViewer
+from ui.widgets.novels import NovelViewer
 from ui.widgets.slide_menus import SideMenu
 
 from models.abstract import AbstractMedia
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, app: "App"):
+    def __init__(self, app: App):
         super().__init__()
         self.app = app
 
@@ -80,22 +81,24 @@ class MainWindow(QMainWindow):
         self.sites_manager = self.app.sites_manager
         self.app_controller = self.app.app_controller
 
-        # self.selection_menu = SelectionMenu(self)
+        self.selection_menu = SelectionMenu(self)
         # self.selection_menu.move(1000, 500)
         self.settings_window = SettingsWindow()
         self.dashboard = Dashboard()
-        self.manga_viewer = MangaViewer(self)
+        self.dashboard.root_layout.addWidget(self.selection_menu)
+        self.manga_viewer = MangaViewer(self.app.images_cache, self)
         self.novel_viewer = NovelWriter(self)
-        self.novel_viewer.text_edit.load_chapter(NovelChapter(num=0, folder=Config.Dirs.NOVELS / 'test.json')
-                                                 .set_data_repo(ParagraphsRepository(
-                                                   Config.Dirs.NOVELS / 'test2.json'
-                                                 )))
-        
+        self.novel_viewer.text_edit.load_chapter(
+            NovelChapter(num=0, folder=Config.Dirs.NOVELS / "test.json").set_data_repo(
+                ParagraphsRepository(Config.Dirs.NOVELS / "test2.json")
+            )
+        )
+
         self.add_manga_window = AddMangaWindow(self.app_controller)
         self.add_manga_button = QPushButton("Add Manga")
         self.dashboard.top_layout.addWidget(self.add_manga_button)
         self.add_manga_button.clicked.connect(self.add_manga)
-        
+
         # self.selection_menu.show()
 
         self.root_layout.insertWidget(0, self.dashboard)
@@ -116,14 +119,10 @@ class MainWindow(QMainWindow):
         self.app_controller.init_connections()
 
         self.manga_manager.cover_downloaded.connect(
-            lambda manga_id, cover: self.dashboard.get_card(manga_id).set_cover(
-                cover
-            )
+            lambda manga_id, cover: self.dashboard.get_card(manga_id).set_cover(cover)
         )
         self.manga_manager.chapters_dict_downloaded.connect(
-            lambda manga_id: self.dashboard.get_card(
-                manga_id
-            ).set_chapter_nums()
+            lambda manga_id: self.dashboard.get_card(manga_id).set_chapter_nums()
         )
 
         self.app_controller.manga_created.connect(
@@ -131,30 +130,37 @@ class MainWindow(QMainWindow):
         )
 
         self.app_controller.manga_changed.connect(self.update_current_mc)
-        self.app_controller.manga_changed.connect(self.manga_viewer.set_manga)
+        # self.app_controller.manga_changed.connect(self.manga_viewer.set_manga)
 
         self.app_controller.chapter_changed.connect(self.update_current_mc)
-        self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
+        # self.app_controller.chapter_changed.connect(self.manga_viewer.set_chapter)
 
         # Setting chapter
-        self.manga_viewer.close_button.clicked.connect(
-            lambda _: self.root_layout.setCurrentIndex(0)
-        )
-        self.manga_viewer.chapter_selection.activated.connect(
-            lambda x: self.app_controller.set_chapter(x + 1)
-        )
-        self.manga_viewer.prev_button.clicked.connect(self.app_controller.prev_chapter)
-        self.manga_viewer.next_button.clicked.connect(self.app_controller.next_chapter)
-
+        # self.manga_viewer.close_button.clicked.connect(
+        #     lambda _: self.root_layout.setCurrentIndex(0)
+        # )
+        # self.manga_viewer.chapter_selection.activated.connect(
+        #     lambda x: self.app_controller.set_chapter(x + 1)
+        # )
+        # self.manga_viewer.prev_button.clicked.connect(self.app_controller.prev_chapter)
+        # self.manga_viewer.next_button.clicked.connect(self.app_controller.next_chapter)
 
         # Chapters loading
-        self.app_controller.manga_signals.chapter_started_loading.connect(self.manga_viewer.clear)
-        self.app_controller.manga_signals.chapter_started_loading.connect(lambda: self.root_layout.setCurrentIndex(1))
-        
+        self.app_controller.manga_signals.chapter_started_loading.connect(
+            self.manga_viewer.clear
+        )
+        self.app_controller.manga_signals.chapter_started_loading.connect(
+            lambda: self.root_layout.setCurrentIndex(1)
+        )
+
         # manga
-        self.app_controller.manga_signals.image_meta_loaded.connect(lambda i, meta: self.manga_viewer.add_placeholder(i, meta.width, meta.height))
-        self.app_controller.manga_signals.image_loaded.connect(self.manga_viewer.replace_placeholder)
-        
+        self.app_controller.manga_signals.image_meta_loaded.connect(
+            lambda i, meta: self.manga_viewer.on_metadata_downloaded(i, meta)
+        )
+        self.app_controller.manga_signals.image_loaded.connect(
+            self.manga_viewer.on_image_downloaded
+        )
+
         self.add_manga_window.find_button.clicked.connect(
             lambda: self.app_controller.find_manga_sites(
                 name=self.add_manga_window.name_input.text(),
@@ -164,15 +170,15 @@ class MainWindow(QMainWindow):
         self.app_controller.manga_signals.sites_checked.connect(
             lambda id_, sites: self.add_manga_window.sites_list.addItems(sites)
         )
-        
+
         self.app_controller.manga_signals.sites_checked.connect(
             lambda: self.add_manga_window.find_button.setDisabled(False)
         )
-        
+
         self.add_manga_window.add_manga_button.clicked.connect(
             lambda: self.app_controller.create_manga(
                 name=self.add_manga_window.name_input.text(),
-                site=self.add_manga_window.sites_list.currentText()
+                site=self.add_manga_window.sites_list.currentText(),
             )
         )
 
@@ -185,7 +191,7 @@ class MainWindow(QMainWindow):
     def create_new_card(self, media: AbstractMedia) -> MediaCard:
         mc = MediaCard()
         mc.set_media(media)
-        self.dashboard.add_card(mc)
+        self.dashboard.add_card(media.id_, mc)
         mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
         return mc
 
@@ -198,7 +204,6 @@ class MainWindow(QMainWindow):
 
     def add_manga(self):
         self.add_manga_window.show()
-
 
     def check_mouse_position(self):
         cursor_pos = QCursor.pos()

@@ -12,11 +12,6 @@ class NovelBlockData(QTextBlockUserData):
         self.paragraph_id = paragraph_id
         self.paragraph = novel_paragraph
         self.tags = tags
-        print(f"NovelBlockData created for ID {self.paragraph_id}")
-
-    # It's good practice to implement __del__ if you need to see when it's cleaned up
-    def __del__(self):
-        print(f"NovelBlockData for ID {self.paragraph_id} destroyed.")
 
 class NovelTextEdit(QTextEdit):
     words_dict = enchant.Dict('en_US')

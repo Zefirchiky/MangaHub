@@ -1,6 +1,8 @@
 import traceback
+import io
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QPixmap, QImage
+from PIL import Image, ImageQt
 
 from models.images import ImageCache
 from utils import ThreadingManager, Worker
@@ -36,6 +38,8 @@ class ImageDecoder(QObject):
     @classmethod
     def _decode_from_bytes_thread(cls, name: str, image: bytes):
         try:
-            cls.signals.image_decoded.emit(name, QPixmap.fromImage(QImage.fromData(image)))
+            result = QPixmap.fromImage(ImageQt.ImageQt(Image.open(io.BytesIO(image))))
+            cls.signals.image_decoded.emit(name, result)
+            return result
         except Exception as e:
-            cls.signals.decoding_failed.emit(name, (type(e), str(e), traceback.format_exc()))
+            cls.signals.decoding_error.emit(name, (type(e), str(e), traceback.format_exc()))

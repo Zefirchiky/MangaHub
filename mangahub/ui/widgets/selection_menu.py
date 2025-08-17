@@ -1,12 +1,7 @@
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, QSize, Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
-    QComboBox,
     QFrame,
-    QGraphicsOpacityEffect,
-    QHBoxLayout,
     QPushButton,
-    QWidget,
-    QStyle,
     QSizePolicy,
 )
 
@@ -71,35 +66,48 @@ class SelectionMenu(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.Panel)
+        
+        # FIXED: Remove Fixed size policy, use Preferred instead
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
         self.setMinimumWidth(400)
         self.setMaximumWidth(500)
 
         self.add_element_button = AddElement()
         self.add_element_button.clicked.connect(
-            lambda: self.add_element(SelectionElement())
+            lambda: self.add_element(SelectionElement(text=f"Item {len(self.selection_elements) + 1}"))
         )
 
-        self.root_layout = FlowLayout(margin=5, spacing=3)
+        # Assuming FlowLayout is available
+        self.root_layout = FlowLayout(margin=5, h_spacing=3)
         self.root_layout.addWidget(self.add_element_button)
         self.setLayout(self.root_layout)
 
         self.selection_elements: list[SelectionElement] = []
 
-        self.adjustSize()
-
     def add_element(self, element: SelectionElement):
         element.clicked.connect(
-            lambda: self._element_clicked(self.root_layout.count() - 2)
+            lambda checked=False, idx=len(self.selection_elements): self._element_clicked(idx)
         )
         self.selection_elements.append(element)
         self.root_layout.addWidget(element)
-        self.adjustSize()
-
+        
+        # Optional: Force geometry update (usually not needed with Preferred policy)
+        self.updateGeometry()
+        
     def _element_clicked(self, i):
-        el = self.selection_elements.pop(i)
-        self.root_layout.takeAt(i+1)
-        el.deleteLater()
-        print(self.width())
-        self.adjustSize()
-        print(self.width())
+        if i < len(self.selection_elements):
+            el = self.selection_elements.pop(i)
+            # Find the actual widget index in the layout (accounting for the add button)
+            widget_index = i + 1  # +1 because add_element_button is at index 0
+            self.root_layout.takeAt(widget_index)
+            el.deleteLater()
+            
+            # Update the click handlers for remaining elements
+            for j, element in enumerate(self.selection_elements):
+                element.clicked.disconnect()
+                element.clicked.connect(
+                    lambda checked=False, idx=j: self._element_clicked(idx)
+                )
+            
+            self.updateGeometry()

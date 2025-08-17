@@ -13,7 +13,7 @@ from resources.enums import SU, StorageSize
 
 
 class Config(Config_):
-    version = Setting[str]("0.1.0", "Version", level=Level.USER | Level.READ_ONLY)
+    version = Setting[str]("0.0.1-alpha", "Version", level=Level.USER | Level.READ_ONLY)
     dev_mode = Setting[bool](True, "Dev Mode", level=Level.USER)
     debug_mode = Setting[bool](True, "Debug Mode", level=Level.USER_DEV)
 
@@ -67,35 +67,27 @@ class Config(Config_):
                 level=Level.DEVELOPER,
                 type_=SettingType.PERFORMANCE,
             )
+
+        class MangaViewer(Config_):
+            debug_gap = Setting[int](5, unit='px')
             
     class Performance(Config_):
         class MangaViewer(Config_):
-            image_loading_intervals = Setting[int](
-                100, "Load Images in UI with Intervals", "ms"
-            )
-            placeholder_loading_intervals = Setting[int](
-                10, "Load Placeholders in UI with Intervals", "ms"
-            )
-
-            set_size_with_every_placeholder = Setting[bool](
-                True,
-                "Set MangaViewer's Scene Size with Every Placeholder Added",
-                level=Level.USER | Level.ADVANCED,
-                type_=SettingType.PERFORMANCE | SettingType.COSMETIC,
-            )
             cull_height_multiplier = Setting[float](
                 2.0,
                 "Cull Viewport Height Multiplier",
                 level=Level.USER | Level.ADVANCED,
                 type_=SettingType.PERFORMANCE | SettingType.COSMETIC,
             )
-            cull_scene_cooldown = Setting[int](
-                250,
-                "Scene Culling Minimum Cooldown",
-                "ms",
-                level=Level.USER | Level.ADVANCED,
-                type_=SettingType.PERFORMANCE,
-            )
+            default_strip_height = Setting[int](256)
+            
+            min_strip_height = Setting[int](128)
+            max_strip_height = Setting[int](2048)
+            detection_confidence_threshold = Setting[float](.8)
+            strip_mode = Setting[str]('adaptive')
+            
+            gutter_threshold = Setting[float](.8)
+            min_gutter_height = Setting[int](10)
             
 
     class Caching(Config_):

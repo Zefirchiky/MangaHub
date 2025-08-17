@@ -12,7 +12,7 @@ class Dashboard(SmoothScrollArea):
         self.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         self.top_layout = QHBoxLayout()
-        self.main_layout = FlowLayout(spacing=10)
+        self.main_layout = FlowLayout(h_spacing=10)
         
         self.root_layout = QVBoxLayout()
         self.root_layout.addLayout(self.top_layout)
@@ -34,9 +34,9 @@ class Dashboard(SmoothScrollArea):
         else:
             raise ValueError(f"Card {name} not found")
 
-    def add_card(self, mc: MediaCard):
+    def add_card(self, name: str, mc: MediaCard):
         self.main_layout.addWidget(mc)
-        self.mc_repo[mc.name] = mc
+        self.mc_repo[name] = mc
         return self
 
     def delete_card(self, mc: MediaCard):

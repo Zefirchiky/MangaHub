@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 class MangaSignals(QObject):
     chapter_started_loading = Signal(str, MangaChapter) # manga.id_
     image_meta_loaded = Signal(int, ImageMetadata)      # i, metadata
-    image_loaded = Signal(int, str)                     # i, name
+    image_loaded = Signal(int, ImageMetadata)                     # i, name
     sites_checked = Signal(str, list)
 
 class AppController(QObject):

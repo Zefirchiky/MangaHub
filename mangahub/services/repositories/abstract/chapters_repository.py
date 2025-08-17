@@ -16,5 +16,5 @@ class ChaptersRepository[CP: AbstractChapter](TagModelsJsonParser[float, CP]):
             if (repo := chapter.get_data_repo()) is not None:
                 repo.save()
             else:
-                logger.warning(f'{chapter} does not have a repo (from chapter.get_data_repo()) when trying to save')
+                logger.warning(f'ChapterRepository: {chapter} does not have a repo (from chapter.get_data_repo()) when trying to save')
         super().save()

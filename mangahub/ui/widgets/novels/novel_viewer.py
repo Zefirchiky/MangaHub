@@ -2,7 +2,7 @@ from models.novels import Novel
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTextBrowser
 
-from .smooth_scroll_area import SmoothScrollArea
+from ..scroll_areas.smooth_scroll_area import SmoothScrollArea
 from config import Config
 
 

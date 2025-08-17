@@ -20,7 +20,7 @@ class MangaManager(QObject):
     cover_downloaded = Signal(str, bytes)
     chapters_dict_downloaded = Signal(str)
     image_meta_loaded = Signal(int, ImageMetadata)  # image num, metadata
-    image_loaded = Signal(int, str) # image num, name
+    image_loaded = Signal(int, ImageMetadata) # image num, name
     
     def __init__(self, app: App):
         super().__init__()
@@ -189,8 +189,8 @@ class MangaManager(QObject):
         self.image_meta_loaded.emit(image_num, metadata)
         
     @Slot(str, float, int, ImageMetadata)
-    def _image_downloaded(self, manga_id: str, chapter_num: float, image_num: int, name: str): # manga id, chapter num, image num, name
-        self.image_loaded.emit(image_num, name)
+    def _image_downloaded(self, manga_id: str, chapter_num: float, image_num: int, meta: ImageMetadata): # manga id, chapter num, image num, name
+        self.image_loaded.emit(image_num, meta)
 
     
     def save(self):

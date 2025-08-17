@@ -1,7 +1,5 @@
 import ctypes
-import asyncio
 import sys
-import os
 
 from config import CM
 from controllers import AppController, MangaManager, NovelsManager, SitesManager
@@ -12,10 +10,12 @@ from models.novels import NovelFormatter
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 import PySide6.QtCore
+
 from services.downloaders import DownloadManager
 from services.handlers import JsonHandler
 from services.repositories.manga import MangaRepository
 from services.repositories.novels import NovelsRepository
+from models.images import ImageCache
 from config import Config
 from utils import MM
 
@@ -48,6 +48,7 @@ class App:
 
         self.sites_manager = SitesManager()
         
+        self.images_cache = ImageCache(Config.Dirs.IMAGES_CACHE, Config.Caching.Image.max_ram(), Config.Caching.Image.max_disc())
         self.download_manager = DownloadManager(self)
 
         self.manga_repository = MangaRepository(Config.Dirs.MANGA_JSON)

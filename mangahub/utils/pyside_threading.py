@@ -50,7 +50,6 @@ class ThreadingManager(QObject):
             name, fn, *args, **kwargs
         )
         worker.setAutoDelete(True)
-        worker.signals.finished.connect(lambda: print(cls.workers))
         cls.thread_pool.start(worker)
         return worker
 
