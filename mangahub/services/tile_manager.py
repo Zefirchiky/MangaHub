@@ -6,7 +6,7 @@ from PIL import Image
 from scipy import ndimage
 from loguru import logger
 
-from models.images import (
+from domain.models.images import (
     StripInfo,
     StripData,
     PanelDetectionResult,

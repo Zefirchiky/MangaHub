@@ -5,7 +5,7 @@ from config import Config
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from models.manga import MangaState
+    from domain.models.manga import MangaState
 
 
 class StateRepository(ModelJsonParser['MangaState']):

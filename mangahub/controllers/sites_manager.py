@@ -1,15 +1,13 @@
 from __future__ import annotations
 from enum import Enum, auto
 from PySide6.QtCore import QObject, Signal
-import httpx
-import asyncio
 from loguru import logger
 
 from models import Url
-from models.abstract import AbstractMedia
-from models.manga import Manga, MangaChapter
-from models.sites import Site
-from models.sites.parsing_methods import MangaParsing, NameParsing, CoverParsing, ChaptersListParsing, MangaChapterParsing, ImagesParsing
+from domain.models.abstract import AbstractMedia
+from domain.models.manga import Manga, MangaChapter
+from domain.models.sites import Site
+from domain.models.sites.parsing_methods import MangaParsing, NameParsing, CoverParsing, ChaptersListParsing, MangaChapterParsing, ImagesParsing
 from services.repositories import SitesRepository
 from services.downloaders import SitesDownloader
 from services.parsers import UrlParser
@@ -22,7 +20,7 @@ class DownloadTypes(Enum):
 
 class MangaSignals(QObject):    # manga id, content
     name = Signal(str, str)
-    cover_url_downloaded = Signal(str, str)
+    cover_url = Signal(str, str)
     chapters_list = Signal(str, list)
     sites_checked = Signal(str, list)
     
@@ -124,7 +122,7 @@ class SitesManager:
                         case DownloadTypes.MANGA_CHAPTER:
                             self.manga_chapter_signals.name.emit(manga.id_, chapter_num, result[0])
                 elif isinstance(parsing, CoverParsing):
-                    self.manga_signals.cover_url_downloaded.emit(manga.id_, result[0])
+                    self.manga_signals.cover_url.emit(manga.id_, result[0])
                 elif isinstance(parsing, ChaptersListParsing):
                     self.manga_signals.chapters_list.emit(manga.id_, result[0])
                 elif isinstance(parsing, ImagesParsing):
@@ -144,7 +142,7 @@ class SitesManager:
                         case DownloadTypes.MANGA_CHAPTER:
                             self.manga_chapter_signals.name.emit(manga.id_, chapter_num, result[0])
                 elif isinstance(parsing, CoverParsing):
-                    self.manga_signals.cover_url_downloaded.emit(manga.id_, result[0])
+                    self.manga_signals.cover_url.emit(manga.id_, result[0])
                 elif isinstance(parsing, ChaptersListParsing):
                     self.manga_signals.chapters_list.emit(manga.id_, result[0])
                 elif isinstance(parsing, ImagesParsing):

@@ -11,7 +11,7 @@ from ..tags.tag_model import TagModel
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .abstract_chapter import AbstractChapter
-    from services.repositories.abstract import ChaptersRepository
+    from infrastructure.repositories.abstract import ChaptersRepository
 
 
 class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
@@ -27,7 +27,7 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
     year: int = 0
     last_updated: str = Field(default_factory=lambda: str(datetime.now))
 
-    sites: list[str] = ["MangaDex"]
+    sites: list[str] = []
 
     current_chapter: float = -1
     last_read_chapter: float = -1

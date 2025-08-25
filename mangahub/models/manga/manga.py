@@ -7,3 +7,4 @@ from .manga_chapter import MangaChapter
 class Manga(AbstractMedia[MangaChapter]):
     id_dex: str = ""
     artist: str = ""
+    sites: list[str] = ['MangaDex']

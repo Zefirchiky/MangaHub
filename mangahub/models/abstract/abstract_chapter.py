@@ -9,7 +9,7 @@ from ..tags.tag_model import TagModel
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from services.repositories.abstract import ChapterDataRepository
+    from infrastructure.repositories.abstract import ChapterDataRepository
 
 
 class ChapterNotFoundError(Exception):
@@ -21,7 +21,6 @@ class AbstractChapterSignals(QObject):
 
 
 class AbstractChapter(ABC, TagModel):
-    
     num: float
     folder: Path
     name: str = ""
@@ -29,7 +28,6 @@ class AbstractChapter(ABC, TagModel):
     translator: str = ""
     language: str = "en"
     
-
     is_read: bool = False
 
     _signals: AbstractChapterSignals = PrivateAttr(

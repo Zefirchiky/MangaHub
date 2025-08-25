@@ -3,19 +3,19 @@ import sys
 
 from config import CM
 from controllers import AppController, MangaManager, NovelsManager, SitesManager
-from ui import MainWindow
-from ui.widgets import IconRepo
+from presentation.gui import MainWindow
+from presentation.gui.widgets import IconRepo
 from loguru import logger
-from models.novels import NovelFormatter
+from domain.models.novels import NovelFormatter
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 import PySide6.QtCore
 
 from services.downloaders import DownloadManager
 from services.handlers import JsonHandler
-from services.repositories.manga import MangaRepository
-from services.repositories.novels import NovelsRepository
-from models.images import ImageCache
+from infrastructure.repositories.manga import MangaRepository
+from infrastructure.repositories.novels import NovelsRepository
+from domain.models.images import ImageCache
 from config import Config
 from utils import MM
 
@@ -59,7 +59,7 @@ class App:
 
         self.app_controller = AppController(self)
 
-        # from models.sites.parsing_methods import (
+        # from domain.models.sites.parsing_methods import (
         #     MangaParsing,
         #     NameParsing,
         #     CoverParsing,

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from ..parsers import TagModelsJsonParser
-from models.sites import Site
+from domain.models.sites import Site
 
 
 class SitesRepository(TagModelsJsonParser[str, Site]):
