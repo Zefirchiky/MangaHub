@@ -8,7 +8,7 @@ from ..scroll_areas import LineLabel
 from ..separators import Separator
 from ..svg_icon import IconRepo, SVGIcon
 
-from domain.models.abstract import AbstractChapter
+from core.models.abstract import AbstractChapter
 
 
 class ChapterButton(QPushButton):

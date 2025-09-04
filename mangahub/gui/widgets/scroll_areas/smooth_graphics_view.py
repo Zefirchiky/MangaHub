@@ -21,7 +21,7 @@ class SmoothGraphicsView(QGraphicsView, SmoothScrollMixin):
         self._scene = QGraphicsScene(self)
         self.setScene(self._scene)
         self.bg_image = QPixmap(
-            str(Config.Dirs.BACKGROUNDS / "manga_viewer.jpg").replace("\\", "/")
+            str(Config.Dirs.RESOURCES.BACKGROUNDS / "manga_viewer.jpg").replace("\\", "/")
         )
         self.setBackgroundBrush(self.bg_image)
 

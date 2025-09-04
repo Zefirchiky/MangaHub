@@ -137,8 +137,8 @@ class StorageSize:
     def to_dict(self) -> dict[str, int | float]:
         return {"value": self.bytes_value}
 
-    def from_dict(self, dict_) -> None:
-        self.bytes_value = dict_["value"]
+    def from_dict(self, data) -> None:
+        return StorageSize(data["value"])
 
 
 class SU:

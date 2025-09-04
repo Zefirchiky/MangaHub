@@ -7,7 +7,7 @@ from ..buttons import ChapterButton
 from ..image import ImageWidget
 from ..scroll_areas import LineLabel
 
-from domain.models.abstract import AbstractMedia
+from core.models.abstract import AbstractMedia
 from config import CM
 
 

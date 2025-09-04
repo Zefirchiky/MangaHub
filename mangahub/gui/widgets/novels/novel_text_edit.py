@@ -3,7 +3,7 @@ from PySide6.QtGui import QTextCursor, QKeyEvent, QTextCharFormat, QColor, QText
 from PySide6.QtWidgets import QTextEdit, QCompleter, QToolTip
 import enchant
 
-from domain.models.novels import NovelChapter, NovelParagraph
+from core.models.novels import NovelChapter, NovelParagraph
 
 
 class NovelBlockData(QTextBlockUserData):

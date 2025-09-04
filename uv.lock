@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.13"
 
 [[package]]
@@ -185,8 +185,13 @@ wheels = [
 
 [[package]]
 name = "easy-config-hub"
-version = "0.2.13"
+version = "0.4.5"
 source = { directory = "../packages/easy-config-hub" }
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = []
 
 [[package]]
 name = "frozenlist"
@@ -392,7 +397,7 @@ requires-dist = [
     { name = "httpx", extras = ["http2"], specifier = ">=0.28.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "lxml", specifier = ">=5.3.1" },
-    { name = "nuitka", specifier = ">=2.6.7" },
+    { name = "nuitka", git = "https://github.com/Nuitka/Nuitka.git" },
     { name = "numpy", specifier = ">=2.3.2" },
     { name = "objsize", specifier = ">=0.7.1" },
     { name = "orjson", specifier = ">=3.10.18" },
@@ -459,13 +464,12 @@ wheels = [
 
 [[package]]
 name = "nuitka"
-version = "2.6.7"
-source = { registry = "https://pypi.org/simple" }
+version = "2.8rc11"
+source = { git = "https://github.com/Nuitka/Nuitka.git#affd57f281882d2f4e292e5d7534c3bc43f421ea" }
 dependencies = [
     { name = "ordered-set" },
     { name = "zstandard" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ed/d9/4c60d2ca0df5015917ca86266ab664af5787039a153e4c1824ebe2e9d194/Nuitka-2.6.7.tar.gz", hash = "sha256:c9d2db630560cf89dfbfd294dd860dd0540e03b74a0c21711ce64305727523bf", size = 3868800, upload-time = "2025-02-23T12:01:15.13Z" }
 
 [[package]]
 name = "numpy"

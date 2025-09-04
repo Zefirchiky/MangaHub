@@ -5,10 +5,10 @@ import shutil
 from PySide6.QtCore import QObject, Signal, Slot
 from loguru import logger
 
-from domain.models.images import ImageCache, ImageMetadata
-from domain.models.manga import Manga, MangaChapter, ChapterImage
-from domain.models.sites import Site
-from infrastructure.repositories.manga import MangaChaptersRepository, ImagesDataRepository
+from core.models.images import ImageCache, ImageMetadata
+from core.models.manga import Manga, MangaChapter, ChapterImage
+from core.models.sites_ import SiteModel
+from core.repositories.manga import MangaChaptersRepository, ImagesDataRepository
 from config import Config
 
 from typing import TYPE_CHECKING
@@ -31,7 +31,7 @@ class MangaManager(QObject):
         self.images_cache = self.download_manager.images_cache
         
         self.sites_manager.manga_signals.chapters_list.connect(self._chapters_list_downloaded)
-        self.sites_manager.manga_signals.cover_url.connect(self._cover_url_downloaded)
+        self.sites_manager.manga_signals.cover_url_downloaded.connect(self._cover_url_downloaded)
         self.download_manager.cover_downloaded.connect(lambda manga_id, _: logger.success(f'Cover for {manga_id} was downloaded successfully'))
         self.download_manager.cover_downloaded.connect(self._cover_downloaded)
         self.download_manager.manga_details_downloaded.connect(lambda manga_id: self._downloading_manga.pop(manga_id))
@@ -80,13 +80,13 @@ class MangaManager(QObject):
         manga = Manga(
             name = name,
             id_  = id_,
-            folder = Config.Dirs.MANGA / f'{id_}',
+            folder = Config.Dirs.DATA.MANGA / f'{id_}',
             **kwargs,
         ).set_changed()
         manga._chapters_repo = MangaChaptersRepository(manga.folder / 'chapters.json')
         return manga
         
-    def create(self, name: str, site: Site | str, overwrite: bool=False):
+    def create(self, name: str, site: SiteModel | str, overwrite: bool=False):
         id_ = self.get_id_from_name(name)
         if overwrite and self.repo.get(id_):
             manga = self.repo.pop(id_)

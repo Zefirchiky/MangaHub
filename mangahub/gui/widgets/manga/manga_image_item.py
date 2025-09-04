@@ -1,19 +1,19 @@
 import math
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QGraphicsRectItem
+from PySide6.QtWidgets import QGraphicsPixmapItem
 from loguru import logger
 
-from presentation.gui import ImageDecoder
-from domain.models.images import ImageMetadata, ImageCache, StripInfo, StripData, StripCache
-from services import ContentAwareTileManager
+from gui import ImageDecoder
+from core.models.images import ImageMetadata, ImageCache, StripInfo, StripData, StripCache
+from mangahub.application.services import ContentAwareTileManager
 from .manga_strip_item import MangaStripItem
 
 from resources.enums import StripQuality
 from config import Config
 
 
-class MangaImageItem(QGraphicsRectItem):
+class MangaImageItem(QGraphicsPixmapItem):
     """Custom graphics item for manga images with strip-based rendering"""
 
     def __init__(
@@ -39,6 +39,7 @@ class MangaImageItem(QGraphicsRectItem):
         if metadata.width > 0 and metadata.height > 0:
             placeholder = QPixmap(metadata.width, metadata.height)
             placeholder.fill(Qt.GlobalColor.darkGray)
+        ImageDecoder.decode_from_cache(image_cache, metadata.name).signals.success.connect(lambda name, img: self.setPixmap(img))
 
         # Generate initial strips
         # self.strips = tile_manager.generate_strips(metadata)

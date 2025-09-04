@@ -2,12 +2,12 @@ import asyncio
 from typing import TYPE_CHECKING
 
 import aiohttp
-from domain.models.novels import Novel
-from domain.models.sites import Site
+from core.models.novels import Novel
+from core.models.sites_ import SiteModel
 from services.parsers import UrlParser
 
 if TYPE_CHECKING:
-    from controllers import SitesManager
+    from application.controllers import SitesManager
 
 
 class NovelsSiteScraper:
@@ -16,7 +16,7 @@ class NovelsSiteScraper:
     def __init__(self, sites_manager: "SitesManager"):
         self.manager = sites_manager
 
-    async def get_title_page(self, site: Site, novel: Novel):
+    async def get_title_page(self, site: SiteModel, novel: Novel):
         url = UrlParser.get_title_page_url(site, novel)
         async with aiohttp.ClientSession() as session:
             async with session.get(

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import importlib
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal, QRectF, QPointF
 from PySide6.QtGui import QPixmap, QFont, QWheelEvent
@@ -9,11 +10,11 @@ from PySide6.QtWidgets import (
 
 from loguru import logger
 
-from presentation.gui.widgets import IconRepo
-from presentation.gui.widgets.buttons import IconButton
-from presentation.gui.widgets.scroll_areas import SmoothScrollMixin
-from services import ContentAwareTileManager
-from domain.models.images import ImageMetadata, ImageCache, StripCache
+from gui.widgets import IconRepo
+from gui.widgets.buttons import IconButton
+from gui.widgets.scroll_areas import SmoothScrollMixin
+from mangahub.application.services import ContentAwareTileManager
+from core.models.images import ImageMetadata, ImageCache, StripCache
 from .manga_image_item import MangaImageItem
 from .debug import DebugCapableMixin
 
@@ -77,7 +78,6 @@ class MangaViewer(QGraphicsView, SmoothScrollMixin, DebugCapableMixin):
         
         # Update positions of items that come after this one
         self._recalculate_positions_after(index)
-        print(index, y_position, self.image_positions)
 
         self._update_scene_rect()
         return manga_item
@@ -132,6 +132,7 @@ class MangaViewer(QGraphicsView, SmoothScrollMixin, DebugCapableMixin):
             self._handle_zoom(event)
         else:
             SmoothScrollMixin.wheelEvent(self, event)
+        importlib.reload(MangaImageItem)
         self._update_visible_strips()
 
     def _handle_zoom(self, event: QWheelEvent):

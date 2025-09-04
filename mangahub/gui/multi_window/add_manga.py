@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from presentation.gui.widgets import IconRepo
+from gui.widgets import IconRepo
 from models import Url
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (
@@ -16,10 +16,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from services.parsers import UrlParser
-from presentation.gui.widgets.buttons import IconButton, IconTypes
+from gui.widgets.buttons import IconButton, IconTypes
 
 if TYPE_CHECKING:
-    from controllers import AppController
+    from application.controllers import AppController
 
 
 class AddMangaWindow(QMainWindow):

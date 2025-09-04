@@ -4,7 +4,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QPixmap, QImage
 from PIL import Image, ImageQt
 
-from domain.models.images import ImageCache
+from core.models.images import ImageCache
 from utils import ThreadingManager, Worker
 
 

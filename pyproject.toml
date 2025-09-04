@@ -38,3 +38,4 @@ strict = false
 
 [tool.uv.sources]
 easy-config-hub = { path = "../packages/easy-config-hub" }
+nuitka = { git = "https://github.com/Nuitka/Nuitka.git" }

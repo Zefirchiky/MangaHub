@@ -1,4 +1,4 @@
-from domain.models.novels import Novel
+from core.models.novels import Novel
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTextBrowser
 
@@ -13,7 +13,7 @@ class NovelViewer(SmoothScrollArea):
         self.viewport().setObjectName("NovelViewer")
         self.viewport().setStyleSheet(f"""
                             #NovelViewer {{
-                                background: url({str(Config.Dirs.BACKGROUNDS).replace("\\", "/")}/novel_viewer.jpg) repeat;
+                                background: url({str(Config.Dirs.RESOURCES.BACKGROUNDS).replace("\\", "/")}/novel_viewer.jpg) repeat;
                             }}
                         """)
 

@@ -5,17 +5,16 @@ from PySide6.QtGui import QCursor, QIcon
 from PySide6.QtWidgets import QMainWindow, QStackedLayout, QWidget, QPushButton
 from loguru import logger
 
-from presentation.gui.multi_window import AddMangaWindow, SettingsWindow
-from presentation.gui.widgets import IconRepo, ImageWidget, SelectionMenu
-from presentation.gui.widgets.novels import NovelWriter
-from presentation.gui.widgets.dashboard import Dashboard, MediaCard
-from presentation.gui.widgets.manga import MangaViewer
-from presentation.gui.widgets.novels import NovelViewer
-from presentation.gui.widgets.slide_menus import SideMenu
+from gui.multi_window import AddMangaWindow, SettingsWindow
+from gui.widgets import IconRepo, ImageWidget, SelectionMenu
+from gui.widgets.novels import NovelWriter
+from gui.widgets.dashboard import Dashboard, MediaCard
+from gui.widgets.manga import MangaViewer
+from gui.widgets.slide_menus import SideMenu
 
-from domain.models.abstract import AbstractMedia
-from domain.models.novels import NovelChapter
-from infrastructure.repositories.novels import ParagraphsRepository
+from core.models.abstract import AbstractMedia
+from core.models.novels import NovelChapter
+from core.repositories.novels import ParagraphsRepository
 
 from app_status import AppStatus
 from utils import MM  # TODO
@@ -34,11 +33,11 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("MangaHub")
         self.setMinimumSize(1200, 800)
-        self.setWindowIcon(QIcon(str(Config.Dirs.RESOURCES / "app_icon.ico")))
+        self.setWindowIcon(QIcon(str(Config.Dirs.RESOURCES.ICONS / "app_icon.ico")))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         ImageWidget.set_default_placeholder(width=200, height=300)
-        ImageWidget.set_default_error_image(Config.Dirs.IMAGES / "placeholder.jpg")
+        ImageWidget.set_default_error_image(Config.Dirs.RESOURCES.IMAGES / "placeholder.jpg")
 
         IconRepo.init_default_icons()
 
@@ -81,16 +80,16 @@ class MainWindow(QMainWindow):
         self.sites_manager = self.app.sites_manager
         self.app_controller = self.app.app_controller
 
-        # self.selection_menu = SelectionMenu(self)
+        self.selection_menu = SelectionMenu(self)
         # self.selection_menu.move(1000, 500)
         self.settings_window = SettingsWindow()
         self.dashboard = Dashboard()
-        # self.dashboard.root_layout.addWidget(self.selection_menu)
+        self.dashboard.root_layout.addWidget(self.selection_menu)
         self.manga_viewer = MangaViewer(self.app.images_cache, self)
         self.novel_viewer = NovelWriter(self)
         self.novel_viewer.text_edit.load_chapter(
-            NovelChapter(num=0, folder=Config.Dirs.NOVELS / "test.json").set_data_repo(
-                ParagraphsRepository(Config.Dirs.NOVELS / "test2.json")
+            NovelChapter(num=0, folder=Config.Dirs.DATA.NOVELS / "test.json").set_data_repo(
+                ParagraphsRepository(Config.Dirs.DATA.NOVELS / "test2.json")
             )
         )
 

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 
 from .scroll_areas import SmoothScrollArea
 from .svg_icon import SVGIcon, IconRepo
-from presentation.gui.widgets import FlowLayout
+from gui.widgets import FlowLayout
 
 
 class AddElement(QPushButton):

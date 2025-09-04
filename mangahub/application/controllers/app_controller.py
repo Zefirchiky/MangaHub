@@ -4,14 +4,14 @@ from loguru import logger
 from PySide6.QtCore import QObject, Signal, QTimer
 
 from models import Url
-from domain.models.images import ImageMetadata
-from domain.models.sites import Site
-from domain.models.manga import MangaState, MangaChapter
+from core.models.images import ImageMetadata
+from core.models.sites_ import SiteModel
+from core.models.manga import MangaState, MangaChapter
 from services.repositories import StateRepository
 
 from .manga_manager import MangaManager
 from .sites_manager import SitesManager
-from domain.models.manga import Manga
+from core.models.manga import Manga
 from config import Config
 
 from typing import TYPE_CHECKING
