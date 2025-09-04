@@ -3,7 +3,7 @@ import typing
 from pathlib import Path
 from pydantic import BaseModel
 from loguru import logger
-from services.handlers import JsonHandler
+from application.services.handlers import JsonHandler
 
 
 KT = typing.TypeVar('KT')

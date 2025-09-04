@@ -1,5 +1,5 @@
 from abc import ABC
-from services.parsers import TagModelsJsonParser
+from application.services.parsers import TagModelsJsonParser
 
 
 class ChapterDataRepository[KeyType, DataType](ABC, TagModelsJsonParser[KeyType, DataType]):

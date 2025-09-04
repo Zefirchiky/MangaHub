@@ -1,8 +1,8 @@
 from __future__ import annotations
 import importlib
 
-from PySide6.QtCore import QSize, Qt, QTimer, Signal, QRectF, QPointF
-from PySide6.QtGui import QPixmap, QFont, QWheelEvent
+from PySide6.QtCore import Qt, QRectF, QPointF
+from PySide6.QtGui import QWheelEvent
 from PySide6.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
@@ -10,10 +10,10 @@ from PySide6.QtWidgets import (
 
 from loguru import logger
 
-from gui.widgets import IconRepo
-from gui.widgets.buttons import IconButton
+# from gui.widgets import IconRepo
+# from gui.widgets.buttons import IconButton
 from gui.widgets.scroll_areas import SmoothScrollMixin
-from mangahub.application.services import ContentAwareTileManager
+from application.services import ContentAwareTileManager
 from core.models.images import ImageMetadata, ImageCache, StripCache
 from .manga_image_item import MangaImageItem
 from .debug import DebugCapableMixin

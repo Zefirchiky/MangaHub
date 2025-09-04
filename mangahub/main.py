@@ -11,8 +11,8 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 import PySide6.QtCore
 
-from services.downloaders import DownloadManager
-from services.handlers import JsonHandler
+from application.services.downloaders import DownloadManager
+from application.services.handlers import JsonHandler
 from core.repositories.manga import MangaRepository
 from core.repositories.novels import NovelsRepository
 from core.models.images import ImageCache
@@ -122,7 +122,7 @@ class App:
         self.test_code()
 
     def test_code(self):
-        # from services.downloaders import HtmlDownloader
+        # from application.services.downloaders import HtmlDownloader
         # self.jh = JsonHandler('test_json')
         # self.mh = HtmlHandler('test_md')
         # self.d = HtmlDownloader()

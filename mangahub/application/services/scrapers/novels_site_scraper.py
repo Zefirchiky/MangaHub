@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import aiohttp
 from core.models.novels import Novel
 from core.models.sites_ import SiteModel
-from services.parsers import UrlParser
+from application.services.parsers import UrlParser
 
 if TYPE_CHECKING:
     from application.controllers import SitesManager

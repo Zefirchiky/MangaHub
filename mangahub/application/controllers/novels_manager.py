@@ -2,7 +2,7 @@ from __future__ import annotations
 from loguru import logger
 from core.models.novels import Novel, NovelChapter
 from core.repositories.novels import NovelsRepository
-from services.scrapers import NovelsSiteScraper
+from application.services.scrapers import NovelsSiteScraper
 from utils import MM
 
 from typing import TYPE_CHECKING

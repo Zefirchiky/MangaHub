@@ -6,11 +6,10 @@ from loguru import logger
 
 from gui import ImageDecoder
 from core.models.images import ImageMetadata, ImageCache, StripInfo, StripData, StripCache
-from mangahub.application.services import ContentAwareTileManager
+from application.services import ContentAwareTileManager
 from .manga_strip_item import MangaStripItem
 
 from resources.enums import StripQuality
-from config import Config
 
 
 class MangaImageItem(QGraphicsPixmapItem):

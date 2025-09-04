@@ -1,5 +1,5 @@
 from core.models.novels import Novel
-from services.parsers import TagModelsJsonParser
+from application.services.parsers import TagModelsJsonParser
 
 
 class NovelsRepository(TagModelsJsonParser[str, Novel]):

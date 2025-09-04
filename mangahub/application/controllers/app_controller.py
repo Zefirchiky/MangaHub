@@ -3,11 +3,10 @@ from __future__ import annotations
 from loguru import logger
 from PySide6.QtCore import QObject, Signal, QTimer
 
-from models import Url
+from core.models import Url
 from core.models.images import ImageMetadata
-from core.models.sites_ import SiteModel
 from core.models.manga import MangaState, MangaChapter
-from services.repositories import StateRepository
+from core.repositories import StateRepository
 
 from .manga_manager import MangaManager
 from .sites_manager import SitesManager

@@ -5,14 +5,14 @@ import httpx
 import asyncio
 from loguru import logger
 
-from models import Url
+from core.models import Url
 from core.models.abstract import AbstractMedia
 from core.models.manga import Manga, MangaChapter
 from core.models.sites_ import SiteModel
 from core.models.sites_.parsing_methods import MangaParsing, NameParsing, CoverParsing, ChaptersListParsing, MangaChapterParsing, ImagesParsing
-from services.repositories import SitesRepository
-from services.downloaders import SitesDownloader
-from services.parsers import UrlParser
+from core.repositories import SitesRepository
+from application.services.downloaders import SitesDownloader
+from application.services.parsers import UrlParser
 from config import Config
 
 

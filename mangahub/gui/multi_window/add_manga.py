@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from gui.widgets import IconRepo
-from models import Url
+from core.models import Url
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (
     QComboBox,
@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QWidget,
 )
-from services.parsers import UrlParser
+from application.services.parsers import UrlParser
 from gui.widgets.buttons import IconButton, IconTypes
 
 if TYPE_CHECKING:

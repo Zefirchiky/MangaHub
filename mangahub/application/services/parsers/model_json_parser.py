@@ -1,6 +1,6 @@
 import typing
 from pydantic import BaseModel
-from services.handlers import JsonHandler
+from application.services.handlers import JsonHandler
 
 
 MT = typing.TypeVar('MT', bound=BaseModel)

@@ -7,7 +7,7 @@ from loguru import logger
 from core.models.abstract import AbstractMedia
 from core.models.manga import Manga, MangaChapter
 from core.models.images import ImageCache, ImageMetadata
-from models import Url
+from core.models import Url
 from .image_downloader import ImageDownloadManager
 from .html_downloader import HtmlDownloader
 from config import Config

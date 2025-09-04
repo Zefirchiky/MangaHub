@@ -6,27 +6,24 @@ from loguru import logger
 from rich import print
 from rich.console import Console
 import rich.traceback
-import pillow_jxl   # loading pillow plugin
+import pillow_jxl   # loading pillow plugin  # noqa: F401
 
-from easy_config_hub import MainConfigBase, ConfigBase, StdDirConfigBase, DirConfigBase, Setting, Level, SettingType
+from easy_config_hub import MainConfigBase, ConfigBase, StdDirConfigBase, DirConfigBase, Setting, RangeSetting, VersionSetting, Level, SettingType
 from resources.enums import SU, StorageSize
 
 
 class Config_(MainConfigBase):
-    version = Setting[str]("0.0.1-alpha", "Version", level=Level.USER | Level.READ_ONLY)
+    version = VersionSetting(0, 0, 1, "alpha")
     dev_mode = Setting[bool](True, "Dev Mode", level=Level.USER)
     debug_mode = Setting[bool](True, "Debug Mode", level=Level.USER_DEV)
 
-    class Downloading(ConfigBase):
     class Downloading(ConfigBase):
         max_retries = Setting[int](3, "Maximum Download Retries")
         min_wait_time = Setting[int](1, "Minimum Time between Retries")
         
         class Chapter(ConfigBase):
-        class Chapter(ConfigBase):
             time_wait_before_loading = Setting[int](300, "Time to Wait before Attempting to Download Chapter", 'ms')
         
-        class Image(ConfigBase):
         class Image(ConfigBase):
             convert_image = Setting[bool](True, "Convert Image")
             preferable_format = Setting[str]("JXL", "Converted Images Format")
@@ -56,17 +53,12 @@ class Config_(MainConfigBase):
 
     class UI(ConfigBase):
         class Scrolling(ConfigBase):
-    class UI(ConfigBase):
-        class Scrolling(ConfigBase):
             step = Setting[int](
-                150, "Step", "px", setting_type=SettingType.COSMETIC | SettingType.QOL
                 150, "Step", "px", setting_type=SettingType.COSMETIC | SettingType.QOL
             )
             step_duration = Setting[int](
                 200, "Step Duration", "ms", setting_type=SettingType.COSMETIC | SettingType.QOL
-                200, "Step Duration", "ms", setting_type=SettingType.COSMETIC | SettingType.QOL
             )
-            alt_multiplier = Setting[int](8, "Alt Step Multiplier", setting_type=SettingType.QOL)
             alt_multiplier = Setting[int](8, "Alt Step Multiplier", setting_type=SettingType.QOL)
 
             scale_multiplier = Setting[float](
@@ -74,22 +66,17 @@ class Config_(MainConfigBase):
                 "Step Scale Multiplier",
                 level=Level.DEVELOPER,
                 setting_type=SettingType.PERFORMANCE,
-                setting_type=SettingType.PERFORMANCE,
             )
 
         class MangaViewer(ConfigBase):
-        class MangaViewer(ConfigBase):
             debug_gap = Setting[int](5, unit='px')
-            
-    class Performance(ConfigBase):
-        class MangaViewer(ConfigBase):
+
     class Performance(ConfigBase):
         class MangaViewer(ConfigBase):
             cull_height_multiplier = Setting[float](
                 2.0,
                 "Cull Viewport Height Multiplier",
                 level=Level.USER | Level.ADVANCED,
-                setting_type=SettingType.PERFORMANCE | SettingType.COSMETIC,
                 setting_type=SettingType.PERFORMANCE | SettingType.COSMETIC,
             )
             default_strip_height = Setting[int](256)
@@ -105,13 +92,9 @@ class Config_(MainConfigBase):
 
     class Caching(ConfigBase):
         class Image(ConfigBase):
-    class Caching(ConfigBase):
-        class Image(ConfigBase):
             max_ram = Setting[StorageSize](00 * SU.MB, "Max Ram for Images")
             max_disc = Setting[StorageSize](500 * SU.MB, "Max Disc Space for Images")
             
-    class DataProcessing(ConfigBase):
-        class UrlParsing(ConfigBase):
     class DataProcessing(ConfigBase):
         class UrlParsing(ConfigBase):
             replace_symbols = Setting[dict[str, str]]({
@@ -123,12 +106,12 @@ class Config_(MainConfigBase):
         CONFIG_JSON = "config.json"
 
         class CONFIG(DirConfigBase):
-            NOVELS_CONF = "novels"
+            NOVELS = "novels"
 
-        LOG = "logs"
+        LOGS = "logs"
 
         class CACHE(DirConfigBase):
-            IMAGES_CACHE = "images"
+            IMAGES = "images"
 
         class DATA(DirConfigBase):
             class NOVELS(DirConfigBase):

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from loguru import logger
-from services.parsers import TagModelsJsonParser
+from application.services.parsers import TagModelsJsonParser
 from .chapters_repository import ChaptersRepository
 from core.models.abstract import AbstractMedia, AbstractChapter
     
