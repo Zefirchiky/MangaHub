@@ -2,20 +2,20 @@ import ctypes
 import sys
 
 from config import CM
-from controllers import AppController, MangaManager, NovelsManager, SitesManager
-from presentation.gui import MainWindow
-from presentation.gui.widgets import IconRepo
+from application.controllers import AppController, MangaManager, NovelsManager, SitesManager
+from gui import MainWindow
+from gui.widgets import IconRepo
 from loguru import logger
-from domain.models.novels import NovelFormatter
+from core.models.novels import NovelFormatter
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 import PySide6.QtCore
 
 from services.downloaders import DownloadManager
 from services.handlers import JsonHandler
-from infrastructure.repositories.manga import MangaRepository
-from infrastructure.repositories.novels import NovelsRepository
-from domain.models.images import ImageCache
+from core.repositories.manga import MangaRepository
+from core.repositories.novels import NovelsRepository
+from core.models.images import ImageCache
 from config import Config
 from utils import MM
 
@@ -43,23 +43,23 @@ class App:
 
         # Set defaults
         NovelFormatter.global_replaces = JsonHandler(
-            f"{Config.Dirs.NOVELS_CONF}/global_replace.json"
+            Config.Dirs.DATA.NOVELS / "global_replace.json"
         ).load()
 
         self.sites_manager = SitesManager()
         
-        self.images_cache = ImageCache(Config.Dirs.IMAGES_CACHE, Config.Caching.Image.max_ram(), Config.Caching.Image.max_disc())
+        self.images_cache = ImageCache(Config.Dirs.CACHE.IMAGES, Config.Caching.Image.max_ram(), Config.Caching.Image.max_disc())
         self.download_manager = DownloadManager(self)
 
-        self.manga_repository = MangaRepository(Config.Dirs.MANGA_JSON)
+        self.manga_repository = MangaRepository(Config.Dirs.DATA.MANGA_JSON)
         self.manga_manager = MangaManager(self)
 
-        self.novels_repository = NovelsRepository(Config.Dirs.NOVELS_JSON)
+        self.novels_repository = NovelsRepository(Config.Dirs.DATA.MANGA_JSON)
         self.novels_manager = NovelsManager(self)
 
         self.app_controller = AppController(self)
 
-        # from domain.models.sites.parsing_methods import (
+        # from core.models.sites.parsing_methods import (
         #     MangaParsing,
         #     NameParsing,
         #     CoverParsing,

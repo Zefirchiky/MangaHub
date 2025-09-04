@@ -1,8 +1,8 @@
 from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtGui import QPixmap
 from services.downloaders import ImageDownloader
-from domain.models.images import ImageMetadata, ImageCache
-from domain.models.manga import MangaChapter
+from core.models.images import ImageMetadata, ImageCache
+from core.models.manga import MangaChapter
 from utils.placeholder_generator import PlaceholderGenerator
 from config import Config
 

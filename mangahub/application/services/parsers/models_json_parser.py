@@ -1,11 +1,15 @@
 from __future__ import annotations
+import typing
 from pathlib import Path
 from pydantic import BaseModel
 from loguru import logger
 from services.handlers import JsonHandler
 
 
-class ModelsJsonParser[KT, MT: BaseModel]:
+KT = typing.TypeVar('KT')
+MT = typing.TypeVar('MT', bound=BaseModel)
+
+class ModelsJsonParser(typing.Generic[KT, MT]):
     def __init__(self, file: Path | str, model: MT, key_type: KT):
         self.file = file
         self.model = model

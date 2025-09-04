@@ -6,10 +6,10 @@ import asyncio
 from loguru import logger
 
 from models import Url
-from domain.models.abstract import AbstractMedia
-from domain.models.manga import Manga, MangaChapter
-from domain.models.sites import Site
-from domain.models.sites.parsing_methods import MangaParsing, NameParsing, CoverParsing, ChaptersListParsing, MangaChapterParsing, ImagesParsing
+from core.models.abstract import AbstractMedia
+from core.models.manga import Manga, MangaChapter
+from core.models.sites_ import SiteModel
+from core.models.sites_.parsing_methods import MangaParsing, NameParsing, CoverParsing, ChaptersListParsing, MangaChapterParsing, ImagesParsing
 from services.repositories import SitesRepository
 from services.downloaders import SitesDownloader
 from services.parsers import UrlParser
@@ -32,7 +32,7 @@ class MangaChapterSignals(QObject): # manga id, chapter num, content
     
 
 class SitesManager:
-    repo = SitesRepository(Config.Dirs.SITES_JSON)
+    repo = SitesRepository(Config.Dirs.DATA.SITES_JSON)
     downloader = SitesDownloader()
     url_parser = UrlParser()
     
@@ -44,8 +44,8 @@ class SitesManager:
         self.downloader.url_checked.connect(self._url_checked)
         self.downloader.all_urls_checked.connect(lambda: self.manga_signals.sites_checked.emit(self._checking_media, self._checking_media_sites))
         
-        self._manga_downloading: dict[str, tuple[str, Site, Manga, DownloadTypes]] = {}
-        self._manga_chapter_downloading: dict[str, tuple[str, Site, Manga, float, DownloadTypes]] = {}
+        self._manga_downloading: dict[str, tuple[str, SiteModel, Manga, DownloadTypes]] = {}
+        self._manga_chapter_downloading: dict[str, tuple[str, SiteModel, Manga, float, DownloadTypes]] = {}
         
         self._checking_media = None
         self._checking_media_sites = []
@@ -59,8 +59,8 @@ class SitesManager:
         manga_parsing: MangaParsing,
         manga_chapter_parsing: MangaChapterParsing,
         **kwargs,
-    ) -> Site:
-        site = Site(
+    ) -> SiteModel:
+        site = SiteModel(
             name=name,
             url=url,
             manga_parsing=manga_parsing,
@@ -70,10 +70,10 @@ class SitesManager:
         self.repo.add(name, site)
         return site
 
-    def get_all(self) -> dict[str, Site]:
+    def get_all(self) -> dict[str, SiteModel]:
         return self.repo.get_all()
 
-    def get(self, name: str = None, url: str | Url = None) -> Site | None:
+    def get(self, name: str = None, url: str | Url = None) -> SiteModel | None:
         if url:
             url = Url(url)
             for site in self.repo.get_all().values():

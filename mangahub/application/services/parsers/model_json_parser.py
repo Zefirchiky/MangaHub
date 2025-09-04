@@ -1,8 +1,11 @@
+import typing
 from pydantic import BaseModel
 from services.handlers import JsonHandler
 
 
-class ModelJsonParser[MT: BaseModel]:
+MT = typing.TypeVar('MT', bound=BaseModel)
+
+class ModelJsonParser(typing.Generic[MT]):
     def __init__(self, file, model: MT):
         self.model = model
         self.json_parser = JsonHandler(file)

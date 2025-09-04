@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from domain.models.abstract import AbstractMedia
+    from core.models.abstract import AbstractMedia
 
 class UrlParser:
     @staticmethod

@@ -40,7 +40,7 @@ class Worker(QRunnable):
             
             
 class ThreadingManager(QObject):
-    thread_pool = QThreadPool.globalInstance()
+    thread_pool = QThreadPool()
     workers: dict[str, QRunnable] = {}
     
     @classmethod

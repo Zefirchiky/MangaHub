@@ -1,6 +1,6 @@
 from pathlib import Path
 from .models_json_parser import ModelsJsonParser
-from domain.models.tags import TagModel
+from core.models.tags import TagModel
 
 
 class TagModelsJsonParser[KT: (str | int | float), MT: TagModel](ModelsJsonParser[KT, MT]):

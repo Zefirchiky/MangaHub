@@ -4,9 +4,9 @@ from itertools import batched
 from PySide6.QtCore import Signal, QObject
 from loguru import logger
 
-from domain.models.abstract import AbstractMedia
-from domain.models.manga import Manga, MangaChapter
-from domain.models.images import ImageCache, ImageMetadata
+from core.models.abstract import AbstractMedia
+from core.models.manga import Manga, MangaChapter
+from core.models.images import ImageCache, ImageMetadata
 from models import Url
 from .image_downloader import ImageDownloadManager
 from .html_downloader import HtmlDownloader

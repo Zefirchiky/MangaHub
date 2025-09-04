@@ -9,7 +9,7 @@ from PIL import Image
 import tenacity
 from loguru import logger
 
-from domain.models.images import ImageMetadata, ImageCache
+from core.models.images import ImageMetadata, ImageCache
 from utils import ThreadingManager
 from config import Config
 
@@ -212,7 +212,7 @@ class ImageDownloadManager(QObject):
         self.thread_pool.start(worker)
         return worker
 
-# cache = ImageCache(Config.Dirs.CACHE, 0)
+# cache = ImageCache(Config.Dirs.CACHE.IMAGES, 0)
 # d = ImageDownloadManager(cache)
 # dt = time.perf_counter()
 # d.download_images_sep_thread(['https://asurascans.imagemanga.online/aHR0cHM6Ly9nZy5hc3VyYWNvbWljLm5ldC9zdG9yYWdlL21lZGlhLzEyMjc1OC9jb252ZXJzaW9ucy8wMS1vcHRpbWl6ZWQud2VicA/aHR0cHM6Ly9hc3VyYWNvbWljLm5ldC9zZXJpZXMvbmFuby1tYWNoaW5lLWFkZDgxMmY2'], ['test']).download_finished.connect(lambda: print(time.perf_counter() - dt))
