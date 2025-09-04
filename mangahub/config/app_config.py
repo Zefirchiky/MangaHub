@@ -8,23 +8,23 @@ from rich.console import Console
 import rich.traceback
 import pillow_jxl
 
-from easy_config_hub import Config_, DirectoriesConfig_, Setting, Level, SettingType
+from easy_config_hub import MainConfigBase, ConfigBase, StdDirConfigBase, DirConfigBase, Setting, Level, SettingType
 from resources.enums import SU, StorageSize
 
 
-class Config(Config_):
+class Config_(MainConfigBase):
     version = Setting[str]("0.0.1-alpha", "Version", level=Level.USER | Level.READ_ONLY)
     dev_mode = Setting[bool](True, "Dev Mode", level=Level.USER)
     debug_mode = Setting[bool](True, "Debug Mode", level=Level.USER_DEV)
 
-    class Downloading(Config_):
+    class Downloading(ConfigBase):
         max_retries = Setting[int](3, "Maximum Download Retries")
         min_wait_time = Setting[int](1, "Minimum Time between Retries")
         
-        class Chapter(Config_):
+        class Chapter(ConfigBase):
             time_wait_before_loading = Setting[int](300, "Time to Wait before Attempting to Download Chapter", 'ms')
         
-        class Image(Config_):
+        class Image(ConfigBase):
             convert_image = Setting[bool](True, "Convert Image")
             preferable_format = Setting[str]("WEBP", "Converted Images Format")
 
@@ -51,33 +51,33 @@ class Config(Config_):
                 "Formats that PIL supports",
             )
 
-    class UI(Config_):
-        class Scrolling(Config_):
+    class UI(ConfigBase):
+        class Scrolling(ConfigBase):
             step = Setting[int](
-                150, "Step", "px", type_=SettingType.COSMETIC | SettingType.QOL
+                150, "Step", "px", setting_type=SettingType.COSMETIC | SettingType.QOL
             )
             step_duration = Setting[int](
-                200, "Step Duration", "ms", type_=SettingType.COSMETIC | SettingType.QOL
+                200, "Step Duration", "ms", setting_type=SettingType.COSMETIC | SettingType.QOL
             )
-            alt_multiplier = Setting[int](8, "Alt Step Multiplier", type_=SettingType.QOL)
+            alt_multiplier = Setting[int](8, "Alt Step Multiplier", setting_type=SettingType.QOL)
 
             scale_multiplier = Setting[float](
                 1.5,
                 "Step Scale Multiplier",
                 level=Level.DEVELOPER,
-                type_=SettingType.PERFORMANCE,
+                setting_type=SettingType.PERFORMANCE,
             )
 
-        class MangaViewer(Config_):
+        class MangaViewer(ConfigBase):
             debug_gap = Setting[int](5, unit='px')
             
-    class Performance(Config_):
-        class MangaViewer(Config_):
+    class Performance(ConfigBase):
+        class MangaViewer(ConfigBase):
             cull_height_multiplier = Setting[float](
                 2.0,
                 "Cull Viewport Height Multiplier",
                 level=Level.USER | Level.ADVANCED,
-                type_=SettingType.PERFORMANCE | SettingType.COSMETIC,
+                setting_type=SettingType.PERFORMANCE | SettingType.COSMETIC,
             )
             default_strip_height = Setting[int](256)
             
@@ -90,52 +90,45 @@ class Config(Config_):
             min_gutter_height = Setting[int](10)
             
 
-    class Caching(Config_):
-        class Image(Config_):
+    class Caching(ConfigBase):
+        class Image(ConfigBase):
             max_ram = Setting[StorageSize](00 * SU.MB, "Max Ram for Images")
             max_disc = Setting[StorageSize](500 * SU.MB, "Max Disc Space for Images")
             
-    class DataProcessing(Config_):
-        class UrlParsing(Config_):
+    class DataProcessing(ConfigBase):
+        class UrlParsing(ConfigBase):
             replace_symbols = Setting[dict[str, str]]({
                 ' ': '-',
                 "'": '',
             })
 
-    class Dirs(DirectoriesConfig_):
-        STD_DIR = DirectoriesConfig_.STD_DIR
+    class Dirs(StdDirConfigBase):
+        CONFIG_JSON = "config.json"
 
-        """=== CONFIGS ==="""
-        CONF = STD_DIR / "config"
-        CONF_JSON = CONF / "config.json"
-        NOVELS_CONF = CONF / "novels"
+        class CONFIG(DirConfigBase):
+            NOVELS_CONF = "novels"
 
-        """=== LOGS ==="""
-        LOG = STD_DIR / "logs"
+        LOG = "logs"
 
-        """=== CACHE ==="""
-        CACHE = STD_DIR / "cache"
-        IMAGES_CACHE = CACHE / "images"
+        class CACHE(DirConfigBase):
+            IMAGES_CACHE = "images"
 
-        """=== DATA ==="""
-        DATA = STD_DIR / "data"
+        class DATA(DirConfigBase):
+            class NOVELS(DirConfigBase):
+                DRAFT = "draft.md"
+            class MANGA(DirConfigBase): ...
+            class STATE(DirConfigBase): ...
 
-        NOVELS = DATA / "novels"
-        MANGA = DATA / "manga"
-        STATE = DATA / "state"
+            NOVELS_JSON = "novels.json"
+            MANGA_JSON = "manga.json"
+            SITES_JSON = "sites.json"
 
-        NOVELS_JSON = DATA / "novels.json"
-        MANGA_JSON = DATA / "manga.json"
-        SITES_JSON = DATA / "sites.json"
-        
-        NOVEL_DRAFT = NOVELS / "draft.md"
+        class RESOURCES(DirConfigBase):
+            ICONS = "icons"
+            IMAGES = "img"
+            BACKGROUNDS = "background"
 
-        """=== RESOURCES ==="""
-        RESOURCES = STD_DIR / "resources"
-
-        ICONS = RESOURCES / "icons"
-        IMAGES = RESOURCES / "img"
-        BACKGROUNDS = RESOURCES / "background"
+Config = Config_(Config_.Dirs.CONFIG_JSON)
 
 
 builtins.print = print
@@ -184,8 +177,3 @@ def custom_exception_handler(
 sys.excepthook = custom_exception_handler
 
 print(f"MangaHub v{Config.version()}")
-
-try:
-    Config.load(Config.Dirs.CONF_JSON)
-except FileNotFoundError:
-    logger.warning("Config file wasn't found. New one will be created.")
