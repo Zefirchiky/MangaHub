@@ -26,6 +26,8 @@ class MediaCard(QFrame):
 
         self.cover = ImageWidget()
         self.cover.set_placeholder(width=256, height=384)
+        self.cover.set_clickable()
+        self.cover.clicked_l.connect(print)
 
         self.name_label = LineLabel()
         self.name_label.setFixedWidth(256)
@@ -115,3 +117,15 @@ class MediaCard(QFrame):
             logger.warning(f'No last chapter in {self.media}')
             
         self._connect_buttons()
+
+
+class MediaPage(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.setObjectName("MediaPage")
+        self.setStyleSheet(f"""#MediaPage {{
+            background-color: {CM().widget_bg.name()}; 
+            border-radius: 10px;
+            border: 1px solid {CM().widget_border.name()};
+            }}""")

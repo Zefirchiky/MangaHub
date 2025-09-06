@@ -1,10 +1,18 @@
 from pathlib import Path
 from typing import Union
+from enum import Enum, auto
 
 from loguru import logger
 from PySide6.QtCore import Property, Qt, Signal
-from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPixmap
+from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPixmap, QPaintEvent, QShowEvent
 from PySide6.QtWidgets import QSizePolicy, QStackedLayout, QWidget
+
+
+class LoadState(Enum):
+    UNLOADED = auto()
+    LOADING = auto()
+    LOADED = auto()
+    ERROR = auto()
 
 
 class ImageWidget(QWidget):
@@ -12,9 +20,6 @@ class ImageWidget(QWidget):
 
     _default_placeholder: QPixmap | None = None
     _default_error_image: QPixmap | None = None
-
-    _default_placeholder_warned = False
-    _default_error_image_warned = False
 
     border_radius_changed = Signal(int)
     clicked_r = Signal()
@@ -29,39 +34,26 @@ class ImageWidget(QWidget):
     image_set = Signal(QPixmap)
 
     def __init__(
-        self, image_data=None, width=0, height=0, save_original=False, parent=None
+        self, image_source: ImageType=None, width=0, height=0, save_original=None, parent=None
     ):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setCursor(Qt.CursorShape.ArrowCursor)
 
-        if (
-            not ImageWidget._default_placeholder
-            and not self._default_placeholder_warned
-        ):
-            logger.warning(
-                "No default placeholder set, setting standard placeholder..."
-            )
-            self._default_placeholder_warned = True
+        if not ImageWidget._default_placeholder:
             ImageWidget.set_default_placeholder(width=200, height=300)
-        if (
-            not ImageWidget._default_error_image
-            and not self._default_error_image_warned
-        ):
-            logger.warning(
-                "No default error image set, setting standard error image..."
-            )
-            self._default_error_image_warned = True
+        if not ImageWidget._default_error_image:
             ImageWidget.set_default_error_image()
 
         self.placeholder = self._default_placeholder
-        if image_data:
-            self.image = self._load_image(image_data)
-            self.set_image(self.image)
+        if image_source:
+            self.image = self._load_image(image_source)
         else:
             self.image = self.placeholder
 
-        if save_original:
+        if save_original is None and isinstance(image_source, str):
+            self._original_image = image_source
+        elif save_original:
             self._original_image = self.image
         else:
             self._original_image = None
@@ -78,6 +70,8 @@ class ImageWidget(QWidget):
         self.root = QStackedLayout()
         self.root.setStackingMode(QStackedLayout.StackingMode.StackAll)
         self.setLayout(self.root)
+        
+        self.pixmap: QPixmap = None
 
         self._border_radius = 5
         self.is_placeholder = False
@@ -112,8 +106,8 @@ class ImageWidget(QWidget):
         self.fit(self.width(), self.height())
         return self.image
 
-    def set_image(self, image_data: ImageType, replace_default_size=False):
-        self.image = self._load_image(image_data)
+    def set_image(self, image_source: ImageType, replace_default_size=False):
+        self.image = self._load_image(image_source)
         if self.save_original:
             self.original_image = self.image
 
@@ -263,16 +257,16 @@ class ImageWidget(QWidget):
     @classmethod
     def set_default_placeholder(
         cls,
-        placeholder_data: ImageType | None = None,
+        placeholder_source: ImageType | None = None,
         width=0,
         height=0,
         color=(200, 200, 200, 50),
     ):
-        if not placeholder_data:
+        if not placeholder_source:
             placeholder = QPixmap(width, height)
             placeholder.fill(QColor(*color))
         else:
-            placeholder = cls._process_image(placeholder_data)
+            placeholder = cls._process_image(placeholder_source)
             if width and height:
                 placeholder = placeholder.scaled(
                     width,
@@ -335,6 +329,10 @@ class ImageWidget(QWidget):
         else:
             self._border_radius = val
         self.update()
+        
+    def showEvent(self, event: QShowEvent) -> None:
+        # self._load_image()
+        return super().showEvent(event)
 
     def mousePressEvent(self, event):
         if self.clickable_left and event.button() == Qt.MouseButton.LeftButton:
@@ -343,14 +341,20 @@ class ImageWidget(QWidget):
         if self.clickable_right and event.button() == Qt.MouseButton.RightButton:
             self.clicked_r.emit()
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QPaintEvent):
+        if event.rect().isEmpty():
+            return
+
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         rounded_rect = self.rect()
         path = QPainterPath()
         path.addRoundedRect(
-            rounded_rect, self.border_radius, self.border_radius, Qt.AbsoluteSize
+            rounded_rect,
+            self.border_radius,
+            self.border_radius,
+            Qt.SizeMode.AbsoluteSize,
         )
 
         painter.setClipPath(path)
