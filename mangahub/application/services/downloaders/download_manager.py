@@ -4,7 +4,7 @@ from itertools import batched
 from PySide6.QtCore import Signal, QObject
 from loguru import logger
 
-from core.models.abstract import AbstractMedia
+from core.interfaces import AbstractMedia
 from core.models.manga import Manga, MangaChapter
 from core.models.images import ImageCache, ImageMetadata
 from core.models import Url
@@ -73,9 +73,9 @@ class DownloadManager(QObject):
         self.sites_manager.download_manga_chapter_details(manga, chapter)
         
     def download_manga_chapter_images(self, manga_id: str, chapter: MangaChapter):
-        all_urls = [image.metadata.url for image in chapter.get_data_repo().get_all().values()]
+        all_urls = [image.metadata.url for image in chapter._repo.get_all().values()]
         
-        for num, image in chapter.get_data_repo().get_all().items():
+        for num, image in chapter._repo.get_all().items():
             self._image_urls[image.metadata.url] = (manga_id, chapter.num, num)
             
         urls_names = [(url, f'chap-image_{manga_id}_{str(chapter.num).replace('.', '-')}_{i}') for i, url in enumerate(all_urls)]

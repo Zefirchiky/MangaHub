@@ -6,7 +6,7 @@ import asyncio
 from loguru import logger
 
 from core.models import Url
-from core.models.abstract import AbstractMedia
+from core.interfaces import AbstractMedia
 from core.models.manga import Manga, MangaChapter
 from core.models.sites_ import SiteModel
 from core.models.sites_.parsing_methods import MangaParsing, NameParsing, CoverParsing, ChaptersListParsing, MangaChapterParsing, ImagesParsing

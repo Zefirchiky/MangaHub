@@ -12,8 +12,9 @@ from gui.widgets.dashboard import Dashboard, MediaCard
 from gui.widgets.manga import MangaViewer
 from gui.widgets.slide_menus import SideMenu
 
-from core.models.abstract import AbstractMedia
-from core.models.novels import NovelChapter
+from application.controllers import NovelsManager
+from core.interfaces import AbstractMedia
+from core.models.novels import Novel, NovelChapter, NovelState
 from core.repositories.novels import ParagraphsRepository
 
 from app_status import AppStatus
@@ -61,7 +62,9 @@ class MainWindow(QMainWindow):
             is_default=True,
         )
         self.side_menu.add_button(
-            lambda: self.root_layout.setCurrentIndex(2),
+            lambda: self.root_layout.setCurrentIndex(
+                2 if self.root_layout.currentIndex() != 2 else 3
+            ),
             IconRepo.get(IconRepo.Icons.NOVEL),
             "Novel",
         )
@@ -83,26 +86,35 @@ class MainWindow(QMainWindow):
         self.selection_menu = SelectionMenu(self)
         # self.selection_menu.move(1000, 500)
         self.settings_window = SettingsWindow()
-        self.dashboard = Dashboard()
-        self.dashboard.root_layout.addWidget(self.selection_menu)
+        self.manga_dashboard = Dashboard()
+        self.manga_dashboard.root_layout.addWidget(self.selection_menu)
+        self.novels_dashboard = Dashboard()
         self.manga_viewer = MangaViewer(self.app.images_cache, self)
+        
+        self.novels_manager = NovelsManager(self.app)
+        self.novel_state = NovelState(novel=self.novels_manager.create_empty('test'))
+        self.novel_state.novel._chapters_repo.add(0, self.novels_manager.create_empty_chapter(self.novel_state.novel))
+        # print(self.novel_state.novel._chapters_repo.get(0))
         self.novel_viewer = NovelWriter(self)
-        self.novel_viewer.text_edit.load_chapter(
-            NovelChapter(num=0, folder=Config.Dirs.DATA.NOVELS / "test.json").set_data_repo(
-                ParagraphsRepository(Config.Dirs.DATA.NOVELS / "test2.json")
-            )
-        )
+        self.novel_state.novel._chapters_repo.get(0)._repo.get(0).add_chars('Hi, nigga! For sme unnown reason, he didnt watn any of that.')
+        self.novel_viewer.text_edit.load_chapter(self.novel_state.novel._chapters_repo.get(0))
 
         self.add_manga_window = AddMangaWindow(self.app_controller)
         self.add_manga_button = QPushButton("Add Manga")
-        self.dashboard.top_layout.addWidget(self.add_manga_button)
+        self.manga_dashboard.top_layout.addWidget(self.add_manga_button)
         self.add_manga_button.clicked.connect(self.add_manga)
+
+        self.add_novel_window = AddMangaWindow(self.app_controller)
+        self.add_novel_button = QPushButton("Add Novel")
+        self.manga_dashboard.top_layout.addWidget(self.add_novel_button)
+        self.add_novel_button.clicked.connect(self.add_manga)
 
         # self.selection_menu.show()
 
-        self.root_layout.insertWidget(0, self.dashboard)
+        self.root_layout.insertWidget(0, self.manga_dashboard)
         self.root_layout.insertWidget(1, self.manga_viewer)
-        self.root_layout.insertWidget(2, self.novel_viewer)
+        self.root_layout.insertWidget(2, self.novels_dashboard)
+        self.root_layout.insertWidget(3, self.novel_viewer)
 
         for manga in self.app_controller.manga_manager.get_all():
             self.create_new_card(manga)
@@ -112,20 +124,21 @@ class MainWindow(QMainWindow):
         self.init_connections()
 
         AppStatus.main_window_initialized = True
+        self.root_layout.setCurrentIndex(3)
         logger.success("MainWindow initialized")
 
     def init_connections(self):
         self.app_controller.init_connections()
 
         self.manga_manager.cover_downloaded.connect(
-            lambda manga_id, cover: self.dashboard.get_card(manga_id).set_cover(cover)
+            lambda manga_id, cover: self.manga_dashboard.get_card(manga_id).set_cover(cover)
         )
         self.manga_manager.chapters_dict_downloaded.connect(
-            lambda manga_id: self.dashboard.get_card(manga_id).set_chapter_nums()
+            lambda manga_id: self.manga_dashboard.get_card(manga_id).set_chapter_nums()
         )
 
         self.app_controller.manga_created.connect(
-            lambda manga: self.dashboard.add_card(self.create_new_card(manga))
+            lambda manga: self.manga_dashboard.add_card(self.create_new_card(manga))
         )
 
         self.app_controller.manga_changed.connect(self.update_current_mc)
@@ -184,13 +197,13 @@ class MainWindow(QMainWindow):
         logger.success("MainWindow connections initialized")
 
     def update_current_mc(self):  # TODO(?): possibly another state, just for gui
-        self.current_mc = self.dashboard.get_card(self.app_controller.state.manga_id)
+        self.current_mc = self.manga_dashboard.get_card(self.app_controller.state.manga_id)
         self.current_mc.set_chapter_nums()
 
     def create_new_card(self, media: AbstractMedia) -> MediaCard:
         mc = MediaCard()
         mc.set_media(media)
-        self.dashboard.add_card(media.id_, mc)
+        self.manga_dashboard.add_card(media.id_, mc)
         mc.chapter_clicked.connect(self.app_controller.select_media_chapter)
         return mc
 

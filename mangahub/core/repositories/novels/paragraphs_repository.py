@@ -1,4 +1,4 @@
-from ..abstract.chapter_data_repository import ChapterDataRepository
+from core.repositories.abstract.chapter_data_repository import ChapterDataRepository
 from core.models.novels import NovelParagraph
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from ..abstract.abstract_media import AbstractMedia
+from core.interfaces import AbstractMedia
+# from core.repositories.manga import MangaChaptersRepository
 from .manga_chapter import MangaChapter
 
 

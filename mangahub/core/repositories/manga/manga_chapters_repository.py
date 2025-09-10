@@ -1,17 +1,10 @@
-from ..abstract.chapters_repository import ChaptersRepository
+from core.repositories.abstract import ChaptersRepository
 from .images_data_repository import ImagesDataRepository
-from core.models.manga import MangaChapter
+from core.models.manga.manga_chapter import MangaChapter
 
 
-class MangaChaptersRepository(ChaptersRepository[MangaChapter]):
+class ChapterNotFoundError(Exception): ...
+
+class MangaChaptersRepository(ChaptersRepository[MangaChapter, ImagesDataRepository]):
     def __init__(self, file):
-        super().__init__(file, MangaChapter)
-
-    def get(self, name) -> MangaChapter | None:
-        chapter = super().get(name)
-        if chapter and chapter.get_data_repo() is None:
-            chapter.set_data_repo(ImagesDataRepository(
-                chapter.folder / 'images.json'
-            ))
-            
-        return chapter
+        super().__init__(file, MangaChapter, ImagesDataRepository)

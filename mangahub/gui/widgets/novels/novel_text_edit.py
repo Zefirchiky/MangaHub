@@ -1,7 +1,6 @@
 from PySide6.QtCore import Qt, QStringListModel, Signal
-from PySide6.QtGui import QTextCursor, QKeyEvent, QTextCharFormat, QColor, QTextBlockUserData
-from PySide6.QtWidgets import QTextEdit, QCompleter, QToolTip
-import enchant
+from PySide6.QtGui import QTextCursor, QTextOption, QKeyEvent, QTextCharFormat, QColor, QTextBlockUserData
+from PySide6.QtWidgets import QTextEdit, QCompleter
 
 from core.models.novels import NovelChapter, NovelParagraph
 
@@ -14,13 +13,16 @@ class NovelBlockData(QTextBlockUserData):
         self.tags = tags
 
 class NovelTextEdit(QTextEdit):
-    words_dict = enchant.Dict('en_US')
     current_word_ended = Signal(str, int, int)
     new_word_started = Signal(int)
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
+        self.setUndoRedoEnabled(True)
+        self.setMaximumWidth(800)
+        # self.document().setIndentWidth(4)
+        # self.document().setDefaultTextOption(QTextOption(QTextOption.TabType.LeftTab))
         
         self.word_list = QStringListModel()
         self.word_list.setStringList(["mana", "lol", "manager"])
@@ -52,6 +54,7 @@ class NovelTextEdit(QTextEdit):
         
         self._prev_cursor_pos = 0
         
+        self._chapter_is_loading = False
         self._chapter = None
 
         self.textChanged.connect(self._text_changed)
@@ -71,7 +74,10 @@ class NovelTextEdit(QTextEdit):
         self.completer.popup().hide()
         
     def _content_document_changed(self, pos: int, chars_removed: int, chars_added: int):
-        # print(f"\n--- Document changed at pos {pos}: removed {chars_removed} chars, added {chars_added} chars ---")
+        print(f"\n--- Document changed at pos {pos}: removed {chars_removed} chars, added {chars_added} chars ---")
+        if self._chapter_is_loading:
+            return
+        
         if self.document().isEmpty():
             return
         
@@ -80,10 +86,10 @@ class NovelTextEdit(QTextEdit):
             # return
             pass
         
-        removed_cursor = QTextCursor(self.textCursor())
-        removed_cursor.setPosition(pos)
-        if chars_removed:
-            removed_cursor.setPosition(pos + chars_removed, QTextCursor.MoveMode.KeepAnchor)
+        # removed_cursor = QTextCursor(self.textCursor())
+        # removed_cursor.setPosition(pos-1)
+        # if chars_removed:
+        #     removed_cursor.setPosition(pos - chars_removed, QTextCursor.MoveMode.KeepAnchor)
         
         added_cursor = QTextCursor(self.textCursor())
         added_cursor.setPosition(pos)
@@ -92,11 +98,17 @@ class NovelTextEdit(QTextEdit):
         
         block = self.document().findBlock(pos)
         # print(block.blockNumber(), pos - block.position(), repr(removed_cursor.selectedText()), repr(added_cursor.selectedText()))
+        # print(block_data := block.userData(), block_data.paragraph)
         if (block_data := block.userData()) and block_data.paragraph is not None:
             para: NovelParagraph = block_data.paragraph
-            para.add_chars(pos, added_cursor.selectedText())
+            para.add_chars(added_cursor.selectedText())
         else:
-            para = self._chapter.get_data_repo().add(block.blockNumber(), NovelParagraph().add_chars(pos, added_cursor.selectedText()))
+            import time
+            t = time.perf_counter()
+            if not (para := self._chapter._repo.get(block.blockNumber(), None)):
+                para = NovelParagraph().add_chars(added_cursor.selectedText())
+            print('Done', time.perf_counter() - t)
+            self._chapter._repo.add(block.blockNumber(), para)
             block.setUserData(NovelBlockData(block.blockNumber(), para))
         # print(para)
 
@@ -133,19 +145,22 @@ class NovelTextEdit(QTextEdit):
         pass
         
     def _current_word_ended(self, word: str, start: int, end: int):
-        if not self.words_dict.check(word):
-            cursor = QTextCursor(self.textCursor())
-            cursor.setPosition(start - 1)
-            cursor.setPosition(end - 1, QTextCursor.MoveMode.KeepAnchor)
-            error = QTextCharFormat(self._error_format)
-            cursor.mergeCharFormat(error)
+        pass
+        # if not self.words_dict.check(word):
+        #     cursor = QTextCursor(self.textCursor())
+        #     cursor.setPosition(start - 1)
+        #     cursor.setPosition(end - 1, QTextCursor.MoveMode.KeepAnchor)
+        #     error = QTextCharFormat(self._error_format)
+        #     cursor.mergeCharFormat(error)
             
     def load_chapter(self, chapter: NovelChapter):
+        self._chapter_is_loading = True
         self._chapter = chapter
         self.setPlainText(chapter.text)
         for i in range(self.document().blockCount()):
             block = self.document().findBlockByNumber(i)
-            block.setUserData(NovelBlockData(i, chapter.get_data_repo().get(i)))
+            block.setUserData(NovelBlockData(i, chapter._repo.get(i)))
+        self._chapter_is_loading = False
     
     def keyPressEvent(self, event: QKeyEvent):
         if self.completer and self.completer.popup().isVisible():

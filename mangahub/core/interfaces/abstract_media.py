@@ -6,15 +6,15 @@ from pathlib import Path
 
 from pydantic import Field, PrivateAttr
 
-from ..tags.tag_model import TagModel
+from core.models.tags.tag_model import TagModel
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .abstract_chapter import AbstractChapter
-    from core.repositories.abstract import ChaptersRepository
+    from core.repositories.abstract import ChaptersRepository, ChapterDataRepository
 
 
-class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
+class AbstractMedia[CT: AbstractChapter](ABC, TagModel):
     name: str
     id_: str
     folder: Path
@@ -33,13 +33,13 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
     last_read_chapter: float = -1
     checked_chapters: set[float] = Field(default_factory=set)
     
-    _chapters_repo: ChaptersRepository[ChapterType] = PrivateAttr(default=None)
+    _chapters_repo: ChaptersRepository[CT, ChapterDataRepository] = PrivateAttr(default=None)
 
     def add_site(self, site_name: str, index=-1) -> None:
         self._changed = True
         self.sites.insert(index, site_name)
 
-    def add_chapter(self, chapter: ChapterType) -> AbstractMedia:
+    def add_chapter(self, chapter: CT) -> AbstractMedia:
         self._changed = True
         self._chapters_repo.add(chapter.num, chapter)
         return self
@@ -48,7 +48,7 @@ class AbstractMedia[ChapterType: AbstractChapter](ABC, TagModel):
         sites = self.sites.copy()
         return sites
 
-    def get_chapter(self, chapter_num: float, default_return=None) -> ChapterType:
+    def get_chapter(self, chapter_num: float, default_return=None) -> CT:
         if chapter_num <= 0 or ((chap := self._chapters_repo.get_i(-1, None)) and chapter_num >= chap.num):
             return default_return
         if chapter := self._chapters_repo.get(chapter_num):

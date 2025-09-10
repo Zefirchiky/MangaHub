@@ -1,9 +1,13 @@
 from __future__ import annotations
 from loguru import logger
-from core.models.novels import Novel, NovelChapter
+
+from core.repositories.novels import NovelChaptersRepository, ParagraphsRepository
+from core.models.novels import Novel, NovelChapter, NovelParagraph
 from core.repositories.novels import NovelsRepository
 from application.services.scrapers import NovelsSiteScraper
+from config import Config
 from utils import MM
+from utils.id_from_name import get_id_from_name
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -32,6 +36,26 @@ class NovelsManager:
 
     def get_chapter(self, novel: Novel, num: int) -> NovelChapter | None:
         return novel._chapters_data.get(num)
+    
+    def create_empty(self, name: str, **kwargs) -> Novel:
+        id_ = get_id_from_name(name)
+        novel = Novel(
+            name = name,
+            id_  = id_,
+            folder = Config.Dirs.DATA.NOVELS / f'{id_}',
+            **kwargs,
+        ).set_changed()
+        novel._chapters_repo = NovelChaptersRepository(novel.folder / 'chapters.json')
+        return novel
+    
+    def create_empty_chapter(self, novel: Novel, num: float=0, **kwargs) -> NovelChapter:
+        chapter = NovelChapter(
+            num=num,
+            folder = novel.folder / str(num),
+            **kwargs,
+        ).set_changed()
+        chapter._repo = ParagraphsRepository(chapter.folder / 'paragraphs.json').add(0, NovelParagraph())
+        return chapter
 
     def create_novel(self, name: str) -> Novel:
         novel = Novel(

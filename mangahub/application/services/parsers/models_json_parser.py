@@ -17,8 +17,9 @@ class ModelsJsonParser(typing.Generic[KT, MT]):
         self.json_parser = JsonHandler(self.file)
         self._models_collection: dict[KT, MT] = {}
 
-    def add(self, name: KT, model: MT):
+    def add(self, name: KT, model: MT) -> typing.Self:
         self._models_collection[name] = model
+        return self
     
     def get(self, name: KT, default=None) -> MT | None:
         name = self.key_type(name)
@@ -27,6 +28,7 @@ class ModelsJsonParser(typing.Generic[KT, MT]):
 
         try:
             if data := self.json_parser.get().get(str(name)):
+                # data = self.json_parser.get()[str(name)]
                 model = self.model.model_validate(data)
                 self._models_collection[self.key_type(name)] = model
                 return model

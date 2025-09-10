@@ -9,6 +9,7 @@ from core.models.images import ImageCache, ImageMetadata
 from core.models.manga import Manga, MangaChapter, ChapterImage
 from core.models.sites_ import SiteModel
 from core.repositories.manga import MangaChaptersRepository, ImagesDataRepository
+from utils.id_from_name import get_id_from_name
 from config import Config
 
 from typing import TYPE_CHECKING
@@ -67,16 +68,9 @@ class MangaManager(QObject):
             self.download_manager.download_manga_chapter_images(manga, chapter)
         else:
             self.download_manager.download_manga_chapter_details(manga, num)
-
-    @staticmethod
-    def get_id_from_name(name: str) -> str:
-        id_ = name.lower()
-        for s1, s2 in Config.DataProcessing.UrlParsing.replace_symbols().items():
-            id_ = id_.replace(s1, s2)
-        return id_
         
     def create_empty(self, name: str, **kwargs):
-        id_ = self.get_id_from_name(name)
+        id_ = get_id_from_name(name)
         manga = Manga(
             name = name,
             id_  = id_,
@@ -87,7 +81,7 @@ class MangaManager(QObject):
         return manga
         
     def create(self, name: str, site: SiteModel | str, overwrite: bool=False):
-        id_ = self.get_id_from_name(name)
+        id_ = get_id_from_name(name)
         if overwrite and self.repo.get(id_):
             manga = self.repo.pop(id_)
             shutil.rmtree(manga.folder)
@@ -147,7 +141,7 @@ class MangaManager(QObject):
                 folder=Path(manga.folder / f'chapter{num}'),
                 name=name
             ).set_changed()
-            chapter.set_data_repo(ImagesDataRepository(chapter.folder / 'images.json'))
+            chapter._repo = ImagesDataRepository(chapter.folder / 'images.json')
             manga._chapters_repo.add(num, chapter)
 
         manga.current_chapter = manga._chapters_repo.get_i(0).num
@@ -174,7 +168,7 @@ class MangaManager(QObject):
         if not chapter:
             logger.warning(f'No chapter {num} for {manga}')
             return
-        repo = chapter.get_data_repo()
+        repo = chapter._repo
         for i, url in enumerate(urls):
             repo.add(i, ChapterImage(
                 number=i,

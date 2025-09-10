@@ -1,435 +1,338 @@
+#!/usr/bin/env python3
+"""
+Dynamic Hunspell downloader and wrapper for distributable applications.
+Downloads and manages Hunspell binaries and dictionaries on-demand.
+"""
+
 import asyncio
-import aiohttp
+import hashlib
+import platform
+import subprocess
+import tempfile
+import zipfile
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Callable
-from PySide6.QtCore import QObject, Signal, QThreadPool, QRunnable, QSize
-import os
-import time
-from dataclasses import dataclass
+from typing import Optional
+from urllib.parse import urljoin
+import aiohttp
+import aiofiles
 
-@dataclass
-class ImageMetadata:
-    url: str
-    width: int = 0
-    height: int = 0
-    size: int = 0
-    format: str = ""
-    cached_path: Optional[str] = None
 
-class ImageDownloadWorker(QRunnable):
-    """Worker thread for downloading an image without blocking the GUI"""
+class HunspellManager:
+    """Manages Hunspell installation and dictionary downloads."""
     
-    def __init__(self, url: str, save_path: Path, callback: Callable, metadata_only: bool = False):
-        super().__init__()
-        self.url = url
-        self.save_path = save_path
-        self.callback = callback
-        self.metadata_only = metadata_only
+    def __init__(self, cache_dir: Optional[Path] = None):
+        self.cache_dir = cache_dir or Path.home() / ".hunspell_cache"
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
         
-    def run(self):
-        try:
-            # Create a new event loop for this thread
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            # Run the download task
-            result = loop.run_until_complete(self._download_image())
-            
-            # Call the callback with the result
-            self.callback(result)
-            
-            # Clean up
-            loop.close()
-        except Exception as e:
-            # Handle exceptions and pass to callback
-            self.callback((None, str(e)))
+        self.system = platform.system().lower()
+        self.arch = platform.machine().lower()
+        
+        # Hunspell download URLs (you'll need to host these or find reliable sources)
+        self.hunspell_urls = {
+            "windows": {
+                "x86_64": "https://github.com/hunspell/hunspell/releases/download/v1.7.2/hunspell-1.7.2-win64.zip",
+                "i386": "https://github.com/hunspell/hunspell/releases/download/v1.7.2/hunspell-1.7.2-win32.zip"
+            },
+            "linux": {
+                "x86_64": "https://github.com/hunspell/hunspell/releases/download/v1.7.2/hunspell-1.7.2-linux-x86_64.tar.gz"
+            },
+            "darwin": {
+                "x86_64": "https://github.com/hunspell/hunspell/releases/download/v1.7.2/hunspell-1.7.2-macos-x86_64.tar.gz",
+                "arm64": "https://github.com/hunspell/hunspell/releases/download/v1.7.2/hunspell-1.7.2-macos-arm64.tar.gz"
+            }
+        }
+        
+        # Dictionary sources
+        self.dict_base_url = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/"
+        self.dict_mappings = {
+            "en_US": "en/en_US",
+            "en_GB": "en/en_GB", 
+            "es_ES": "es_ES/es_ES",
+            "fr_FR": "fr_FR/fr_FR",
+            "de_DE": "de_DE/de_DE",
+            "it_IT": "it_IT/it_IT",
+            "pt_PT": "pt_PT/pt_PT",
+            "ru_RU": "ru_RU/ru_RU",
+        }
     
-    async def _download_image(self) -> tuple[Path | None, dict]:
-        """Download image or just its metadata based on metadata_only flag"""
+    @property
+    def hunspell_executable(self) -> Path:
+        """Get path to Hunspell executable."""
+        exe_name = "hunspell.exe" if self.system == "windows" else "hunspell"
+        return self.cache_dir / "bin" / exe_name
+    
+    @property
+    def dict_dir(self) -> Path:
+        """Get dictionary directory path."""
+        return self.cache_dir / "dictionaries"
+    
+    async def is_hunspell_available(self) -> bool:
+        """Check if Hunspell is available and working."""
+        if not self.hunspell_executable.exists():
+            return False
+        
+        try:
+            process = await asyncio.create_subprocess_exec(
+                str(self.hunspell_executable), "--version",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            await process.communicate()
+            return process.returncode == 0
+        except Exception:
+            return False
+    
+    async def download_file(self, url: str, destination: Path, 
+                          progress_callback: Optional[callable] = None) -> bool:
+        """Download file with optional progress callback."""
         try:
             async with aiohttp.ClientSession() as session:
-                # First request with HEAD to get metadata without downloading the full image
-                async with session.head(self.url) as response:
+                async with session.get(url) as response:
                     if response.status != 200:
-                        return None, f"Failed to get metadata: {response.status}"
+                        return False
                     
-                    # Extract image size and other metadata
-                    content_length = int(response.headers.get('Content-Length', 0))
-                    content_type = response.headers.get('Content-Type', '')
+                    total_size = int(response.headers.get('content-length', 0))
+                    downloaded = 0
                     
-                    # If we only need metadata, return here
-                    if self.metadata_only:
-                        # We'll determine width/height when we download a small portion
-                        return self.save_path, {
-                            'size': content_length,
-                            'format': content_type,
-                            'url': self.url
-                        }
-                
-                # If we need the full image, download it
-                async with session.get(self.url) as response:
-                    if response.status != 200:
-                        return None, f"Failed to download image: {response.status}"
+                    destination.parent.mkdir(parents=True, exist_ok=True)
                     
-                    # Ensure directory exists
-                    os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
+                    async with aiofiles.open(destination, 'wb') as file:
+                        async for chunk in response.content.iter_chunked(8192):
+                            await file.write(chunk)
+                            downloaded += len(chunk)
+                            
+                            if progress_callback and total_size > 0:
+                                progress = (downloaded / total_size) * 100
+                                await progress_callback(progress, downloaded, total_size)
                     
-                    # Stream the content to a file
-                    with open(self.save_path, 'wb') as f:
-                        while True:
-                            chunk = await response.content.read(8192)  # Read in 8kb chunks
-                            if not chunk:
-                                break
-                            f.write(chunk)
-                    
-                    return self.save_path, None
-                    
+                    return True
         except Exception as e:
-            return None, str(e)
+            print(f"Download failed: {e}")
+            return False
+    
+    async def install_hunspell(self, progress_callback: Optional[callable] = None) -> bool:
+        """Download and install Hunspell binary."""
+        if await self.is_hunspell_available():
+            return True
+        
+        # Get appropriate download URL
+        arch_key = "x86_64" if self.arch in ["x86_64", "amd64"] else self.arch
+        if self.system not in self.hunspell_urls:
+            raise RuntimeError(f"Unsupported system: {self.system}")
+        
+        system_urls = self.hunspell_urls[self.system]
+        if arch_key not in system_urls:
+            raise RuntimeError(f"Unsupported architecture: {arch_key} on {self.system}")
+        
+        download_url = system_urls[arch_key]
+        
+        # Download archive
+        archive_path = self.cache_dir / f"hunspell_archive_{self.system}_{arch_key}"
+        
+        print(f"Downloading Hunspell from {download_url}...")
+        if not await self.download_file(download_url, archive_path, progress_callback):
+            return False
+        
+        # Extract archive
+        try:
+            if download_url.endswith('.zip'):
+                with zipfile.ZipFile(archive_path, 'r') as zip_file:
+                    zip_file.extractall(self.cache_dir)
+            else:
+                # Handle tar.gz files
+                import tarfile
+                with tarfile.open(archive_path, 'r:gz') as tar_file:
+                    tar_file.extractall(self.cache_dir)
+            
+            # Make executable (Unix systems)
+            if self.system != "windows":
+                self.hunspell_executable.chmod(0o755)
+            
+            # Clean up archive
+            archive_path.unlink()
+            
+            return await self.is_hunspell_available()
+            
+        except Exception as e:
+            print(f"Extraction failed: {e}")
+            return False
+    
+    async def download_dictionary(self, language: str, 
+                                progress_callback: Optional[callable] = None) -> bool:
+        """Download dictionary files for specified language."""
+        if language not in self.dict_mappings:
+            raise ValueError(f"Unsupported language: {language}")
+        
+        dict_path = self.dict_mappings[language]
+        self.dict_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Download .aff and .dic files
+        for ext in ['aff', 'dic']:
+            filename = f"{language}.{ext}"
+            url = urljoin(self.dict_base_url, f"{dict_path}.{ext}")
+            destination = self.dict_dir / filename
+            
+            if destination.exists():
+                continue  # Skip if already downloaded
+            
+            print(f"Downloading {filename}...")
+            if not await self.download_file(url, destination, progress_callback):
+                return False
+        
+        return True
+    
+    async def get_available_dictionaries(self) -> list[str]:
+        """Get list of locally available dictionaries."""
+        available = []
+        for lang in self.dict_mappings:
+            aff_file = self.dict_dir / f"{lang}.aff"
+            dic_file = self.dict_dir / f"{lang}.dic"
+            if aff_file.exists() and dic_file.exists():
+                available.append(lang)
+        return available
 
-class ImageDownloader(QObject):
-    """Manages parallel downloading of images"""
+
+class AsyncHunspell:
+    """Async wrapper for Hunspell operations."""
     
-    metadata_ready = Signal(str, object)  # url, metadata
-    image_downloaded = Signal(str, Path)  # url, local path
-    download_error = Signal(str, str)    # url, error message
-    download_progress = Signal(str, int, int)  # url, bytes downloaded, total bytes
+    def __init__(self, manager: HunspellManager, language: str = "en_US"):
+        self.manager = manager
+        self.language = language
+        self._ensure_ready_task: Optional[asyncio.Task] = None
     
-    def __init__(self, cache_dir: str = "cache", max_concurrent: int = 4):
-        super().__init__()
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(exist_ok=True, parents=True)
-        
-        # Create thread pool for downloads
-        self.thread_pool = QThreadPool()
-        self.thread_pool.setMaxThreadCount(max_concurrent)
-        
-        # Track ongoing downloads to prevent duplicates
-        self._ongoing_downloads = set()
-        self._metadata_cache = {}  # url -> metadata
+    async def ensure_ready(self, progress_callback: Optional[callable] = None) -> bool:
+        """Ensure Hunspell and dictionary are available."""
+        if self._ensure_ready_task is None:
+            self._ensure_ready_task = asyncio.create_task(
+                self._setup_hunspell(progress_callback)
+            )
+        return await self._ensure_ready_task
     
-    def _get_cache_path(self, url: str) -> Path:
-        """Generate a unique file path for caching an image"""
-        # Create a filename based on the URL (you might want to use a hash instead)
-        filename = url.split('/')[-1]
-        # Add a timestamp to prevent collisions
-        timestamp = int(time.time() * 1000)
-        cache_file = f"{timestamp}_{filename}"
-        return self.cache_dir / cache_file
+    async def _setup_hunspell(self, progress_callback: Optional[callable] = None) -> bool:
+        """Setup Hunspell and dictionary."""
+        # Install Hunspell if needed
+        if not await self.manager.install_hunspell(progress_callback):
+            return False
+        
+        # Download dictionary if needed
+        if not await self.manager.download_dictionary(self.language, progress_callback):
+            return False
+        
+        return True
     
-    def _download_completed(self, url: str, result: Tuple[Optional[Path], Optional[str]]):
-        """Callback when a download is complete"""
-        self._ongoing_downloads.remove(url)
+    async def check_word(self, word: str) -> bool:
+        """Check if a word is spelled correctly."""
+        if not await self.ensure_ready():
+            raise RuntimeError("Hunspell not available")
         
-        path, error = result
-        if error:
-            self.download_error.emit(url, error)
-        else:
-            self.image_downloaded.emit(url, path)
-    
-    def _metadata_completed(self, url: str, result: Tuple[Optional[Path], Optional[dict]]):
-        """Callback when metadata retrieval is complete"""
-        self._ongoing_downloads.remove(url)
+        dict_path = self.manager.dict_dir / self.language
         
-        path, metadata = result
-        if isinstance(metadata, dict):
-            self._metadata_cache[url] = metadata
-            self.metadata_ready.emit(url, metadata)
-        else:
-            # metadata is actually an error message in this case
-            self.download_error.emit(url, metadata)
-    
-    def get_metadata(self, url: str):
-        """Get image metadata without downloading the full image"""
-        if url in self._ongoing_downloads:
-            return
-        
-        if url in self._metadata_cache:
-            # Use cached metadata if available
-            self.metadata_ready.emit(url, self._metadata_cache[url])
-            return
-            
-        self._ongoing_downloads.add(url)
-        cache_path = self._get_cache_path(url)
-        
-        # Create and start worker
-        worker = ImageDownloadWorker(
-            url=url,
-            save_path=cache_path,
-            callback=lambda result: self._metadata_completed(url, result),
-            metadata_only=True
+        process = await asyncio.create_subprocess_exec(
+            str(self.manager.hunspell_executable),
+            "-d", str(dict_path),
+            "-l",  # List only misspelled words
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
         )
-        self.thread_pool.start(worker)
-    
-    def download_image(self, url: str):
-        """Download an image in a separate thread"""
-        if url in self._ongoing_downloads:
-            return
-            
-        self._ongoing_downloads.add(url)
-        cache_path = self._get_cache_path(url)
         
-        # Create and start worker
-        worker = ImageDownloadWorker(
-            url=url,
-            save_path=cache_path,
-            callback=lambda result: self._download_completed(url, result)
+        stdout, stderr = await process.communicate(input=word.encode())
+        
+        if process.returncode != 0:
+            raise RuntimeError(f"Hunspell error: {stderr.decode()}")
+        
+        # If word is misspelled, it will appear in stdout
+        return word not in stdout.decode().strip()
+    
+    async def suggest_corrections(self, word: str) -> list[str]:
+        """Get spelling suggestions for a word."""
+        if not await self.ensure_ready():
+            raise RuntimeError("Hunspell not available")
+        
+        dict_path = self.manager.dict_dir / self.language
+        
+        process = await asyncio.create_subprocess_exec(
+            str(self.manager.hunspell_executable),
+            "-d", str(dict_path),
+            "-a",  # Ispell compatibility mode for suggestions
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
         )
-        self.thread_pool.start(worker)
-    
-    def download_multiple(self, urls: List[str], metadata_first: bool = True):
-        """Download multiple images, optionally getting metadata first"""
-        if metadata_first:
-            # First get metadata for all images
-            for url in urls:
-                self.get_metadata(url)
         
-        # Then download the actual images
-        for url in urls:
-            self.download_image(url)
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-class ImageCache:
-    """Manages caching of downloaded images"""
-    
-    def __init__(self, max_size_mb: int = 500):
-        self.max_size_bytes = max_size_mb * 1024 * 1024
-        self.current_size_bytes = 0
-        self._cache = {}  # url -> (path, size, last_accessed)
-    
-    def add(self, url: str, path: Path, size_bytes: int):
-        """Add an image to the cache"""
-        # If adding would exceed max cache size, remove least recently used items
-        if self.current_size_bytes + size_bytes > self.max_size_bytes:
-            self._evict_lru(size_bytes)
+        stdout, stderr = await process.communicate(input=word.encode())
         
-        # Add to cache with current timestamp
-        self._cache[url] = (path, size_bytes, time.time())
-        self.current_size_bytes += size_bytes
-    
-    def get(self, url: str) -> Optional[Path]:
-        """Get an image from the cache if it exists and update its access time"""
-        if url in self._cache:
-            path, size, _ = self._cache[url]
-            # Update access time
-            self._cache[url] = (path, size, time.time())
-            return path
-        return None
-    
-    def _evict_lru(self, required_space: int):
-        """Remove least recently used items to free up space"""
-        # Sort by access time (oldest first)
-        sorted_items = sorted(self._cache.items(), key=lambda x: x[1][2])
+        if process.returncode != 0:
+            raise RuntimeError(f"Hunspell error: {stderr.decode()}")
         
-        # Remove items until we have enough space
-        space_freed = 0
-        items_to_remove = []
+        # Parse suggestions from Hunspell output
+        output = stdout.decode().strip()
+        suggestions = []
         
-        for url, (path, size, _) in sorted_items:
-            items_to_remove.append(url)
-            space_freed += size
-            if space_freed >= required_space:
+        for line in output.split('\n'):
+            if line.startswith('&'):  # Suggestions line
+                parts = line.split(':')
+                if len(parts) > 1:
+                    suggestions = [s.strip() for s in parts[1].split(',')]
                 break
         
-        # Remove the items
-        for url in items_to_remove:
-            path, size, _ = self._cache[url]
-            del self._cache[url]
-            self.current_size_bytes -= size
+        return suggestions[:10]  # Return top 10 suggestions
+    
+    async def check_text(self, text: str) -> dict[str, list[str]]:
+        """Check entire text and return misspelled words with suggestions."""
+        words = text.split()
+        results = {}
+        
+        for word in words:
+            # Clean word (remove punctuation)
+            clean_word = ''.join(c for c in word if c.isalpha())
+            if not clean_word:
+                continue
             
-            # Optionally delete the file from disk
-            try:
-                os.remove(path)
-            except OSError:
-                pass  # Ignore errors when removing files
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-from PySide6.QtGui import QColor, QPixmap, QPainter, QLinearGradient, QFont
-from PySide6.QtCore import Qt
+            if not await self.check_word(clean_word):
+                suggestions = await self.suggest_corrections(clean_word)
+                results[clean_word] = suggestions
+        
+        return results
 
-class PlaceholderGenerator:
-    """Generates placeholder images"""
+
+# Example usage and UI integration
+async def example_usage():
+    """Example of how to use the Hunspell manager."""
     
-    @staticmethod
-    def create_placeholder(width: int, height: int, text: str = "", color: QColor = QColor(200, 200, 200)):
-        """Create a placeholder image with dimensions and optional text"""
-        # Create a pixmap
-        pixmap = QPixmap(width, height)
-        pixmap.fill(Qt.GlobalColor.transparent)
-        
-        # Paint a gradient background
-        painter = QPainter(pixmap)
-        gradient = QLinearGradient(0, 0, width, height)
-        gradient.setColorAt(0, color.lighter(120))
-        gradient.setColorAt(1, color.darker(120))
-        painter.fillRect(0, 0, width, height, gradient)
-        
-        # Add text for dimensions if no text provided
-        if not text:
-            text = f"{width}x{height}"
-        
-        # Draw the text
-        font = QFont("Arial", 12)
-        painter.setFont(font)
-        painter.setPen(QColor(0, 0, 0, 180))
-        painter.drawText(pixmap.rect(), Qt.AlignCenter, text)
-        
-        painter.end()
-        return pixmap
+    async def progress_callback(percent: float, downloaded: int, total: int):
+        print(f"Progress: {percent:.1f}% ({downloaded}/{total} bytes)")
     
-    @staticmethod
-    def create_loading_placeholder(width: int, height: int, progress: int = 0):
-        """Create a placeholder showing loading progress"""
-        pixmap = QPixmap(width, height)
-        pixmap.fill(QColor(230, 230, 230))
-        
-        painter = QPainter(pixmap)
-        
-        # Draw progress bar
-        if progress > 0:
-            progress_height = height // 20
-            progress_y = height // 2 - progress_height // 2
-            
-            # Background
-            painter.fillRect(10, progress_y, width - 20, progress_height, QColor(180, 180, 180))
-            
-            # Actual progress
-            progress_width = int((width - 20) * (progress / 100))
-            painter.fillRect(10, progress_y, progress_width, progress_height, QColor(100, 180, 100))
-            
-        # Draw text
-        font = QFont("Arial", 14)
-        painter.setFont(font)
-        painter.setPen(QColor(80, 80, 80))
-        painter.drawText(pixmap.rect(), Qt.AlignCenter, f"Loading... {progress}%")
-        
-        painter.end()
-        return pixmap
+    # Initialize manager
+    manager = HunspellManager()
     
+    # Create spell checker
+    spell_checker = AsyncHunspell(manager, "en_US")
     
+    # Ensure everything is ready (downloads if needed)
+    print("Setting up Hunspell...")
+    if not await spell_checker.ensure_ready(progress_callback):
+        print("Failed to setup Hunspell!")
+        return
     
+    print("Hunspell ready!")
     
+    # Test spell checking
+    test_text = "This is a sampl text with mistaks to check."
+    print(f"\nChecking: '{test_text}'")
     
+    results = await spell_checker.check_text(test_text)
     
+    if results:
+        print("Misspelled words found:")
+        for word, suggestions in results.items():
+            print(f"  {word}: {', '.join(suggestions[:3])}")
+    else:
+        print("No misspelled words found!")
+
+
+if __name__ == "__main__":
+    # Install required packages first:
+    # uv add aiohttp aiofiles
     
-    
-    
-    
-    
-    
-    
-    
-    
-class ChapterImageLoader(QObject):
-    """Manages loading of chapter images and preloading of adjacent chapters"""
-    
-    chapter_loaded = Signal(int)  # chapter_index
-    image_loaded = Signal(int, int, Path)  # chapter_index, image_index, image_path
-    placeholder_ready = Signal(int, int, QPixmap)  # chapter_index, image_index, placeholder
-    
-    def __init__(self, image_downloader: ImageDownloader, image_cache: ImageCache):
-        super().__init__()
-        self.downloader = image_downloader
-        self.cache = image_cache
-        self.placeholder_generator = PlaceholderGenerator()
-        
-        # Connect signals
-        self.downloader.metadata_ready.connect(self._on_metadata_ready)
-        self.downloader.image_downloaded.connect(self._on_image_downloaded)
-        
-        # Map of URL to (chapter_index, image_index)
-        self._url_mapping = {}
-        
-        # Keep track of loaded chapters
-        self._loaded_chapters = set()
-        
-        # Current chapter being viewed
-        self.current_chapter_index = 0
-    
-    def load_chapter(self, chapter_index: int, urls: List[str]):
-        """Load all images for a chapter"""
-        # Store the URL mapping for this chapter
-        for image_index, url in enumerate(urls):
-            self._url_mapping[url] = (chapter_index, image_index)
-        
-        # Start downloading metadata for placeholders
-        for url in urls:
-            self.downloader.get_metadata(url)
-        
-        # Mark this chapter as loaded (in terms of requesting downloads)
-        self._loaded_chapters.add(chapter_index)
-        
-        # Preload adjacent chapters
-        self._preload_adjacent_chapters(chapter_index)
-    
-    def set_current_chapter(self, chapter_index: int):
-        """Set the current chapter being viewed and manage preloading"""
-        if chapter_index == self.current_chapter_index:
-            return
-            
-        self.current_chapter_index = chapter_index
-        self._preload_adjacent_chapters(chapter_index)
-    
-    def _preload_adjacent_chapters(self, chapter_index: int):
-        """Preload the chapters before and after the current chapter"""
-        # We'll preload chapters [chapter_index+1, chapter_index+2]
-        # This assumes chapters are indexed sequentially
-        
-        # Logic to determine which chapters to preload would go here
-        # For now, we'll just preload the next two chapters
-        chapters_to_preload = [chapter_index + 1, chapter_index + 2]
-        
-        # Your code to get URLs for these chapters would go here
-        # For example:
-        # for preload_index in chapters_to_preload:
-        #     urls = self._get_chapter_urls(preload_index)
-        #     if urls:
-        #         self.load_chapter(preload_index, urls)
-    
-    def _on_metadata_ready(self, url: str, metadata: dict):
-        """Handle when image metadata is available"""
-        if url not in self._url_mapping:
-            return
-            
-        chapter_index, image_index = self._url_mapping[url]
-        
-        # Create a placeholder based on the metadata
-        width = metadata.get('width', 800)  # Default if not available
-        height = metadata.get('height', 1200)  # Default if not available
-        
-        # Create and emit placeholder
-        placeholder = self.placeholder_generator.create_placeholder(width, height)
-        self.placeholder_ready.emit(chapter_index, image_index, placeholder)
-    
-    def _on_image_downloaded(self, url: str, path: Path):
-        """Handle when an image has been downloaded"""
-        if url not in self._url_mapping:
-            return
-            
-        chapter_index, image_index = self._url_mapping[url]
-        
-        # Add to cache
-        file_size = os.path.getsize(path)
-        self.cache.add(url, path, file_size)
-        
-        # Emit signal that image is loaded
-        self.image_loaded.emit(chapter_index, image_index, path)
+    asyncio.run(example_usage())
