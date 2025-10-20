@@ -1,0 +1,12 @@
+[package]
+name = "models"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = { version = "0.4.42", features = ["serde"] }
+indexmap = { version = "2.11.4", features = ["rayon", "serde"] }
+linkme = "0.3.35"
+models-macros = { path = "../models-macros" }
+
+[profile.release]

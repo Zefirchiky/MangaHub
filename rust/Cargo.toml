@@ -1,0 +1,11 @@
+[workspace]
+members = ["models", "models-macros", "services/handlers"]
+resolver = "3"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = 3
+
+[workspace.dependencies]
