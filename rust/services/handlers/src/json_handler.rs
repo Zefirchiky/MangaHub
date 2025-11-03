@@ -1,10 +1,12 @@
 use std::{fs::{File}, io::Write, ops::Deref, path::{Path}};
 
+use serde::{de::DeserializeOwned, Serialize};
+
 use crate::file_handler::{FileHandler, Handler, TemporaryHandler};
 
-
+#[derive(Debug, Default)]
 pub struct JsonHandler {
-    handler: FileHandler
+    handler: FileHandler,
 }
 
 impl JsonHandler {
@@ -19,6 +21,14 @@ impl JsonHandler {
         Self {
             handler: FileHandler::new::<Self>(file)
         }
+    }
+
+    pub fn save(&self, model: &impl Serialize) -> Result<(), serde_json::Error> {
+        self.handler.save::<Self>(model)
+    }
+
+    pub fn load<T: DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
+        self.handler.load::<T, Self>()
     }
 }
 
@@ -37,6 +47,14 @@ impl Handler for JsonHandler {
 
     fn ext() -> String {
         "json".to_string()
+    }
+
+    fn from_string<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, serde_json::Error> {
+        serde_json::from_str(s)
+    }
+
+    fn to_string(model: &impl serde::Serialize) -> Result<String, serde_json::Error> {
+        serde_json::to_string_pretty(model)
     }
 }
 

@@ -1,12 +1,17 @@
+use serde::{Deserialize, Serialize};
+
 use crate::novel::{Paragraph, Token};
+use crate::chapter::{ChapterMetadata, ChapterTrait};
 
 #[allow(dead_code)]
-pub struct NovelChapter {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Chapter {
     metadata: ChapterMetadata,
+    #[serde(skip)]
     paragraphs: Vec<Paragraph>
 }
 
-impl NovelChapter {
+impl Chapter {
     pub fn new(metadata: ChapterMetadata) -> Self {
         Self {
             metadata,
@@ -23,28 +28,8 @@ impl NovelChapter {
     }
 }
 
-impl ChapterTrait for NovelChapter {
+impl ChapterTrait for Chapter {
     fn metadata(&self) -> &ChapterMetadata {
         &self.metadata
     }
 }
-
-pub trait ChapterTrait {
-    const THIS: Vec<String> = Vec::new();
-
-    fn metadata(&self) -> &ChapterMetadata;
-}
-
-pub struct ChapterMetadata {
-    pub num: i32,
-    pub name: String
-}
-
-// impl ChapterMetadata {
-//     fn new(num: i32, name: String) -> Self {
-//         Self {
-//             num,
-//             name,
-//         }
-//     }
-// }

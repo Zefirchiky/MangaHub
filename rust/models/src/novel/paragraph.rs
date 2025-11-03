@@ -54,7 +54,10 @@ impl Paragraph {
     
         while let Some(token) = self.tokens_to_process.pop() {
             if self.elements.is_empty() {
-                let mut new = ParserRegistry::parse_text_element_token(&token);
+                let (mut new, token, tok) = ParserRegistry::parse_text_element_token(token);
+                if let Some(tok) = tok {
+                    self.tokens_to_process.push(tok);
+                }
                 new.push_token(token);
                 self.elements.push(new);
                 continue;
@@ -68,7 +71,10 @@ impl Paragraph {
                         // Process buffered token next
                         self.tokens_to_process.push(tok);
                     } else {
-                        let mut new = ParserRegistry::parse_text_element_token(&token);
+                        let (mut new, token, tok) = ParserRegistry::parse_text_element_token(token);
+                        if let Some(tok) = tok {
+                            self.tokens_to_process.push(tok);
+                        }
                         new.push_token(token);
                         self.elements.push(new);
                     }
@@ -79,7 +85,10 @@ impl Paragraph {
                         self.tokens_to_process.push(tok);
                     } else {
                         let last = self.elements.last_mut().unwrap();
-                        let mut new = ParserRegistry::parse_text_element_token(&token);
+                        let (mut new, token, tok) = ParserRegistry::parse_text_element_token(token);
+                        if let Some(tok) = tok {
+                            self.tokens_to_process.push(tok);
+                        }
 
                         // If last element was the same as new one, we can `merge` them
                         if last.type_index() == new.type_index() {
@@ -124,7 +133,7 @@ mod novel_paragraph {
         p.push_token(Token::new("that2\""));
         p.push_token(Token::new("dih"));
         p.push_token(Token::new("\"that3"));
-        dbg!(&p);
+        // dbg!(&p);
         assert!(p.elements[0].as_any().is::<Dialog>());
     }
 }

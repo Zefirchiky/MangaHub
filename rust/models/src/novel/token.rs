@@ -42,16 +42,16 @@ impl From<&str> for Token {
 pub struct ParseContext {}
 
 pub enum TokenParsingResult<T> {
-    Matched(T),
-    // MatchedWithBadStart(T, u8),
-    NotMatched,
+    Matched(T, Token),
+    MatchedWithRest(Token, Token),
+    NotMatched(Token),
 }
 
-impl<T> TokenParsingResult<T> {
-    pub fn unwrap(self) -> T {
-        match self {
-            Self::Matched(el) => el,
-            Self::NotMatched => panic!("What the fuck"),
-        }
-    }
-}
+// impl<T> TokenParsingResult<T> {
+//     pub fn unwrap(self) -> T {
+//         match self {
+//             Self::Matched(el) => el,
+//             Self::NotMatched => panic!("What the fuck"),
+//         }
+//     }
+// }

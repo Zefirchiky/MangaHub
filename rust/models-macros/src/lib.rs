@@ -44,16 +44,24 @@ pub fn register_text_element(_attr: TokenStream, item: TokenStream) -> TokenStre
             // handler: Box::<#name>new(),
             // type_index: #type_index,
             
+            // from_token: |token| {
+            //     let res = <#name>::try_from_token(token);
+            //     if let crate::TokenParsingResult::Matched(el, tok) = res {
+            //         TokenParsingResult::Matched(
+            //             Box::new(el) as Box<dyn TextElementAuto>,
+            //             tok
+            //         )
+            //     } else {
+            //         res
+            //     }
+            // },
             from_token: |token| match <#name>::try_from_token(token) {
-                crate::TokenParsingResult::Matched(el) => TokenParsingResult::Matched(Box::new(el) as Box<dyn TextElementAuto>),
-                crate::TokenParsingResult::NotMatched => crate::TokenParsingResult::NotMatched,
+                crate::TokenParsingResult::Matched(el, tok) => TokenParsingResult::Matched(Box::new(el) as Box<dyn TextElementAuto>, tok),
+                crate::TokenParsingResult::MatchedWithRest(tok1, tok2) => TokenParsingResult::MatchedWithRest(tok1, tok2),
+                crate::TokenParsingResult::NotMatched(token) => crate::TokenParsingResult::NotMatched(token),
             },
             
             from_narration: |nar, cxt| Box::new(<#name>::from_narration(nar, cxt)) as Box<dyn TextElementAuto>,
-            
-            // drop_fn: |ptr| unsafe {
-            //     let _ = Box::from_raw(ptr as *mut #name);
-            // },
         };
     };
 

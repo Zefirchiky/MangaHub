@@ -22,5 +22,5 @@ pub use file_handler::{FileHandler, Handler, Temporary};
 mod json_handler;
 pub use json_handler::{JsonHandler};
 
-mod md_handler;
-pub use md_handler::{MdHandler, TemporaryMdHandler};
+// mod md_handler;
+// pub use md_handler::{MdHandler, TemporaryMdHandler};

@@ -1,39 +1,30 @@
-use std::{path::{Path, PathBuf}};
+use std::{ops::{Deref, DerefMut}, path::Path};
 
-use crate::novel::ChapterTrait;
+use crate::{novel::Chapter, repos::ChaptersRepoBase};
 
-pub struct ChaptersRepo<T: ChapterTrait> {
-    _path: PathBuf,
-    /// Chapters should always be avaliable between first and last, so they can be accessed by indexing.
-    /// As chapters are dinamicaly scaled, better store in Box to avoid memory moves.
-    chapters: Vec<T>,
-    /// Aluxary chapters are chapters that may exist before real ones, and are not part of the story itself.
-    aluxary_chapters: Vec<T>
+#[derive(Debug)]
+pub struct ChaptersRepo {
+    repo: ChaptersRepoBase<Chapter>,
 }
 
-impl<T: ChapterTrait> ChaptersRepo<T> {
-    pub fn new(path: impl AsRef<Path>) -> Self {
+impl ChaptersRepo {
+    pub fn new(file: impl AsRef<Path>) -> Self {
         Self {
-            _path: path.as_ref().to_path_buf(),
-            chapters: Vec::new(),
-            aluxary_chapters: Vec::new(),
+            repo: ChaptersRepoBase::new(file)
         }
     }
+}
 
-    pub fn get(&self, i: i32) -> Option<&T> {
-        if i >= 0 {
-            self.chapters.get(i as usize)
-        } else {
-            self.aluxary_chapters.get((-i-1) as usize)
-        }
+impl Deref for ChaptersRepo {
+    type Target = ChaptersRepoBase<Chapter>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.repo
     }
+}
 
-    pub fn insert(&mut self, chapter: T) {
-        let num = chapter.metadata().num;
-        if num >= 0 {
-            self.chapters.insert(num as usize, chapter)
-        } else {
-            self.aluxary_chapters.insert((-num - 1) as usize, chapter);
-        }
+impl DerefMut for ChaptersRepo {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.repo
     }
 }

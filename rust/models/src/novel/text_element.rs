@@ -34,7 +34,7 @@ pub enum ElementEndState {
 
 pub trait TextElement: Send + Sync + Debug {
     /// Will try parsing token into `TextElement` based on rules of `Self`.
-    fn try_from_token(token: &Token) -> TokenParsingResult<Self> where Self: Sized;
+    fn try_from_token(token: Token) -> TokenParsingResult<Self> where Self: Sized;
 
     /// Will push a token into `TextElement`.
     /// 
@@ -77,11 +77,15 @@ impl TextElement for Dialog {
     }
 
     fn push_token(&mut self, mut token: Token) -> ElementEndState {
-        if token.ends_with('\"') {
+        dbg!(&token);
+        if token.ends_with('"') {
             if self.is_opened {
                 self.is_opened = false;
                 let len = token.len();
                 token.truncate(len - 1);
+                if token.is_empty() {
+                    return ElementEndState::Finished(None);
+                }
                 self.sentences.last_mut().unwrap().push(token);
                 ElementEndState::Finished(None)
             } else {
@@ -90,7 +94,7 @@ impl TextElement for Dialog {
                 let t2 = token.split_off(len - 2);
                 ElementEndState::NotFinishedToken(token, t2.into())
             }
-        } else if token.starts_with('\"') {
+        } else if token.starts_with('"') {
             if !self.is_opened {
                 self.is_opened = true;
                 token = token[1..].into();
@@ -103,21 +107,24 @@ impl TextElement for Dialog {
             ElementEndState::NotFinished
         }
     }
-
-    fn try_from_token(token: &Token) -> TokenParsingResult<Self> {
+    
+    fn try_from_token(mut token: Token) -> TokenParsingResult<Self> {
+        // dbg!(&token);
         if token.starts_with('"') {
+            let len = token.len();
+            token.truncate(len - 1);
             return TokenParsingResult::Matched(Self {
                 to: String::new(),
                 from: String::new(),
                 is_opened: false,
-                sentences: vec![ParserRegistry::parse_sentence_token(token)]
-            });
+                sentences: vec![ParserRegistry::parse_sentence_token(&token)]
+            }, token);
+        } else if let Some(at) = token.find('"') {
+            let tok = token.split_off(at).into();
+            return TokenParsingResult::MatchedWithRest(token, tok)
         }
-        // else if token.ends_with('"') {
-            // return TokenParsingResult::MatchedWithBadStart()
-        // }
         
-        TokenParsingResult::NotMatched
+        TokenParsingResult::NotMatched(token)
     }
     
     fn from_narration(narration: Narration, _ctx: &ParseContext) -> Self {
@@ -163,21 +170,21 @@ impl TextElement for Thought {
         }
     }
 
-    fn try_from_token(token: &Token) -> TokenParsingResult<Self> {
+    fn try_from_token(token: Token) -> TokenParsingResult<Self> {
         if token.starts_with('\'') {
             let sentences = if token.is_empty() {
                 vec![]
             } else {
-                vec![ParserRegistry::parse_sentence_token(token)]
+                vec![ParserRegistry::parse_sentence_token(&token)]
             };
             
             return TokenParsingResult::Matched(Self {
                 from: String::new(),
                 sentences
-            });
+            }, token);
         }
         
-        TokenParsingResult::NotMatched
+        TokenParsingResult::NotMatched(token)
     }
 
     fn from_narration(narration: Narration, _ctx: &ParseContext) -> Self {
@@ -202,6 +209,14 @@ pub struct Narration {
     sentences: Vec<Box<dyn SentenceTrait>>
 }
 
+impl Narration {
+    pub fn new(token: Token) -> (Self, Token) {
+        (Self {
+            sentences: vec![ParserRegistry::parse_sentence_token(&token)]
+        }, token)
+    }
+}
+
 impl TextElement for Narration {
     fn sentences(&self) -> &Vec<Box<dyn SentenceTrait>> {
         &self.sentences
@@ -213,10 +228,9 @@ impl TextElement for Narration {
         ElementEndState::MaybeFinished(None)
     }
     
-    fn try_from_token(token: &Token) -> TokenParsingResult<Self> {
-        TokenParsingResult::Matched(Self {
-            sentences: vec![ParserRegistry::parse_sentence_token(token)]
-        })
+    fn try_from_token(token: Token) -> TokenParsingResult<Self> {
+        let (el, tok) = Self::new(token);
+        TokenParsingResult::Matched(el, tok)
     }
     
     fn from_narration(narration: Narration, _ctx: &ParseContext) -> Self {

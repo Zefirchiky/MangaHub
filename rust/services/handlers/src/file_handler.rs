@@ -1,5 +1,8 @@
-use std::{fs::{self, create_dir_all, File}, ops::Deref, path::{Path, PathBuf}};
+use std::{fmt::Debug, fs::{self, create_dir_all, File}, ops::Deref, path::{Path, PathBuf}};
 
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct FileHandler {    // TODO: With thousands of paths, central storage is preferable. Something like a mini filesystem. OPTIMIZATIONS BABE
     file: PathBuf
 }
@@ -48,11 +51,24 @@ impl FileHandler {
     pub fn path(&self) -> &Path {
         &self.file
     }
+
+    pub fn save<H: Handler>(&self, model: &impl Serialize) -> Result<(), serde_json::Error> {
+        let res = H::to_string(model)?;
+        fs::write(&self.file, res).unwrap();
+        Ok(())
+    }
+
+    pub fn load<T: DeserializeOwned, H: Handler>(&self) -> Result<T, serde_json::Error> {
+        let res = fs::read_to_string(&self.file).unwrap();
+        H::from_string(&res)
+    }
 }
 
-pub trait Handler: Deref<Target = FileHandler> {
+pub trait Handler: Debug + Default + Deref<Target = FileHandler> {
     fn initialize_file(file: &mut File);
     fn ext() -> String;
+    fn to_string(model: &impl Serialize) -> Result<String, serde_json::Error>;
+    fn from_string<T: DeserializeOwned>(s: &str) -> Result<T, serde_json::Error>;
 }
 
 pub trait TemporaryHandler: Handler {}
