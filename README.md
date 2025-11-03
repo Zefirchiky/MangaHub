@@ -1,41 +1,71 @@
+# MangaHub
 
-MangaHub is an open source app that was created to unify all work with web-novels and manga. It functions as a central hub to read, modify and contribute different media.
+MangaHub is an open source app that was created to unify all work with web-novels and manga.
+It functions as a central hub to read, modify and contribute different media.
 
 > [!IMPORTANT]
-> Very early beta
+> Very early beta.
+
+## Main Goal
+
+Create THE best place to distribute and read mangaa and novels, with possible support of other media.
+
+Make it the best expirience possible for everyone.
 
 ## FAQ
 
-#### Why?
+### Why?
 
 Author was frustrated with a need to check for updates on different sites and remembering about different novels/mangas.
 
-#### How is it different from others?
+### How is it different from others?
 
 It's not just a program to read. It also serves as a personal library and wiki.
 
-#### Huh?
+### Huh?
 
 Huh?
-
 
 ## Roadmap
 
 ### DONE
 
-- [+] Manga Scraping
-- [+] Manga Reading
+- [ ] Manga
+  - [x] Scraping
+  - [ ] Reading
+    - [x] Display panels
+    - [ ] Smart panels spliter (WIP in Rust)
+    - [ ] Low-quality images previews, that change to high-quality once. Saves memory with good visual quality.
+
+- [ ] Novels
+  - [ ] Scraping
+  - [ ] Reading
+  - [ ] Writing (WIP in Rust)
+    - [x] Spell Checking ([SpelRight](https://github.com/Zefirchiky/SpelRight))
+    - [ ] Smart sintax detection
+
+- [ ] All media
+  - [ ] Personal wikis
+    - [ ] Characters
+    - [ ] Terms
+    - [ ] Event history
+    - [ ] Maps
+  - [ ] Custom file formats
+
+- [ ] MangaHub servers
 
 ### TOP-PRIORITY
+
 - Save unused models in json and unload from memory
 - ASYNC manga creation
 - Partial image loading
 
 ### TODO
+
 - FIX THE FUCKING INTERFACE:
-    - Fine-tune the Dashboard
-    - MediaCard/FullMediaCard
-    - Create cool design for Dashboards in fucking Figma
+  - Fine-tune the Dashboard
+  - MediaCard/FullMediaCard
+  - Create cool design for Dashboards in fucking Figma
 - Caching saving/loading
 - Proper manga state
 - ASYNC
@@ -44,21 +74,24 @@ Huh?
 - Manga search
 
 ### LONG-TERM TODO
+
 - ASYNC
 - System/Cultivation calculation and display
 - Keywords to remember the read
 - Build-in notes/to-do
+- Inspirational chapters. Like drafts for other authors who lost motivation or stuck
 - Event history
 - Map
 - Saving media (ZIP, 7Z)
 - Music
-    - Background
-    - Conditional (authors can put start and finish)
+  - Background
+  - Conditional (authors can put start and finish)
 - Easy color themes saving and loading
 - Better image compression (JXL)
 - Integration with MyAnimeList and AniList
 
 ### LONG-LONG-TERM TODO
+
 - Multi-platforming
 - Servers
 - Plugins

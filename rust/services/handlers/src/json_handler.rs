@@ -1,4 +1,4 @@
-use std::{fs::{File}, io::Write, ops::Deref, path::{Path}};
+use std::{fs::{File}, io::Write, path::{Path}};
 
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -19,20 +19,20 @@ impl JsonHandler {
     /// Panics if the path exists but is not a file, or if the file does not have the correct extension.
     pub fn new(file: impl AsRef<Path>) -> Self {
         Self {
-            handler: FileHandler::new::<Self>(file)
+            handler: FileHandler::new_with_handler::<Self>(file)
         }
     }
 
     pub fn save(&self, model: &impl Serialize) -> Result<(), serde_json::Error> {
-        self.handler.save::<Self>(model)
+        self.handler.save_with_handler::<Self>(model)
     }
 
     pub fn load<T: DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
-        self.handler.load::<T, Self>()
+        self.handler.load_with_handler::<T, Self>()
     }
 }
 
-impl Deref for JsonHandler {
+impl std::ops::Deref for JsonHandler {
     type Target = FileHandler;
     fn deref(&self) -> &Self::Target {
         &self.handler

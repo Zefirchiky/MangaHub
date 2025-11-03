@@ -1,4 +1,4 @@
-use std::{hash::Hash, ops::{Deref, DerefMut}, path::Path};
+use std::{hash::Hash, path::Path};
 
 use handlers::JsonHandler;
 use indexmap::{IndexMap};
@@ -34,14 +34,14 @@ impl<K: RepoKey + DeserializeOwned, V: RepoValue + DeserializeOwned> RepoBase<K,
     }
 }
 
-impl<K: RepoKey, V: RepoValue> Deref for RepoBase<K, V> {
+impl<K: RepoKey, V: RepoValue> std::ops::Deref for RepoBase<K, V> {
     type Target = IndexMap<K, V>;
     fn deref(&self) -> &Self::Target {
         &self.elements
     }
 }
 
-impl<K: RepoKey, V: RepoValue> DerefMut for RepoBase<K, V> {
+impl<K: RepoKey, V: RepoValue> std::ops::DerefMut for RepoBase<K, V> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.elements
     }

@@ -1,4 +1,4 @@
-use crate::repos::CharacterRepo;
+use crate::character::Repo;
 
 pub struct Context {
     pub novel: NovelContext,
@@ -8,7 +8,7 @@ pub struct Context {
 
 pub struct NovelContext {
     pub spell_checker: spel_right::SpellChecker,
-    pub character_repo: CharacterRepo,
+    pub character_repo: Repo,
 }
 
 pub struct ChapterContext {

@@ -1,5 +1,3 @@
-use std::{ops::{Deref, DerefMut}};
-
 /// A part of text, divided by ' ' (space)
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Token(String);
@@ -14,14 +12,14 @@ impl Token {
     }
 }
 
-impl Deref for Token {
+impl std::ops::Deref for Token {
     type Target = String;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl DerefMut for Token {
+impl std::ops::DerefMut for Token {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

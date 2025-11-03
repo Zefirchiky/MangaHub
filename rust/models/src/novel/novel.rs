@@ -19,6 +19,16 @@ impl Novel {
             repo,
         }
     }
+
+    fn add_chapter(&mut self, chapter: Chapter) -> Option<()> {
+        match &mut self.repo {
+            Some(repo) => {
+                repo.insert(chapter);
+                Some(())
+            },
+            None => None,
+        }
+    }
 }
 
 impl MediaTrait for Novel {

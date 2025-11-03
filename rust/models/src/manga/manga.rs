@@ -14,6 +14,16 @@ impl Manga {
             repo,
         }
     }
+
+    pub fn insert_chapter(&mut self, chapter: Chapter) -> Option<()> {
+        match &mut self.repo {
+            Some(repo) => {
+                repo.insert(chapter);
+                Some(())
+            },
+            None => None,
+        }
+    }
 }
 
 impl MediaTrait for Manga {

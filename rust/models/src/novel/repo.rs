@@ -1,4 +1,4 @@
-use std::{ops::{Deref, DerefMut}, path::Path};
+use std::path::Path;
 
 use crate::{novel::Chapter, repos::ChaptersRepoBase};
 
@@ -15,7 +15,7 @@ impl ChaptersRepo {
     }
 }
 
-impl Deref for ChaptersRepo {
+impl std::ops::Deref for ChaptersRepo {
     type Target = ChaptersRepoBase<Chapter>;
 
     fn deref(&self) -> &Self::Target {
@@ -23,7 +23,7 @@ impl Deref for ChaptersRepo {
     }
 }
 
-impl DerefMut for ChaptersRepo {
+impl std::ops::DerefMut for ChaptersRepo {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.repo
     }
