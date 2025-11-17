@@ -1,9 +1,9 @@
-mod image;
-mod ram_image;
-mod pixmap;
 mod cache;
+mod image;
+mod pixmap;
+mod ram_image;
 
-pub use image::Image;
-pub use ram_image::RamImage;
-pub use pixmap::Pixmap;
 pub use cache::Cache;
+pub use image::Image;
+pub use pixmap::Pixmap;
+pub use ram_image::RamImage;

@@ -8,8 +8,8 @@ pub trait ChapterTrait {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChapterMetadata {
-    pub num: i32,
-    pub name: String
+    pub num: isize,
+    pub name: String,
 }
 
 // impl ChapterMetadata {

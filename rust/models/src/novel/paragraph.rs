@@ -1,10 +1,17 @@
-use crate::{novel::{text_element::TextElementAuto, ElementEndState, Token}, registry::ParserRegistry};
+use derive_more::{Deref, DerefMut};
+
+use crate::{
+    novel::{ElementEndState, Token, text_element::TextElementAuto},
+    registry::ParserRegistry,
+};
 
 type TextElPlugin = Box<dyn TextElementAuto>;
 
-#[derive(Debug)]
+#[derive(Debug, Deref, DerefMut)]
 pub struct Paragraph {
-    elements: Vec<TextElPlugin>,
+    #[deref]
+    #[deref_mut]
+    pub elements: Vec<TextElPlugin>,
     last_end_state: ElementEndState,
     tokens_to_process: Vec<Token>,
 }
@@ -51,7 +58,7 @@ impl Paragraph {
     pub fn push_token(&mut self, token: Token) -> &mut Self {
         // dbg!(&token);
         self.tokens_to_process.push(token);
-    
+
         while let Some(token) = self.tokens_to_process.pop() {
             if self.elements.is_empty() {
                 let (mut new, token, tok) = ParserRegistry::parse_text_element_token(token);
@@ -62,7 +69,7 @@ impl Paragraph {
                 self.elements.push(new);
                 continue;
             }
-            
+
             match &mut self.last_end_state {
                 ElementEndState::Finished(buffered_token) => {
                     if let Some(tok) = buffered_token.take() {
@@ -101,7 +108,8 @@ impl Paragraph {
                     }
                 }
                 ElementEndState::NotFinishedToken(..) => {
-                    let old_state = std::mem::replace(&mut self.last_end_state, ElementEndState::NotFinished);
+                    let old_state =
+                        std::mem::replace(&mut self.last_end_state, ElementEndState::NotFinished);
                     if let ElementEndState::NotFinishedToken(t1, t2) = old_state {
                         self.tokens_to_process.push(t1);
                         self.tokens_to_process.push(t2);
@@ -113,15 +121,14 @@ impl Paragraph {
                 }
             }
         }
-        
+
         self
     }
 }
 
-
 #[cfg(test)]
 mod novel_paragraph {
-    use crate::novel::{text_element::Dialog, Paragraph, Token};
+    use crate::novel::{Paragraph, Token, text_element::Dialog};
 
     #[test]
     // #[should_panic]
@@ -133,7 +140,7 @@ mod novel_paragraph {
         p.push_token(Token::new("that2\""));
         p.push_token(Token::new("dih"));
         p.push_token(Token::new("\"that3"));
-        // dbg!(&p);
+        dbg!(&p);
         assert!(p.elements[0].as_any().is::<Dialog>());
     }
 }

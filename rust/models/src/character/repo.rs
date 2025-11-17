@@ -1,8 +1,12 @@
+use derive_more::{Deref, DerefMut, From};
 use indexmap::IndexMap;
 
 use crate::{character::Character, repos::RepoBase};
 
+#[derive(Debug, From, Deref, DerefMut)]
 pub struct Repo {
+    #[deref]
+    #[deref_mut]
     pub characters: RepoBase<uuid::Uuid, Character>,
     character_names_map: IndexMap<String, uuid::Uuid>,
     character_surnames_map: IndexMap<String, uuid::Uuid>,
@@ -32,29 +36,16 @@ impl Repo {
         self.add_character_surname_id(character.name.clone(), character.id);
         self.characters.insert(character.id, character);
     }
-    
+
     pub fn add_character_name_id(&mut self, name: String, id: uuid::Uuid) {
         if !name.is_empty() {
             self.character_names_map.insert(name, id);
         }
     }
-    
+
     pub fn add_character_surname_id(&mut self, surname: String, id: uuid::Uuid) {
         if !surname.is_empty() {
             self.character_names_map.insert(surname, id);
         }
-    }
-}
-
-impl std::ops::Deref for Repo {
-    type Target = RepoBase<uuid::Uuid, Character>;
-    fn deref(&self) -> &Self::Target {
-        &self.characters
-    }
-}
-
-impl std::ops::DerefMut for Repo {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.characters
     }
 }

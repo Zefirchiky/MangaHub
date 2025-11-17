@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use derive_more::{Deref, DerefMut, From};
 use image::DynamicImage;
 
 use crate::image::Pixmap;
@@ -11,7 +12,11 @@ pub trait QualityState {}
 impl QualityState for LowQuality {}
 impl QualityState for HighQuality {}
 
+#[derive(Debug, Default, From, Deref, DerefMut)]
 pub struct StripPixmap<Q: QualityState> {
+    #[deref]
+    #[deref_mut]
+    #[from(forward)]
     pixmap: Pixmap,
     _qual: PhantomData<Q>,
 }
@@ -25,11 +30,13 @@ impl<Q: QualityState> StripPixmap<Q> {
     }
 
     pub fn resize(&self, factor: f32) -> StripPixmap<HighQuality> {
-        self.img.resize(
-            (self.width() as f32 * factor) as u32,
-            (self.height() as f32 * factor) as u32,
-            image::imageops::FilterType::Nearest
-        ).into()
+        self.img
+            .resize(
+                (self.width() as f32 * factor) as u32,
+                (self.height() as f32 * factor) as u32,
+                image::imageops::FilterType::Nearest,
+            )
+            .into()
     }
 }
 
@@ -54,18 +61,5 @@ impl<Q: QualityState> From<Pixmap> for StripPixmap<Q> {
 impl<Q: QualityState> From<DynamicImage> for StripPixmap<Q> {
     fn from(value: DynamicImage) -> Self {
         StripPixmap::new(Pixmap::new(value))
-    }
-}
-
-impl<Q: QualityState> std::ops::Deref for StripPixmap<Q> {
-    type Target = Pixmap;
-    fn deref(&self) -> &Self::Target {
-        &self.pixmap
-    }
-}
-
-impl<Q: QualityState> std::ops::DerefMut for StripPixmap<Q> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.pixmap
     }
 }

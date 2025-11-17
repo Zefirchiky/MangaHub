@@ -1,18 +1,19 @@
+use derive_more::{From};
 use serde::{Deserialize, Serialize};
 
 use crate::manga::{Strip, StripType};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, From, Serialize, Deserialize)]
 pub struct Size {
-    height: usize,
-    width: usize,
+    pub height: usize,
+    pub width: usize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, From, Serialize, Deserialize)]
 pub struct Panel {
-    size: Size,
-    index: usize,
-    strips_type: StripType,
-    strips: Vec<Strip>,
-    image_name: String,
+    pub size: Size,
+    pub index: usize,
+    pub strips_type: StripType,
+    pub strips: Vec<Strip>,
+    pub image_name: String,
 }

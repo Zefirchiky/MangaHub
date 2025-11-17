@@ -1,8 +1,9 @@
 use std::{hash::Hash, path::Path};
 
-use handlers::JsonHandler;
-use indexmap::{IndexMap};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use derive_more::{Deref, DerefMut, IntoIterator};
+use handlers::file::{Json, ModelFileTrait, ModelJsonIoError};
+use indexmap::IndexMap;
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 pub trait RepoKey: Eq + Hash + Serialize {}
 pub trait RepoValue: Serialize {}
@@ -10,47 +11,29 @@ pub trait RepoValue: Serialize {}
 impl<T> RepoKey for T where T: Eq + Hash + Serialize {}
 impl<T> RepoValue for T where T: Serialize {}
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, IntoIterator, Deref, DerefMut, Serialize, Deserialize)]
 pub struct RepoBase<K: RepoKey, V: RepoValue> {
     #[serde(skip)]
-    file_handler: JsonHandler,
+    pub file: Json,
+    #[deref]
+    #[deref_mut]
+    #[into_iterator(owned, ref, ref_mut)]
     elements: IndexMap<K, V>,
 }
 
 impl<K: RepoKey + DeserializeOwned, V: RepoValue + DeserializeOwned> RepoBase<K, V> {
     pub fn new(file: impl AsRef<Path>) -> Self {
         Self {
-            file_handler: JsonHandler::new(file),
+            file: Json::new(file),
             elements: IndexMap::new(),
         }
     }
 
-    pub fn load(&self) -> Result<Self, serde_json::Error> {
-        self.file_handler.load::<Self>()
+    pub fn load(f: &Json) -> Result<Self, ModelJsonIoError> {
+        f.load_model::<Self>()
     }
 
-    pub fn save(&self) -> Result<(), serde_json::Error> {
-        self.file_handler.save(self)
-    }
-}
-
-impl<K: RepoKey, V: RepoValue> std::ops::Deref for RepoBase<K, V> {
-    type Target = IndexMap<K, V>;
-    fn deref(&self) -> &Self::Target {
-        &self.elements
-    }
-}
-
-impl<K: RepoKey, V: RepoValue> std::ops::DerefMut for RepoBase<K, V> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.elements
-    }
-}
-
-impl<K: RepoKey, V: RepoValue> Drop for RepoBase<K, V> {
-    fn drop(&mut self) {
-        if let Result::Err(err) = self.file_handler.save(self) {
-            eprintln!("{err}");
-        }
+    pub fn save(&self) -> Result<(), ModelJsonIoError> {
+        self.file.save_model(self)
     }
 }

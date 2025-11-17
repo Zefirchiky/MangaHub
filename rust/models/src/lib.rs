@@ -1,24 +1,30 @@
-#![feature(
-    type_alias_impl_trait,
-    default_field_values,
-)]
+#![feature(type_alias_impl_trait, default_field_values)]
 #![allow(refining_impl_trait)]
-pub mod media;
-pub mod novel;
-pub mod manga;
-pub mod chapter;
-pub mod repos;
 pub mod cache;
+pub mod chapter;
 pub mod character;
 pub mod image;
+pub mod manga;
+pub mod media;
+pub mod novel;
 pub mod registry;
+pub mod repos;
+pub mod site;
+
+pub mod theme;
 
 use linkme::distributed_slice;
 
-use crate::novel::{text_element::{Narration, TextElementAuto}, ParseContext, TokenParsingResult, Token};
+use crate::novel::{
+    ParseContext, Token, TokenParsingResult,
+    text_element::{Narration, TextElementAuto},
+};
 
 pub fn init() {
-    assert!(jxl_oxide::integration::register_image_decoding_hook(), "Init function should only be called once! jxl_oxide error");
+    assert!(
+        jxl_oxide::integration::register_image_decoding_hook(),
+        "Init function should only be called once! jxl_oxide error"
+    );
 }
 
 /// Parser with explicit ordering hint

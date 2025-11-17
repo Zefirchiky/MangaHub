@@ -1,3 +1,5 @@
 mod chapter;
+mod repo_base;
 
-pub use chapter::{ChapterTrait, ChapterMetadata};
+pub use chapter::{ChapterMetadata, ChapterTrait};
+pub use repo_base::RepoBase;

@@ -1,13 +1,15 @@
-mod manga;
 mod chapter;
-mod repo;
+mod chapters_repo;
+mod manga;
 mod panel;
-mod strip;
 mod pixmap;
+mod repo;
+mod strip;
 
-pub use manga::Manga;
 pub use chapter::Chapter;
-pub use repo::ChaptersRepo;
+pub use chapters_repo::ChaptersRepo;
+pub use manga::Manga;
 pub use panel::Panel;
-pub use strip::{Strip, StripType};
 pub use pixmap::StripPixmap;
+pub use repo::Repo;
+pub use strip::{Strip, StripType};

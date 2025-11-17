@@ -1,5 +1,8 @@
+use derive_more::{Deref, DerefMut, From};
+
 /// A part of text, divided by ' ' (space)
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, From, Deref, DerefMut)]
+#[from(forward)]
 pub struct Token(String);
 
 impl Token {
@@ -9,31 +12,6 @@ impl Token {
 
     pub fn as_str(&self) -> &str {
         &self.0
-    }
-}
-
-impl std::ops::Deref for Token {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl std::ops::DerefMut for Token {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl From<String> for Token {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for Token {
-    fn from(s: &str) -> Self {
-        Self(s.into())
     }
 }
 

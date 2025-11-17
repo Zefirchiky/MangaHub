@@ -1,6 +1,12 @@
 use std::sync::OnceLock;
 
-use crate::{novel::{text_element::{Narration, TextElementAuto}, Sentence, SentenceTrait, Token, TokenParsingResult}, Parser};
+use crate::{
+    Parser,
+    novel::{
+        Sentence, SentenceTrait, Token, TokenParsingResult,
+        text_element::{Narration, TextElementAuto},
+    },
+};
 static GLOBAL_REGISTRY: OnceLock<ParserRegistry> = OnceLock::new();
 
 pub fn init_registry() {
@@ -8,17 +14,19 @@ pub fn init_registry() {
 }
 
 pub struct ParserRegistry {
-    _text_element_parsers: &'static [Parser]
+    _text_element_parsers: &'static [Parser],
 }
 
 impl ParserRegistry {
     pub fn new() -> Self {
         Self {
-            _text_element_parsers: &crate::TEXT_ELEMENT_PARSERS
+            _text_element_parsers: &crate::TEXT_ELEMENT_PARSERS,
         }
     }
 
-    pub fn parse_text_element_token(mut token: Token) -> (Box<dyn TextElementAuto>, Token, Option<Token>) {
+    pub fn parse_text_element_token(
+        mut token: Token,
+    ) -> (Box<dyn TextElementAuto>, Token, Option<Token>) {
         // `This"` -> `This` & `"`      Matched `"` with `This` as rest
         // `This"` -> `This` & Dialog   Matched Dialog with `This` as rest
         // `This"` -> `This` -> `"`     Matched `Narration(This)` with `"` as rest
@@ -30,24 +38,30 @@ impl ParserRegistry {
             match (f.from_token)(token) {
                 TokenParsingResult::Matched(el, tok) => return (el, tok, None),
                 // Pass first token as element, and second as the rest
-                TokenParsingResult::MatchedWithRest(t1, t2) => return {
-                    for f in crate::TEXT_ELEMENT_PARSERS {
-                        match (f.from_token)(t1) {
-                            TokenParsingResult::Matched(el, tok) => return (el, tok, Some(t2)),
-                            TokenParsingResult::MatchedWithRest(mut tm, tn) => return {
-                                tm.push_str(&tn);
-                                let (el, tok) = Narration::new(tm);
-                                (Box::new(el), tok, Some(t2))
-                            },
-                            TokenParsingResult::NotMatched(t) => return {
-                                let (el, tok) = Narration::new(t);
-                                (Box::new(el), tok, Some(t2))
-                            },
+                TokenParsingResult::MatchedWithRest(t1, t2) => {
+                    return {
+                        for f in crate::TEXT_ELEMENT_PARSERS {
+                            match (f.from_token)(t1) {
+                                TokenParsingResult::Matched(el, tok) => return (el, tok, Some(t2)),
+                                TokenParsingResult::MatchedWithRest(mut tm, tn) => {
+                                    return {
+                                        tm.push_str(&tn);
+                                        let (el, tok) = Narration::new(tm);
+                                        (Box::new(el), tok, Some(t2))
+                                    };
+                                }
+                                TokenParsingResult::NotMatched(t) => {
+                                    return {
+                                        let (el, tok) = Narration::new(t);
+                                        (Box::new(el), tok, Some(t2))
+                                    };
+                                }
+                            }
                         }
-                    }
-                    let (el, tok) = Narration::new(t1);
-                    (Box::new(el), tok, Some(t2))
-                },
+                        let (el, tok) = Narration::new(t1);
+                        (Box::new(el), tok, Some(t2))
+                    };
+                }
                 TokenParsingResult::NotMatched(t) => token = t,
             }
         }

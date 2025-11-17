@@ -11,10 +11,6 @@ pub struct NovelContext {
     pub character_repo: Repo,
 }
 
-pub struct ChapterContext {
+pub struct ChapterContext {}
 
-}
-
-pub struct ParagraphContext {
-
-}
+pub struct ParagraphContext {}

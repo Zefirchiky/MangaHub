@@ -1,18 +1,25 @@
-use crate::{manga::{Chapter, ChaptersRepo}, media::{MediaMetadata, MediaTrait}};
+use derive_more::{Deref, DerefMut, From};
+use serde::{Deserialize, Serialize};
 
+use crate::{
+    manga::{Chapter, ChaptersRepo},
+    media::{MediaMetadata, MediaTrait},
+};
+
+#[derive(Debug, From, Deref, DerefMut, Serialize, Deserialize)]
 pub struct Manga {
+    #[deref]
+    #[deref_mut]
     metadata: MediaMetadata,
-    repo: Option<ChaptersRepo>
+    #[serde(skip)]
+    repo: Option<ChaptersRepo>,
 }
 
 impl Manga {
     pub fn new(metadata: MediaMetadata) -> Self {
         let repo = Some(ChaptersRepo::new(&metadata.folder));
 
-        Self {
-            metadata,
-            repo,
-        }
+        Self { metadata, repo }
     }
 
     pub fn insert_chapter(&mut self, chapter: Chapter) -> Option<()> {
@@ -20,7 +27,7 @@ impl Manga {
             Some(repo) => {
                 repo.insert(chapter);
                 Some(())
-            },
+            }
             None => None,
         }
     }
@@ -37,7 +44,7 @@ impl MediaTrait for Manga {
             None => None,
         }
     }
-    
+
     fn get_chapter_mut(&mut self, num: isize) -> Option<&mut Chapter> {
         match &mut self.repo {
             Some(repo) => repo.get_mut(num),

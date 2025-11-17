@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 handlers = { path = "../services/handlers" }
 models-macros = { path = "../models-macros" }
-spel-right = "0.3.0-rc1"
+spel-right = "0.4.1"
 
 chrono = { version = "0.4.42", features = ["serde"] }
 indexmap = { version = "2.12.0", features = ["rayon", "serde"] }
@@ -20,6 +20,12 @@ size = { version = "0.5.0", features = ["serde"] }
 fxhash = "0.2.1"
 thiserror = "2.0.17"
 bytes = "1.10.1"
-jpegxl-rs = { version = "0.11.2", features = ["vendored"] }
+url = { version = "2.5.7", features = ["serde"] }
+slug = "0.1.6"
+scraper = { version = "0.24.0", features = ["indexmap", "serde"] }
+derive_more = { version = "2.0.1", features = ["full"] }
+log = "0.4.28"
+palette = { version = "0.7.6", features = ["serde", "serializing"] }
+# jpegxl-rs = { version = "0.11.2", features = ["vendored"] }
 
 [profile.release]

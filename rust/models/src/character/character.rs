@@ -2,23 +2,18 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[allow(dead_code)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub enum CharacterSex {
     Male,
     Female,
     Asexual,
     Hermafrodite,
+    #[default]
     Unknown,
 }
 
-impl Default for CharacterSex {
-    fn default() -> Self {
-        CharacterSex::Unknown
-    }
-}
-
 #[allow(dead_code)]
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Character {
     pub id: Uuid,
     pub name: String,

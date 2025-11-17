@@ -1,21 +1,24 @@
+use derive_more::{Deref, DerefMut};
 use serde::{Deserialize, Serialize};
 
-use crate::novel::{Paragraph, Token};
 use crate::chapter::{ChapterMetadata, ChapterTrait};
+use crate::novel::{Paragraph, Token};
 
 #[allow(dead_code)]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deref, DerefMut, Serialize, Deserialize)]
 pub struct Chapter {
-    metadata: ChapterMetadata,
+    #[deref]
+    #[deref_mut]
+    pub metadata: ChapterMetadata,
     #[serde(skip)]
-    paragraphs: Vec<Paragraph>
+    pub paragraphs: Vec<Paragraph>,
 }
 
 impl Chapter {
     pub fn new(metadata: ChapterMetadata) -> Self {
         Self {
             metadata,
-            paragraphs: vec![Paragraph::new()]
+            paragraphs: vec![Paragraph::new()],
         }
     }
 
@@ -23,7 +26,10 @@ impl Chapter {
         if token.is_empty() {
             return self;
         }
-        self.paragraphs.last_mut().unwrap().push_token(Token::new(token));
+        self.paragraphs
+            .last_mut()
+            .unwrap()
+            .push_token(Token::new(token));
         self
     }
 }
