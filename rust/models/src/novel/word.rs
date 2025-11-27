@@ -8,16 +8,18 @@ pub trait WordTrait: Any + Sync + Sync + Debug {
     fn try_from_token(token: Token, ctx: Context) -> Self;
 }
 
+#[allow(dead_code)]
 pub struct Name {
-    character: String,
-    has_name: bool,
-    has_surname: bool,
-    candidate_names: Vec<String>,
-    candidate_surnames: Vec<String>,
+    pub character: String,
+    pub has_name: bool,
+    pub has_surname: bool,
+    pub candidate_names: Vec<String>,
+    pub candidate_surnames: Vec<String>,
 }
 
 #[derive(Debug, Default, From, Deref, DerefMut)]
 #[from(forward)]
+#[allow(dead_code)]
 pub struct Word {
     #[deref]
     #[deref_mut]

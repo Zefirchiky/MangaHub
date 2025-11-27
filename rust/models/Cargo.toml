@@ -26,6 +26,7 @@ scraper = { version = "0.24.0", features = ["indexmap", "serde"] }
 derive_more = { version = "2.0.1", features = ["full"] }
 log = "0.4.28"
 palette = { version = "0.7.6", features = ["serde", "serializing"] }
+tokio = { version = "1.48.0", features = ["full"] }
 # jpegxl-rs = { version = "0.11.2", features = ["vendored"] }
 
 [profile.release]

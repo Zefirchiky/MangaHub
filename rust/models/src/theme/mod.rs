@@ -1,7 +1,7 @@
 mod color;
-mod theme;
 mod repo;
+mod theme;
 
 pub use color::Color;
-pub use theme::Theme;
 pub use repo::Repo;
+pub use theme::Theme;

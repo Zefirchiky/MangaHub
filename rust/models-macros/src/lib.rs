@@ -1,7 +1,6 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, DeriveInput};
-
+use syn::{DeriveInput, parse_macro_input};
 
 #[proc_macro_attribute]
 pub fn register_text_element(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -14,10 +13,10 @@ pub fn register_text_element(_attr: TokenStream, item: TokenStream) -> TokenStre
         }
         hash()
     };
-    
+
     let expanded = quote! {
         #input
-        
+
         impl TextElementAuto for #name {
             // const TYPE_INDEX: usize = #type_index;
 
@@ -28,11 +27,11 @@ pub fn register_text_element(_attr: TokenStream, item: TokenStream) -> TokenStre
             fn type_name(&self) -> &'static str {
                 stringify!(#name)
             }
-            
+
             fn as_any(&self) -> &dyn std::any::Any {
                 self
             }
-            
+
             fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
                 self
             }
@@ -43,7 +42,7 @@ pub fn register_text_element(_attr: TokenStream, item: TokenStream) -> TokenStre
             name: stringify!(#name),
             // handler: Box::<#name>new(),
             // type_index: #type_index,
-            
+
             // from_token: |token| {
             //     let res = <#name>::try_from_token(token);
             //     if let crate::TokenParsingResult::Matched(el, tok) = res {
@@ -55,12 +54,16 @@ pub fn register_text_element(_attr: TokenStream, item: TokenStream) -> TokenStre
             //         res
             //     }
             // },
+
+            start_chars: <#name>::start_chars,
+            end_chars: <#name>::end_chars,
+
             from_token: |token| match <#name>::try_from_token(token) {
                 crate::TokenParsingResult::Matched(el, tok) => TokenParsingResult::Matched(Box::new(el) as Box<dyn TextElementAuto>, tok),
                 crate::TokenParsingResult::MatchedWithRest(tok1, tok2) => TokenParsingResult::MatchedWithRest(tok1, tok2),
                 crate::TokenParsingResult::NotMatched(token) => crate::TokenParsingResult::NotMatched(token),
             },
-            
+
             from_narration: |nar, cxt| Box::new(<#name>::from_narration(nar, cxt)) as Box<dyn TextElementAuto>,
         };
     };

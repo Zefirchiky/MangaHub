@@ -9,7 +9,7 @@ use crate::site::Extractor;
 pub struct MediaPageContent {
     pub name: Option<String>,
     pub cover_url: Option<Url>,
-    pub last_chapter_num: Option<isize>
+    pub last_chapter_num: Option<isize>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,29 +52,26 @@ impl MediaPage {
 
         if let Some(extractor) = &self.cover_selector {
             match extractor.parse_html(html).get(0) {
-                Some(surl) => {
-                    match Url::parse(surl) {
-                        Ok(purl) => content.cover_url = Some(purl),
-                        Err(err) => warn!("Failed to parse {surl}: {err:#?}"),
-                    }
-                }
-                None => warn!("Cover url was not found with extractor {extractor:#?}")
+                Some(surl) => match Url::parse(surl) {
+                    Ok(purl) => content.cover_url = Some(purl),
+                    Err(err) => warn!("Failed to parse {surl}: {err:#?}"),
+                },
+                None => warn!("Cover url was not found with extractor {extractor:#?}"),
             }
         }
 
         if let Some(extractor) = &self.last_chapter_num_selector {
             match extractor.parse_html(html).get(0) {
                 Some(num_str) => {
-                    let digits: String = num_str
-                        .chars()
-                        .filter(|c| c.is_numeric())
-                        .collect();
+                    let digits: String = num_str.chars().filter(|c| c.is_numeric()).collect();
                     match digits.is_empty() {
-                        true => warn!("Failed to extract a last chapter number from string `{num_str}`"),
+                        true => {
+                            warn!("Failed to extract a last chapter number from string `{num_str}`")
+                        }
                         false => content.last_chapter_num = digits.parse::<isize>().ok(),
                     }
                 }
-                None => warn!("Last chapter number was not found with extractor {extractor:#?}")
+                None => warn!("Last chapter number was not found with extractor {extractor:#?}"),
             }
         }
 

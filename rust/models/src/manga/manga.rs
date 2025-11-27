@@ -17,7 +17,7 @@ pub struct Manga {
 
 impl Manga {
     pub fn new(metadata: MediaMetadata) -> Self {
-        let repo = Some(ChaptersRepo::new(&metadata.folder));
+        let repo = Some(ChaptersRepo::new(metadata.dir.clone().into(), metadata.dir.join("chapters.json").into()));
 
         Self { metadata, repo }
     }

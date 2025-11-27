@@ -6,17 +6,14 @@ pub trait ChapterTrait {
     fn metadata(&self) -> &ChapterMetadata;
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ChapterMetadata {
     pub num: isize,
     pub name: String,
 }
 
-// impl ChapterMetadata {
-//     fn new(num: i32, name: String) -> Self {
-//         Self {
-//             num,
-//             name,
-//         }
-//     }
-// }
+impl ChapterMetadata {
+    pub fn new(num: isize, name: String) -> Self {
+        Self { num, name }
+    }
+}

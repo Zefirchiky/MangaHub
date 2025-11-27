@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
 
-use crate::site::{ChapterPage, MediaPage};
+use crate::{
+    site::{ChapterPage, MediaPage},
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Site {

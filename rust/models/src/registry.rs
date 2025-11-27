@@ -7,7 +7,8 @@ use crate::{
         text_element::{Narration, TextElementAuto},
     },
 };
-static GLOBAL_REGISTRY: OnceLock<ParserRegistry> = OnceLock::new();
+
+pub static GLOBAL_REGISTRY: OnceLock<ParserRegistry> = OnceLock::new();
 
 pub fn init_registry() {
     GLOBAL_REGISTRY.get_or_init(|| ParserRegistry::new());

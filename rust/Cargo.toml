@@ -1,9 +1,18 @@
+cargo-features = ["profile-rustflags", "trim-paths"]
+
 [workspace]
-members = ["managers","models", "models-macros", "services/handlers"]
+members = ["ffi","managers", "models", "models-macros", "services/handlers"]
 resolver = "3"
 
+[profile.dev]
+incremental = true
+rustflags = ["-Zthreads=0", "-Zshare-generics=true"]
+
 [profile.release]
-panic = "abort"
 codegen-units = 1
 lto = true
 opt-level = 3
+panic = "abort"
+strip = true
+trim-paths = "all" # Removes potentially privileged information from binaries.
+rustflags = ["-Cdebuginfo=0"]

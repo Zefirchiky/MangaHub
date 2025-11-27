@@ -1,4 +1,4 @@
-use derive_more::{From};
+use derive_more::From;
 use serde::{Deserialize, Serialize};
 
 use crate::manga::{Strip, StripType};

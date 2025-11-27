@@ -28,16 +28,18 @@ pub fn init() {
 }
 
 /// Parser with explicit ordering hint
-struct Parser {
+pub struct Parser {
     pub name: &'static str,
     /// Ordering hint: Fallback = last, Normal = middle, Priority = first
     // pub order: ParserOrder,
+    pub start_chars: fn() -> &'static str,
+    pub end_chars: fn() -> &'static str,
     pub from_token: fn(Token) -> TokenParsingResult<Box<dyn TextElementAuto>>,
     pub from_narration: fn(Narration, &ParseContext) -> Box<dyn TextElementAuto>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum ParserOrder {
+pub enum ParserOrder {
     Highest = 0,
     High = 1,
     MediumHgh = 2,

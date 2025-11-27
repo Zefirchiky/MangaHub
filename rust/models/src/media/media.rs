@@ -1,6 +1,5 @@
-use std::path::PathBuf;
-
 use chrono::Datelike;
+use handlers::file::Dir;
 use indexmap::IndexSet;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use uuid::Uuid;
@@ -37,7 +36,7 @@ pub struct MediaMetadata {
     pub name: String,
     pub slug: String,
     pub id: Uuid,
-    pub folder: PathBuf,
+    pub dir: Dir,
     pub description: String,
     pub author: String,
     pub status: Status,
@@ -54,15 +53,24 @@ pub struct MediaMetadata {
 }
 
 impl MediaMetadata {
-    pub fn new(name: String, folder: String) -> Self {
+    /// Creates a new `MediaMetadata` instance from a given name and directory path.
+    ///
+    /// The name slug is generated from the given name using the `slug` crate.
+    /// The directory path is joined with the name slug to ensure that the media's
+    /// metadata is stored in a unique directory.
+    ///
+    /// The `year` field is set to the current year.
+    ///
+    /// All other fields are set to their default values.
+    pub fn new(name: String, dir: Dir) -> Self {
         let name_slug = slug::slugify(&name);
-        let folder = PathBuf::from(folder).join(&name_slug);
+        let dir = dir.join(&name_slug).into();
 
         Self {
             name,
             slug: name_slug,
             id: Uuid::new_v4(),
-            folder,
+            dir,
             description: String::new(),
             author: String::new(),
             status: Status::Ongoing,

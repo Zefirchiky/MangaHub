@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use derive_more::{Debug, Deref, DerefMut, From};
-use image::{ImageReader};
+use image::ImageReader;
 
 use crate::image::Image;
 

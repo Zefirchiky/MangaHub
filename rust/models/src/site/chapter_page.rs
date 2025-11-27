@@ -1,15 +1,15 @@
 use log::warn;
-use scraper::{Html};
+use scraper::Html;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-use crate::site::{Extractor};
+use crate::site::Extractor;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ChapterPageContent {
     pub name: Option<String>,
     pub image_urls: Option<Vec<Url>>,
-    pub text: Option<Vec<String>>
+    pub text: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,7 +21,12 @@ pub struct ChapterPage {
 }
 
 impl ChapterPage {
-    pub fn new(url_template: String, name_selector: Option<Extractor>, img_selector: Option<Extractor>, text_selector: Option<Extractor>) -> Self {
+    pub fn new(
+        url_template: String,
+        name_selector: Option<Extractor>,
+        img_selector: Option<Extractor>,
+        text_selector: Option<Extractor>,
+    ) -> Self {
         Self {
             url_template,
             name_selector,
@@ -51,7 +56,8 @@ impl ChapterPage {
         }
 
         if let Some(extractor) = &self.img_selector {
-            let surls: Vec<Url> = extractor.parse_html(html)
+            let surls: Vec<Url> = extractor
+                .parse_html(html)
                 .iter()
                 .filter_map(|s| Url::parse(s).ok())
                 .collect();
@@ -60,7 +66,7 @@ impl ChapterPage {
                 false => content.image_urls = Some(surls),
             }
         }
-        
+
         if let Some(extractor) = &self.text_selector {
             let texts = extractor.parse_html(html);
             match texts.is_empty() {

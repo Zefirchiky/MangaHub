@@ -50,6 +50,19 @@ pub trait TextElement: Send + Sync + Debug {
     where
         Self: Sized;
 
+    fn start_chars() -> &'static str
+    where
+        Self: Sized,
+    {
+        ""
+    }
+    fn end_chars() -> &'static str
+    where
+        Self: Sized,
+    {
+        ""
+    }
+
     fn sentences(&self) -> &Vec<Box<dyn SentenceTrait>>;
     fn is_start(&self) -> bool;
     fn is_end(&self) -> bool;
@@ -144,6 +157,20 @@ impl TextElement for Dialog {
         }
     }
 
+    fn start_chars() -> &'static str
+    where
+        Self: Sized,
+    {
+        "\""
+    }
+
+    fn end_chars() -> &'static str
+    where
+        Self: Sized,
+    {
+        "\""
+    }
+
     fn is_start(&self) -> bool {
         true
     }
@@ -203,6 +230,20 @@ impl TextElement for Thought {
             from: String::new(),
             sentences: narration.sentences,
         }
+    }
+
+    fn start_chars() -> &'static str
+    where
+        Self: Sized,
+    {
+        "'"
+    }
+
+    fn end_chars() -> &'static str
+    where
+        Self: Sized,
+    {
+        "'"
     }
 
     fn is_start(&self) -> bool {

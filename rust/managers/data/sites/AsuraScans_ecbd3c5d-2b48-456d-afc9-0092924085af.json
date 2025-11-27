@@ -1,0 +1,39 @@
+{
+  "id": "ecbd3c5d-2b48-456d-afc9-0092924085af",
+  "name": "AsuraScans",
+  "url": "https://asurascanz.com/",
+  "media_page": {
+    "url_template": "manga/{slug}",
+    "name_selector": {
+      "selector": "div#titlemove h1.entry-title",
+      "source": {
+        "Text": 0
+      }
+    },
+    "cover_selector": {
+      "selector": "div.thumb img",
+      "source": {
+        "Attr": "src"
+      }
+    },
+    "last_chapter_num_selector": {
+      "selector": "span.chapternum",
+      "source": {
+        "Text": 0
+      }
+    }
+  },
+  "chapter_page": {
+    "url_template": "{slug}-chapter-{num}",
+    "name_selector": null,
+    "img_selector": {
+      "selector": "div#readerarea p img.lazyload",
+      "source": {
+        "Attr": "data-src"
+      }
+    },
+    "text_selector": null
+  },
+  "languages": [],
+  "manga": []
+}

@@ -1,5 +1,6 @@
+use handlers::file::Json;
 use uuid::Uuid;
 
-use crate::{repos::RepoBase, theme::Theme};
+use crate::{repos::FileRepo, theme::Theme};
 
-pub type Repo = RepoBase<Uuid, Theme>;
+pub type Repo = FileRepo<Uuid, Theme, Json>;

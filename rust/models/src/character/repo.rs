@@ -1,21 +1,22 @@
 use derive_more::{Deref, DerefMut, From};
+use handlers::file::Json;
 use indexmap::IndexMap;
 
-use crate::{character::Character, repos::RepoBase};
+use crate::{character::Character, repos::FileRepo};
 
 #[derive(Debug, From, Deref, DerefMut)]
 pub struct Repo {
     #[deref]
     #[deref_mut]
-    pub characters: RepoBase<uuid::Uuid, Character>,
+    pub characters: FileRepo<uuid::Uuid, Character, Json>,
     character_names_map: IndexMap<String, uuid::Uuid>,
     character_surnames_map: IndexMap<String, uuid::Uuid>,
 }
 
 impl Repo {
-    pub fn new(file: impl AsRef<std::path::Path>) -> Self {
+    pub fn new(file: Json) -> Self {
         Self {
-            characters: RepoBase::new(file),
+            characters: FileRepo::new(file),
             character_names_map: IndexMap::new(),
             character_surnames_map: IndexMap::new(),
         }

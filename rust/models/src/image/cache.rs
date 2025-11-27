@@ -1,6 +1,4 @@
-use std::{
-    io::{Read, Seek},
-};
+use std::io::{Read, Seek};
 
 use derive_more::{Debug, Deref, DerefMut, From};
 

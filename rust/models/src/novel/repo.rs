@@ -1,3 +1,3 @@
-use crate::{novel::Novel, media::RepoBase};
+use crate::{media::RepoBase, novel::Novel};
 
 pub type Repo = RepoBase<Novel>;

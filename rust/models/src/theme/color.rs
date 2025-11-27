@@ -25,7 +25,11 @@ impl Color {
     }
 
     pub fn from_hex(hex: &String) -> Self {
-        Self(palette::rgb::Rgba::from_str(hex).expect(&format!("Wrong string: {hex}")).into())
+        Self(
+            palette::rgb::Rgba::from_str(hex)
+                .expect(&format!("Wrong string: {hex}"))
+                .into(),
+        )
     }
 
     pub fn as_hex(&self) -> String {

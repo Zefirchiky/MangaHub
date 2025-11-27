@@ -1,8 +1,8 @@
 mod chapter;
+mod chapters_repo;
 mod context;
 mod novel;
 mod paragraph;
-mod chapters_repo;
 mod repo;
 mod sentence;
 pub mod text_element;
@@ -10,10 +10,10 @@ mod token;
 mod word;
 
 pub use chapter::Chapter;
+pub use chapters_repo::ChaptersRepo;
 pub use context::{ChapterContext, Context, NovelContext, ParagraphContext};
 pub use novel::Novel;
 pub use paragraph::Paragraph;
-pub use chapters_repo::ChaptersRepo;
 pub use repo::Repo;
 pub use sentence::{Sentence, SentenceTrait};
 pub use text_element::{ElementEndState, TextElement};
