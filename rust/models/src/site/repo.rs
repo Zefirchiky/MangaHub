@@ -30,7 +30,11 @@ impl Repo {
     }
 
     pub fn load(&mut self) -> Result<(), ModelJsonIoError> {
-        self.repo.load()
+        self.repo.load()?;
+        for (id, site) in self.repo.iter() {
+            self.name_to_id.insert(site.name.to_lowercase(), id.clone());
+        }
+        Ok(())
     }
 
     pub fn save(&self) -> Result<(), ModelJsonIoError> {

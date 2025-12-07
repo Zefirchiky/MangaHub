@@ -52,7 +52,7 @@ pub fn site() -> Site {
 }
 
 pub fn sites_manager() -> SitesManager {
-    let mut sites_manager = SitesManager::new("data/sites/test_sites.json".into());
+    let mut sites_manager = SitesManager::new("data/sites/test_sites".into());
     sites_manager.load();
 
     if sites_manager.repo.get_by_name("AsuraScans").is_none() {

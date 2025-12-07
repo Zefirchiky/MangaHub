@@ -40,7 +40,7 @@ impl DownloadManager {
     pub fn new() -> Self {
         Self {
             client: Client::default(),
-            rt: tokio::runtime::Builder::new_multi_thread().build().unwrap(),
+            rt: tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap(),
         }
     }
 
@@ -217,15 +217,17 @@ impl DownloadManager {
     /// # Example
     ///
     ///
-    pub fn run_channels<F, T>(&self, f: F, cap: usize) -> Receiver<T>
+    pub fn run_channels<F, T>(&self, f: F, cap: usize) -> tokio::sync::mpsc::Receiver<T>
     where
-        F: AsyncFnOnce(Sender<T>) + Send + 'static,
+        F: AsyncFnOnce(tokio::sync::mpsc::Sender<T>) + Send + 'static,
         F::CallOnceFuture: Send + 'static,
     {
         let (tc, rc) = if cap > 0 {
-            crossbeam::channel::bounded(cap)
+            // crossbeam::channel::bounded(cap)
+            tokio::sync::mpsc::channel(cap)
         } else {
-            crossbeam::channel::unbounded()
+            // crossbeam::channel::unbounded()
+            tokio::sync::mpsc::channel(10)
         };
         self.rt.spawn((f)(tc));
         rc

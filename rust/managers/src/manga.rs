@@ -35,6 +35,13 @@ impl MangaManager {
         manga.id
     }
 
+    pub fn add_site_to(&mut self, manga: Uuid, site: Uuid) -> Option<()> {
+        let manga = self.repo.get_mut(&manga)?;
+        manga.sites.push(site);
+        // let site = self.sites_manager.repo.get_mut(&site);
+        Some(())
+    }
+
     /// Downloads all images of a given chapter.
     ///
     /// This function is blocking and should be called in another thread.
@@ -56,20 +63,20 @@ impl MangaManager {
         &self,
         manga: &Manga,
         chapter: &Chapter,
-    ) -> Option<crossbeam::channel::Receiver<ImageMessage>> {
+    ) -> Option<tokio::sync::mpsc::Receiver<ImageMessage>> {
         // let (tc, rc) = crossbeam::channel::unbounded();
         let download_manager = Arc::clone(&self.download_manager);
         if let Some(urls) = chapter.image_urls.clone() {
             let len = urls.len();
             return Some(self.download_manager.run_channels(
-                |tc: Sender<ImageMessage>| async move {
+                |tc: tokio::sync::mpsc::Sender<ImageMessage>| async move {
                     while let Some(msg) = download_manager
                         .download_images(urls.clone())
                         .await
                         .next()
                         .await
                     {
-                        tc.send(msg).unwrap();
+                        tc.send(msg).await.unwrap();
                     }
                 },
                 len,
@@ -83,7 +90,7 @@ impl MangaManager {
         let chapter_num = chapter.num;
         let download_manager = Arc::clone(&self.download_manager);
         let rc = self.download_manager.run_channels(
-            async move |tc: Sender<ImageMessage>| {
+            async move |tc: tokio::sync::mpsc::Sender<ImageMessage>| {
                 dbg!("Here");
                 let chapter_image_urls = match image_urls {
                     Some(urls) => urls,
@@ -115,7 +122,7 @@ impl MangaManager {
                     .next()
                     .await
                 {
-                    tc.send(msg).unwrap();
+                    tc.send(msg).await.unwrap();
                 }
             },
             0,

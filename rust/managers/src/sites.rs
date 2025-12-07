@@ -63,6 +63,7 @@ impl SitesManager {
         num: isize,
     ) -> Option<Html> {
         let chap_url = site.chapter_page.get_url(&site.url, name_slug, num);
+        dbg!("Fuck");
         let text = match DownloadManager::new().download_html_task(chap_url).await {
             Ok(t) => t,
             Err(err) => {
@@ -73,6 +74,7 @@ impl SitesManager {
                 return None;
             }
         };
+        dbg!("Fuck3");
 
         Some(scraper::Html::parse_document(&text))
     }
@@ -113,8 +115,10 @@ impl SitesManager {
                     continue;
                 }
             };
-
+            
+            dbg!("Downloading chapter content", &site.name, &name_slug, num);
             let html = Self::download_chapter_page_task(site, &name_slug, num).await?;
+            dbg!("Downloaded");
             return Some(site.chapter_page.parse_html(&html));
         }
 

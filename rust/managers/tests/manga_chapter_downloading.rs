@@ -34,12 +34,15 @@ fn test_manga_manager() -> MangaManager {
 #[test]
 fn download_images() {
     ffi::init();
-    let manager = test_manga_manager();
+    let mut manager = test_manga_manager();
     let manga = manager.repo.get_by_name(TEST_NAME).unwrap();
-    let rc = manager
+    let site = manager.sites_manager.repo.get_by_name("AsuraScans").unwrap();
+    manager.add_site_to(manga.id, site.id);
+    let manga = manager.repo.get_by_name(TEST_NAME).unwrap();
+    let mut rc = manager
         .download_chapter_images(manga, manga.get_chapter(1).unwrap())
         .unwrap();
-    for mes in rc {
+    while let Some(mes) = rc.blocking_recv() {
         match mes {
             ImageMessage::Metadata {
                 i,
@@ -60,4 +63,5 @@ fn download_images() {
             }
         }
     }
+    dbg!("I sure hope it didn't drop");
 }
