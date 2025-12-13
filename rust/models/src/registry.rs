@@ -27,7 +27,7 @@ impl ParserRegistry {
 
     pub fn parse_text_element_token(
         mut token: Token,
-    ) -> (Box<dyn TextElementAuto>, Token, Option<Token>) {
+    ) -> (Box<dyn TextElementAuto>, Token, Option<Token>, Option<Token>) {
         // `This"` -> `This` & `"`      Matched `"` with `This` as rest
         // `This"` -> `This` & Dialog   Matched Dialog with `This` as rest
         // `This"` -> `This` -> `"`     Matched `Narration(This)` with `"` as rest
@@ -37,39 +37,20 @@ impl ParserRegistry {
         // while let TokenParsingResult::MatchedWithRest(t1, t2) = &mut result {
         for f in crate::TEXT_ELEMENT_PARSERS {
             match (f.from_token)(token) {
-                TokenParsingResult::Matched(el, tok) => return (el, tok, None),
+                TokenParsingResult::Matched {
+                    model,
+                    matched,
+                    prev: not_matched_back,
+                    next: not_matched_forward,
+                } => return (model, matched, not_matched_back, not_matched_forward),
                 // Pass first token as element, and second as the rest
-                TokenParsingResult::MatchedWithRest(t1, t2) => {
-                    return {
-                        for f in crate::TEXT_ELEMENT_PARSERS {
-                            match (f.from_token)(t1) {
-                                TokenParsingResult::Matched(el, tok) => return (el, tok, Some(t2)),
-                                TokenParsingResult::MatchedWithRest(mut tm, tn) => {
-                                    return {
-                                        tm.push_str(&tn);
-                                        let (el, tok) = Narration::new(tm);
-                                        (Box::new(el), tok, Some(t2))
-                                    };
-                                }
-                                TokenParsingResult::NotMatched(t) => {
-                                    return {
-                                        let (el, tok) = Narration::new(t);
-                                        (Box::new(el), tok, Some(t2))
-                                    };
-                                }
-                            }
-                        }
-                        let (el, tok) = Narration::new(t1);
-                        (Box::new(el), tok, Some(t2))
-                    };
-                }
                 TokenParsingResult::NotMatched(t) => token = t,
             }
         }
 
         // }
         let (el, token) = Narration::new(token);
-        (Box::new(el), token, None)
+        (Box::new(el), token, None, None)
     }
 
     pub fn parse_sentence_token(token: &Token) -> Box<dyn SentenceTrait> {

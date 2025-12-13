@@ -7,7 +7,9 @@ pub struct Token(String);
 
 impl Token {
     pub fn new(s: impl Into<String>) -> Self {
-        Self(s.into())
+        let s = s.into();
+        assert!(!s.is_empty());
+        Self(s)
     }
 
     pub fn as_str(&self) -> &str {
@@ -18,8 +20,13 @@ impl Token {
 pub struct ParseContext {}
 
 pub enum TokenParsingResult<T> {
-    Matched(T, Token),
-    MatchedWithRest(Token, Token),
+    Matched {
+        model: T,
+        matched: Token,
+        prev: Option<Token>,
+        next: Option<Token>,
+    },
+    // MatchedWithRest(Token, Token),
     NotMatched(Token),
 }
 

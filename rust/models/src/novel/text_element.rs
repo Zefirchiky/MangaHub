@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use derive_more::From;
 use models_macros::register_text_element;
 
-use crate::novel::{ParseContext, TokenParsingResult};
+use crate::novel::{ParseContext, Sentences, TokenParsingResult};
 use crate::novel::{
     SentenceTrait,
     Token,
@@ -63,7 +63,7 @@ pub trait TextElement: Send + Sync + Debug {
         ""
     }
 
-    fn sentences(&self) -> &Vec<Box<dyn SentenceTrait>>;
+    fn sentences(&self) -> &Sentences;
     fn is_start(&self) -> bool;
     fn is_end(&self) -> bool;
 }
@@ -85,64 +85,83 @@ pub struct Dialog {
     /// Represents the character that is talking.
     pub from: String,
     is_opened: bool,
-    sentences: Vec<Box<dyn SentenceTrait>>,
+    sentences: Sentences,
 }
 
 impl TextElement for Dialog {
     // const TYPE_INDEX: usize = Dialog::TYPE_INDEX;
-    fn sentences(&self) -> &Vec<Box<dyn SentenceTrait>> {
+    fn sentences(&self) -> &Sentences {
         &self.sentences
     }
 
     fn push_token(&mut self, mut token: Token) -> ElementEndState {
-        dbg!(&token);
-        if token.ends_with('"') {
+        if let Some(at) = token.find('"') {
             if self.is_opened {
                 self.is_opened = false;
-                let len = token.len();
-                token.truncate(len - 1);
-                if token.is_empty() {
-                    return ElementEndState::Finished(None);
+                let mut to_push = token.split_off(at);
+                to_push = to_push.split_off(1);
+                if !token.is_empty() {
+                    self.sentences.push(token.into());
                 }
-                self.sentences.last_mut().unwrap().push(token);
-                ElementEndState::Finished(None)
+                ElementEndState::Finished(Token::new(to_push).into())
             } else {
-                self.is_opened = true;
-                let len = token.len();
-                let t2 = token.split_off(len - 2);
-                ElementEndState::NotFinishedToken(token, t2.into())
-            }
-        } else if token.starts_with('"') {
-            if !self.is_opened {
-                self.is_opened = true;
-                token = token[1..].into();
-                self.push_token(token)
-            } else {
-                ElementEndState::Finished(Some(token[1..].to_string().into()))
+                token = token.split_off(1).into();
+                if token.is_empty() {
+                    self.is_opened = true;
+                    ElementEndState::NotFinished
+                } else {
+                    if let Some(at2) = token.find('"') {      // '"' can only be at the start if Dialog is not opened
+                        token.truncate(at);                 // Remove '"'+ from token
+                        let to_push = token.split_off(at2);
+                        if !to_push.is_empty() {
+                            self.sentences.push(to_push.into());
+                        }
+                        ElementEndState::Finished(token.into())
+                    } else {
+                        self.is_opened = true;
+                        token.truncate(at);
+                        if !token.is_empty() {
+                            self.sentences.push(token.into());
+                        }
+                        ElementEndState::NotFinished
+                    }
+                }
             }
         } else {
-            self.sentences.last_mut().unwrap().push(token);
+            self.sentences.push(token);
             ElementEndState::NotFinished
         }
     }
 
     fn try_from_token(mut token: Token) -> TokenParsingResult<Self> {
         // dbg!(&token);
-        if token.starts_with('"') {
-            let len = token.len();
-            token.truncate(len - 1);
-            return TokenParsingResult::Matched(
-                Self {
+        if let Some(at) = token.find('"') {
+            let back_token = if at == 0 {
+                None
+            } else {
+                Some(token.split_off(at).into())
+            };
+            let mut forward_token = None;
+            let matched = if let Some(at_end) = token.find('"') {
+                let m = token.split_off(at_end).into();
+                if !token.is_empty() {
+                    forward_token = Some(token);
+                }
+                m
+            } else {
+                token
+            };
+            return TokenParsingResult::Matched {
+                model: Self {
                     to: String::new(),
                     from: String::new(),
                     is_opened: false,
-                    sentences: vec![ParserRegistry::parse_sentence_token(&token)],
+                    sentences: vec![].into(),
                 },
-                token,
-            );
-        } else if let Some(at) = token.find('"') {
-            let tok = token.split_off(at).into();
-            return TokenParsingResult::MatchedWithRest(token, tok);
+                matched,
+                prev: back_token,
+                next: forward_token,
+            };
         }
 
         TokenParsingResult::NotMatched(token)
@@ -186,40 +205,81 @@ impl TextElement for Dialog {
 pub struct Thought {
     /// Represents the character that is thinking.
     from: String,
-    sentences: Vec<Box<dyn SentenceTrait>>,
+    is_opened: bool,
+    sentences: Sentences,
 }
 
 impl TextElement for Thought {
-    fn sentences(&self) -> &Vec<Box<dyn SentenceTrait>> {
+    fn sentences(&self) -> &Sentences {
         &self.sentences
     }
 
-    fn push_token(&mut self, token: Token) -> ElementEndState {
-        if token.ends_with('\'') {
-            ElementEndState::Finished(None)
-        } else if token.starts_with('\'') {
-            ElementEndState::Finished(Some(token[1..].to_string().into()))
+    fn push_token(&mut self, mut token: Token) -> ElementEndState {
+        if let Some(at) = token.find('\'') {
+            if self.is_opened {
+                self.is_opened = false;
+                let mut to_push = token.split_off(at);
+                to_push = to_push.split_off(1);
+                if !token.is_empty() {
+                    self.sentences.push(token.into());
+                }
+                ElementEndState::Finished(Token::new(to_push).into())
+            } else {
+                token = token.split_off(1).into();
+                if token.is_empty() {
+                    self.is_opened = true;
+                    ElementEndState::NotFinished
+                } else {
+                    if let Some(at2) = token.find('\'') {      // '"' can only be at the start if Dialog is not opened
+                        token.truncate(at);                 // Remove '"'+ from token
+                        let to_push = token.split_off(at2);
+                        if !to_push.is_empty() {
+                            self.sentences.push(to_push.into());
+                        }
+                        ElementEndState::Finished(token.into())
+                    } else {
+                        self.is_opened = true;
+                        token.truncate(at);
+                        if !token.is_empty() {
+                            self.sentences.push(token.into());
+                        }
+                        ElementEndState::NotFinished
+                    }
+                }
+            }
         } else {
-            self.sentences.last_mut().unwrap().push(token);
+            self.sentences.push(token);
             ElementEndState::NotFinished
         }
     }
 
-    fn try_from_token(token: Token) -> TokenParsingResult<Self> {
-        if token.starts_with('\'') {
-            let sentences = if token.is_empty() {
-                vec![]
+    fn try_from_token(mut token: Token) -> TokenParsingResult<Self> {
+        if let Some(at) = token.find('\'') {
+            let back_token = if at == 0 {
+                None
             } else {
-                vec![ParserRegistry::parse_sentence_token(&token)]
+                Some(token.split_off(at).into())
             };
-
-            return TokenParsingResult::Matched(
-                Self {
+            let mut forward_token = None;
+            let matched = if let Some(at_end) = token.find('"') {
+                let m = token.split_off(at_end).into();
+                if !token.is_empty() {
+                    forward_token = Some(token);
+                }
+                m
+            } else {
+                token
+            };
+            return TokenParsingResult::Matched {
+                model: Self {
                     from: String::new(),
-                    sentences,
+                    is_opened: false,
+                    sentences: vec![].into(),
                 },
-                token,
-            );
+                matched,
+                prev: back_token,
+                next: forward_token,
+            };
         }
 
         TokenParsingResult::NotMatched(token)
@@ -228,6 +288,7 @@ impl TextElement for Thought {
     fn from_narration(narration: Narration, _ctx: &ParseContext) -> Self {
         Self {
             from: String::new(),
+            is_opened: false,
             sentences: narration.sentences,
         }
     }
@@ -258,14 +319,14 @@ impl TextElement for Thought {
 #[derive(Debug, Default, From)]
 #[from(forward)]
 pub struct Narration {
-    sentences: Vec<Box<dyn SentenceTrait>>,
+    sentences: Sentences,
 }
 
 impl Narration {
     pub fn new(token: Token) -> (Self, Token) {
         (
             Self {
-                sentences: vec![ParserRegistry::parse_sentence_token(&token)],
+                sentences: vec![ParserRegistry::parse_sentence_token(&token)].into(),
             },
             token,
         )
@@ -273,7 +334,7 @@ impl Narration {
 }
 
 impl TextElement for Narration {
-    fn sentences(&self) -> &Vec<Box<dyn SentenceTrait>> {
+    fn sentences(&self) -> &Sentences {
         &self.sentences
     }
 
@@ -284,7 +345,12 @@ impl TextElement for Narration {
 
     fn try_from_token(token: Token) -> TokenParsingResult<Self> {
         let (el, tok) = Self::new(token);
-        TokenParsingResult::Matched(el, tok)
+        TokenParsingResult::Matched {
+            model: el,
+            matched: tok,
+            prev: None,
+            next: None,
+        }
     }
 
     fn from_narration(narration: Narration, _ctx: &ParseContext) -> Self {

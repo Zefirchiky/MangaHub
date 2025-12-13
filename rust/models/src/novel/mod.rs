@@ -15,7 +15,7 @@ pub use context::{ChapterContext, Context, NovelContext, ParagraphContext};
 pub use novel::Novel;
 pub use paragraph::Paragraph;
 pub use repo::Repo;
-pub use sentence::{Sentence, SentenceTrait};
+pub use sentence::{Sentence, SentenceTrait, Sentences};
 pub use text_element::{ElementEndState, TextElement};
 pub use token::{ParseContext, Token, TokenParsingResult};
 pub use word::WordTrait;
