@@ -32,8 +32,8 @@ pub struct Parser {
     pub name: &'static str,
     /// Ordering hint: Fallback = last, Normal = middle, Priority = first
     // pub order: ParserOrder,
-    pub start_chars: fn() -> &'static str,
-    pub end_chars: fn() -> &'static str,
+    pub start_chars: fn() -> &'static [&'static str],
+    pub end_chars: fn() -> &'static [&'static str],
     pub from_token: fn(Token) -> TokenParsingResult<Box<dyn TextElementAuto>>,
     pub from_narration: fn(Narration, &ParseContext) -> Box<dyn TextElementAuto>,
 }

@@ -56,7 +56,8 @@ impl Paragraph {
     /// last end state and queued for later processing.
     ///
     /// Returns a mutable reference to the paragraph.
-    pub fn push_token(&mut self, token: Token) -> &mut Self {
+    pub fn push_token(&mut self, token: impl Into<Token>) -> &mut Self {
+        let token = dbg!(token.into());
         self.tokens_to_process.push(token);
         
         while let Some(token) = self.tokens_to_process.pop() {
@@ -143,7 +144,7 @@ impl Paragraph {
                     }
                 }
                 ElementEndState::NotFinished => {
-                    self.last_end_state = self.elements.last_mut().unwrap().push_token(token);
+                    self.last_end_state = self.elements.last_mut().unwrap().push_token(dbg!(token));
                     self.extract_and_queue_buffered_token();
                 }
             }
@@ -160,15 +161,15 @@ mod novel_paragraph {
     #[test]
     fn correct() {
         let mut p = Paragraph::new();
-        p.push_token("This".into());
-        p.push_token("is".into());
-        p.push_token("the".into());
-        p.push_token("right".into());
-        p.push_token("one.".into());
-        p.push_token("\"Dialog".into());
-        p.push_token("is".into());
-        p.push_token("also".into());
-        p.push_token("correct.\"".into());
+        p.push_token("This");
+        p.push_token("is");
+        p.push_token("the");
+        p.push_token("right");
+        p.push_token("one.");
+        p.push_token("\"Dialog");
+        p.push_token("is");
+        p.push_token("also");
+        p.push_token("correct.\"");
         dbg!(&p);
     }
 
@@ -184,6 +185,16 @@ mod novel_paragraph {
         p.push_token(Token::new("ahh\"that3"));
         dbg!(&p);
         // assert!(p.elements[0].as_any().is::<Dialog>());
+    }
+
+    #[test]
+    fn real_example() {
+        let mut p = Paragraph::new();
+        let text = "Currently, within the mountain range, a large Divine Crocodile Clansmen wearing silver armour was patrolling the area until he could not help but say, “That cultivation technique we got from the Black Hawk Family is truly profound! I have already advanced to the Intermediate Enlightened Noble Realm last night, and I’ve been stuck on this bottleneck for centuries...”".replace('”', "\"").replace('“', "\"");
+        for token in text.split_whitespace() {
+            p.push_token(token);
+        }
+        dbg!(&p);
     }
 }
 

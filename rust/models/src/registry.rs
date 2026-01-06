@@ -3,8 +3,7 @@ use std::sync::OnceLock;
 use crate::{
     Parser,
     novel::{
-        Sentence, SentenceTrait, Token, TokenParsingResult,
-        text_element::{Narration, TextElementAuto},
+        Sentence, SentenceTrait, Token, TokenParsingResult, WordTrait, text_element::{Narration, TextElementAuto}
     },
 };
 
@@ -55,5 +54,9 @@ impl ParserRegistry {
 
     pub fn parse_sentence_token(token: &Token) -> Box<dyn SentenceTrait> {
         Sentence::from_token(&token)
+    }
+
+    pub fn parse_word_token(token: &Token) -> Box<dyn WordTrait> {
+        
     }
 }

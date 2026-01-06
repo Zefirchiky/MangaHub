@@ -6,14 +6,23 @@ use derive_more::{Deref, DerefMut, From};
 pub struct Token(String);
 
 impl Token {
+    /// Creates a new Token from a string.
+    ///
+    /// Panics if the string is empty or contains a space.
     pub fn new(s: impl Into<String>) -> Self {
         let s = s.into();
-        assert!(!s.is_empty());
+        assert!(!s.is_empty(), "Token should not be empty");
+        assert!(!s.contains(' '), "Token should not contain spaces, given `{s}`");
         Self(s)
     }
 
-    pub fn as_str(&self) -> &str {
-        &self.0
+    pub fn try_new(s: impl Into<String>) -> Option<Self> {
+        let s = s.into();
+        if s.is_empty() || s.contains(' ') {
+            None
+        } else {
+            Some(Self(s))
+        }
     }
 }
 
@@ -29,12 +38,3 @@ pub enum TokenParsingResult<T> {
     // MatchedWithRest(Token, Token),
     NotMatched(Token),
 }
-
-// impl<T> TokenParsingResult<T> {
-//     pub fn unwrap(self) -> T {
-//         match self {
-//             Self::Matched(el) => el,
-//             Self::NotMatched => panic!("What the fuck"),
-//         }
-//     }
-// }

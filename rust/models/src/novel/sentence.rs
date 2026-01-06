@@ -2,7 +2,7 @@ use std::{any::Any, fmt::Debug};
 
 use derive_more::{Deref, DerefMut, From};
 
-use crate::{novel::Token, registry::ParserRegistry};
+use crate::{novel::{Token, WordsVec}, registry::ParserRegistry};
 
 pub trait SentenceTrait: Any + Sync + Send + Debug {
     fn from_token(token: &Token) -> Box<Self>
@@ -29,16 +29,19 @@ impl Sentences {
 
 #[derive(Debug)]
 pub struct Sentence {
-    // words: Vec<Box<dyn WordTrait>>
-    words: Vec<Token>,
+    words: WordsVec,
 }
 
 impl SentenceTrait for Sentence {
     fn from_token(_: &Token) -> Box<Self> {
-        Box::new(Self { words: vec![] })
+        Box::new(Self { words: vec![].into() })
     }
 
     fn push(&mut self, token: Token) {
-        self.words.push(token);
+        self.words.push_token(token);
     }
+}
+
+pub struct Exclamation {
+    words: WordsVec,
 }

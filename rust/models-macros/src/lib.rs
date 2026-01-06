@@ -59,8 +59,12 @@ pub fn register_text_element(_attr: TokenStream, item: TokenStream) -> TokenStre
             end_chars: <#name>::end_chars,
 
             from_token: |token| match <#name>::try_from_token(token) {
-                crate::TokenParsingResult::Matched(el, tok) => TokenParsingResult::Matched(Box::new(el) as Box<dyn TextElementAuto>, tok),
-                crate::TokenParsingResult::MatchedWithRest(tok1, tok2) => TokenParsingResult::MatchedWithRest(tok1, tok2),
+                crate::TokenParsingResult::Matched {
+                    model, matched, prev, next,
+                } => TokenParsingResult::Matched {
+                    model: Box::new(model) as Box<dyn TextElementAuto>,
+                    matched, prev, next,
+                },
                 crate::TokenParsingResult::NotMatched(token) => crate::TokenParsingResult::NotMatched(token),
             },
 

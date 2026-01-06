@@ -6,25 +6,20 @@ use std::fmt::Debug;
 use derive_more::From;
 use models_macros::register_text_element;
 
-use crate::novel::{ParseContext, Sentences, TokenParsingResult};
-use crate::novel::{
-    SentenceTrait,
-    Token,
-    // sentence::Sentence
-};
+use crate::novel::{ParseContext, Sentences, Token, TokenParsingResult};
 use crate::registry::ParserRegistry;
 use crate::{Parser, TEXT_ELEMENT_PARSERS};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ElementEndState {
-    /// Curtent TextElement is definitely finished
+    /// Current TextElement is definitely finished
     Finished(Option<Token>),
-    /// Current TextELement is finished but may be combined wiht next TextElement
+    /// Current TextELement is finished but may be combined with next TextElement
     MaybeFinished(Option<Token>),
     /// Current TextElement is definitely not finished, but first part of Token was wrong, and should be retried
     ///
     /// # Example
-    /// `this"` is a Narration folowed by Dialog, `this` should be tried again, and `"` later.
+    /// `this"` is a Narration followed by Dialog, `this` should be tried again, and `"` later.
     ///
     /// `this"` will be parsed as new empty Narration, and after Token is pushed, `this` and `"` should be extracted, making 2 new Tokens to parse.
     ///
@@ -35,6 +30,8 @@ pub enum ElementEndState {
 }
 
 pub trait TextElement: Send + Sync + Debug {
+    fn is_custom_match(&self) -> bool { false }
+
     /// Will try parsing token into `TextElement` based on rules of `Self`.
     fn try_from_token(token: Token) -> TokenParsingResult<Self>
     where
@@ -50,17 +47,17 @@ pub trait TextElement: Send + Sync + Debug {
     where
         Self: Sized;
 
-    fn start_chars() -> &'static str
+    fn start_chars() -> &'static [&'static str]
     where
         Self: Sized,
     {
-        ""
+        &[]
     }
-    fn end_chars() -> &'static str
+    fn end_chars() -> &'static [&'static str]
     where
         Self: Sized,
     {
-        ""
+        &[]
     }
 
     fn sentences(&self) -> &Sentences;
@@ -103,7 +100,7 @@ impl TextElement for Dialog {
                 if !token.is_empty() {
                     self.sentences.push(token.into());
                 }
-                ElementEndState::Finished(Token::new(to_push).into())
+                ElementEndState::Finished(Token::try_new(to_push))
             } else {
                 token = token.split_off(1).into();
                 if token.is_empty() {
@@ -176,18 +173,18 @@ impl TextElement for Dialog {
         }
     }
 
-    fn start_chars() -> &'static str
+    fn start_chars() -> &'static [&'static str]
     where
         Self: Sized,
     {
-        "\""
+        &["\""]
     }
 
-    fn end_chars() -> &'static str
+    fn end_chars() -> &'static [&'static str]
     where
         Self: Sized,
     {
-        "\""
+        &["\""]
     }
 
     fn is_start(&self) -> bool {
@@ -223,7 +220,7 @@ impl TextElement for Thought {
                 if !token.is_empty() {
                     self.sentences.push(token.into());
                 }
-                ElementEndState::Finished(Token::new(to_push).into())
+                ElementEndState::Finished(Token::try_new(to_push))
             } else {
                 token = token.split_off(1).into();
                 if token.is_empty() {
@@ -293,18 +290,18 @@ impl TextElement for Thought {
         }
     }
 
-    fn start_chars() -> &'static str
+    fn start_chars() -> &'static [&'static str]
     where
         Self: Sized,
     {
-        "'"
+        &["'"]
     }
 
-    fn end_chars() -> &'static str
+    fn end_chars() -> &'static [&'static str]
     where
         Self: Sized,
     {
-        "'"
+        &["'"]
     }
 
     fn is_start(&self) -> bool {

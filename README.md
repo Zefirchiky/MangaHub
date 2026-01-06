@@ -79,6 +79,12 @@ Huh?
 - System/Cultivation calculation and display
 - Keywords to remember the read
 - Build-in notes/to-do
+- Manga creation/interaction
+  - Read bubbles with right click 
+  - Auto translation
+- Reading point
+  - Play sounds at some points
+  - Shaders
 - Inspirational chapters. Like drafts for other authors who lost motivation or stuck
 - Event history
 - Map
